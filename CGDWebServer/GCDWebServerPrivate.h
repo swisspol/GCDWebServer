@@ -25,7 +25,7 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#import "GCDWebServer.h"
+#import "GCDWebServerConnection.h"
 
 #ifdef __LOGGING_HEADER__
 
@@ -85,8 +85,27 @@ extern "C" {
 #endif
 
 NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension);
+NSString* GCDWebServerUnescapeURLString(NSString* string);
 NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form);
 
 #ifdef __cplusplus
 }
 #endif
+
+@interface GCDWebServerConnection ()
+- (id) initWithServer:(GCDWebServer*)server address:(NSData*)address socket:(CFSocketNativeHandle)socket;
+@end
+
+@interface GCDWebServer ()
+@property(nonatomic, readonly) NSArray* handlers;
+@end
+
+@interface GCDWebServerHandler : NSObject {
+@private
+  GCDWebServerMatchBlock _matchBlock;
+  GCDWebServerProcessBlock _processBlock;
+}
+@property(nonatomic, readonly) GCDWebServerMatchBlock matchBlock;
+@property(nonatomic, readonly) GCDWebServerProcessBlock processBlock;
+- (id) initWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
+@end

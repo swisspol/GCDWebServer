@@ -13,6 +13,7 @@
 		E209F812169005AB00FF3062 /* GCDWebServer.m in Sources */ = {isa = PBXBuildFile; fileRef = E209F80D169005AB00FF3062 /* GCDWebServer.m */; };
 		E209F813169005AB00FF3062 /* GCDWebServerRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = E209F80F169005AB00FF3062 /* GCDWebServerRequest.m */; };
 		E209F814169005AB00FF3062 /* GCDWebServerResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = E209F811169005AB00FF3062 /* GCDWebServerResponse.m */; };
+		E22112441690B1D70048D2B2 /* GCDWebServerConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = E22112431690B1D70048D2B2 /* GCDWebServerConnection.m */; };
 		E2EE638D147DAE630004D40B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = E2EE638C147DAE630004D40B /* main.m */; };
 /* End PBXBuildFile section */
 
@@ -27,6 +28,8 @@
 		E209F80F169005AB00FF3062 /* GCDWebServerRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebServerRequest.m; sourceTree = "<group>"; };
 		E209F810169005AB00FF3062 /* GCDWebServerResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebServerResponse.h; sourceTree = "<group>"; };
 		E209F811169005AB00FF3062 /* GCDWebServerResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebServerResponse.m; sourceTree = "<group>"; };
+		E22112421690B1D70048D2B2 /* GCDWebServerConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebServerConnection.h; sourceTree = "<group>"; };
+		E22112431690B1D70048D2B2 /* GCDWebServerConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebServerConnection.m; sourceTree = "<group>"; };
 		E2448DF616900A550069FA25 /* GCDWebServerPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebServerPrivate.h; sourceTree = "<group>"; };
 		E2EE638C147DAE630004D40B /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -77,6 +80,8 @@
 			children = (
 				E209F80C169005AB00FF3062 /* GCDWebServer.h */,
 				E209F80D169005AB00FF3062 /* GCDWebServer.m */,
+				E22112421690B1D70048D2B2 /* GCDWebServerConnection.h */,
+				E22112431690B1D70048D2B2 /* GCDWebServerConnection.m */,
 				E2448DF616900A550069FA25 /* GCDWebServerPrivate.h */,
 				E209F80E169005AB00FF3062 /* GCDWebServerRequest.h */,
 				E209F80F169005AB00FF3062 /* GCDWebServerRequest.m */,
@@ -149,6 +154,7 @@
 				E209F812169005AB00FF3062 /* GCDWebServer.m in Sources */,
 				E209F813169005AB00FF3062 /* GCDWebServerRequest.m in Sources */,
 				E209F814169005AB00FF3062 /* GCDWebServerResponse.m in Sources */,
+				E22112441690B1D70048D2B2 /* GCDWebServerConnection.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

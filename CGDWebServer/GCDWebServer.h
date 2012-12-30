@@ -31,34 +31,6 @@
 typedef GCDWebServerRequest* (^GCDWebServerMatchBlock)(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery);
 typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* request);
 
-@class GCDWebServer, GCDWebServerHandler;
-
-@interface GCDWebServerConnection : NSObject {
-@private
-  GCDWebServer* _server;
-  NSData* _address;
-  CFSocketNativeHandle _socket;
-  NSUInteger _bytesRead;
-  NSUInteger _bytesWritten;
-  
-  CFHTTPMessageRef _requestMessage;
-  GCDWebServerRequest* _request;
-  GCDWebServerHandler* _handler;
-  CFHTTPMessageRef _responseMessage;
-  GCDWebServerResponse* _response;
-}
-@property(nonatomic, readonly) GCDWebServer* server;
-@property(nonatomic, readonly) NSData* address;  // struct sockaddr
-@property(nonatomic, readonly) NSUInteger totalBytesRead;
-@property(nonatomic, readonly) NSUInteger totalBytesWritten;
-@end
-
-@interface GCDWebServerConnection (Subclassing)
-- (void) open;
-- (GCDWebServerResponse*) processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block;
-- (void) close;
-@end
-
 @interface GCDWebServer : NSObject {
 @private
   NSMutableArray* _handlers;
