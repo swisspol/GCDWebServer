@@ -93,6 +93,8 @@ Handlers require 2 GCD blocks:
 * The 'GCDWebServerMatchBlock' is called on every handler added to the 'GCDWebServer' instance whenever a web request has started (i.e. HTTP headers have been received). It is passed the basic info for the web request (HTTP method, URL, headers...) and must decide if it wants to handle it or not. If yes, it must return a 'GCDWebServerRequest' instance which will be used to read (and optionally parse) the web request HTTP body. Otherwise, it simply returns nil. GCDWebServer provides several subclasses of 'GCDWebServerRequest' to handle common cases like storing the body in memory or to a file on disk. See [GCDWebServerRequest.h](GCDWebServer/blob/master/CGDWebServer/GCDWebServerRequest.h) for the full list.
 * The 'GCDWebServerProcessBlock' is called after the web request has been fully received and is passed the 'GCDWebServerRequest' instance created at the previous step. It must return a 'GCDWebServerResponse' instance which will be used to send the reponse HTTP headers and body. GCDWebServer provides several subclasses of 'GCDWebServerResponse' to handle common cases like HTML text in memory or streaming a file from disk. See [GCDWebServerResponse.h](GCDWebServer/blob/master/CGDWebServer/GCDWebServerResponse.h) for the full list.
 
+Note that most methods on 'GCDWebServer' to add handlers only take a 'GCDWebServerProcessBlock' as they already provide a built-in 'GCDWebServerMatchBlock' e.g. to match a URL path with a Regex.
+
 Advanced Example 1: Implementing HTTP Redirects
 ===============================================
 
@@ -152,7 +154,7 @@ Advanced Example 3: Serving a Dynamic Website
 
 GCDWebServer provides an extension to the 'GCDWebServerDataResponse' class that can return HTML content generated from a template and a set of variables (using the format '%variable%').
 
-Assuming you have a website directory in your app containing HTML template files along with the corresponding CSS, scripts and images, it's pretty easy to turn it into a dyanmic website:
+Assuming you have a website directory in your app containing HTML template files along with the corresponding CSS, scripts and images, it's pretty easy to turn it into a dynamic website:
 
 ```objectivec
 // Get the path to the website directory
