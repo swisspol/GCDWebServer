@@ -5,9 +5,9 @@ GCDWebServer is a lightweight GCD based HTTP 1.1 server for Mac & iOS apps writt
 * Entirely built with an event-driven design using [Grand Central Dispatch](http://en.wikipedia.org/wiki/Grand_Central_Dispatch) for maximum performance and concurrency
 * Well designed API for easy integration
 * Handle URL requests with simple GCD blocks instead of subclasses or delegates
-* Minimal number of source files and no dependencies on third-party source code
 * Support for streaming large HTTP bodies for requests and responses to minimize memory usage
 * Built-in parser for web forms submitted using "application/x-www-form-urlencoded" or "multipart/form-data"
+* Minimal number of source files and no dependencies on third-party source code
 * Available under a friendly [New BSD License](../master/LICENSE)
 
 What's not supported (yet?):
