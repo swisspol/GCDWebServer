@@ -72,10 +72,10 @@
 @interface GCDWebServerDataResponse (Extensions)
 + (GCDWebServerDataResponse*) responseWithText:(NSString*)text;
 + (GCDWebServerDataResponse*) responseWithHTML:(NSString*)html;
-+ (GCDWebServerDataResponse*) responseWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables;  // Simple template system that replaces all occurences of "%variable%" with corresponding value (encodes using UTF-8)
++ (GCDWebServerDataResponse*) responseWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables;
 - (id) initWithText:(NSString*)text;  // Encodes using UTF-8
 - (id) initWithHTML:(NSString*)html;  // Encodes using UTF-8
-- (id) initWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables;
+- (id) initWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables;  // Simple template system that replaces all occurences of "%variable%" with corresponding value (encodes using UTF-8)
 @end
 
 @interface GCDWebServerFileResponse : GCDWebServerResponse {

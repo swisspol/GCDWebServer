@@ -29,7 +29,8 @@
 
 #ifdef __LOGGING_HEADER__
 
-#import __LOGGING_HEADER__
+// Define __GCDWEBSERVER_LOGGING_HEADER__ as a preprocessor constant to redirect GCDWebServer logging to your own system
+#import __GCDWEBSERVER_LOGGING_HEADER__
 
 #else
 

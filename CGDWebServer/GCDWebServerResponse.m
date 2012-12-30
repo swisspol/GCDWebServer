@@ -245,11 +245,12 @@
   
   if ((self = [super initWithContentType:type contentLength:info.st_size])) {
     _path = [path copy];
-    if (attachment) {
-      NSData* data = [[path lastPathComponent] dataUsingEncoding:NSISOLatin1StringEncoding allowLossyConversion:YES];  // ISO 8859-1
-      NSString* fileName = data ? [[[NSString alloc] initWithData:data encoding:NSISOLatin1StringEncoding] autorelease] : nil;
+    if (attachment) {  // TODO: Use http://tools.ietf.org/html/rfc5987 to encode file names with special characters instead of using lossy conversion to ISO 8859-1
+      NSData* data = [[path lastPathComponent] dataUsingEncoding:NSISOLatin1StringEncoding allowLossyConversion:YES];
+      NSString* fileName = data ? [[NSString alloc] initWithData:data encoding:NSISOLatin1StringEncoding] : nil;
       if (fileName) {
-        [self setValue:[NSString stringWithFormat:@"attachment; filename=\"%@\"", fileName] forAdditionalHeader:@"Content-Disposition"];  // TODO: Use http://tools.ietf.org/html/rfc5987
+        [self setValue:[NSString stringWithFormat:@"attachment; filename=\"%@\"", fileName] forAdditionalHeader:@"Content-Disposition"];
+        [fileName release];
       } else {
         DNOT_REACHED();
       }
