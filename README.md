@@ -147,9 +147,48 @@ To implement an HTTP form, you need a pair of handlers:
 }];
 ```
 
-Advanced Example 3: WiFi Downloads and Uploads in iOS App
-=========================================================
+Advanced Example 3: Serving a Dynamic Website
+=============================================
 
-GCDWebServer was originally written for the [ComicFlow](http://itunes.apple.com/us/app/comicflow/id409290355?mt=8) comic reader app for iPad. It uses it to provide a web server for people to upload and download comic files directly over WiFi.
+GCDWebServer provides an extension to the 'GCDWebServerDataResponse' class that can return HTML content generated from a template and a set of variables (using the format '%variable%').
+
+Assuming you have a website directory in your app containing HTML template files along with the corresponding CSS, scripts and images, it's pretty easy to turn it into a dyanmic website:
+
+```objectivec
+// Get the path to the website directory
+NSString* websitePath = [[NSBundle mainBundle] pathForResource:@"Website" ofType:nil];
+
+// Add a default handler to serve static files (i.e. anything other than HTML files)
+[self addHandlerForBasePath:@"/" localPath:websitePath indexFilename:nil cacheAge:3600];
+
+// Add an override handler for all requests to "*.html" URLs to do the special HTML templatization
+[self addHandlerForMethod:@"GET"
+                pathRegex:@"/.*\.html"
+             requestClass:[GCDWebServerRequest class]
+             processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+    
+    NSDictionary* variables = [NSDictionary dictionaryWithObjectsAndKeys:@"value", @"variable", nil];
+    return [GCDWebServerDataResponse responseWithHTMLTemplate:[websitePath stringByAppendingPathComponent:request.path]
+                                                    variables:variables];
+    
+}];
+
+// Add an override handler to redirect "/" URL to "/index.html"
+[self addHandlerForMethod:@"GET"
+                     path:@"/"
+             requestClass:[GCDWebServerRequest class]
+             processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+    
+    return [GCDWebServerResponse responseWithRedirect:[NSURL URLWithString:@"index.html" relativeToURL:request.URL]
+                                            permanent:NO];
+    
+];
+
+```
+
+Final Example: File Downloads and Uploads From iOS App
+======================================================
+
+GCDWebServer was originally written for the [ComicFlow](http://itunes.apple.com/us/app/comicflow/id409290355?mt=8) comic reader app for iPad. It uses it to provide a web server for people to upload and download comic files directly over WiFi to and from the app.
 
 ComicFlow is [entirely open-source](https://code.google.com/p/comicflow/) and you can see how it uses GCDWebServer in the [AppDelegate.m](https://code.google.com/p/comicflow/source/browse/Classes/AppDelegate.m) file.
