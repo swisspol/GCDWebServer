@@ -8,7 +8,7 @@ GCDWebServer is a lightweight GCD based HTTP 1.1 server for Mac & iOS apps writt
 * Support for streaming large HTTP bodies for requests and responses to minimize memory usage
 * Built-in parser for web forms submitted using "application/x-www-form-urlencoded" or "multipart/form-data"
 * Minimal number of source files and no dependencies on third-party source code
-* Available under a friendly [New BSD License](../master/LICENSE)
+* Available under a friendly [New BSD License](blob/master/LICENSE)
 
 What's not available out of the box but can be implemented on top of the API:
 * Authentication like Basic Authentication
