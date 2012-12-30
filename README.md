@@ -152,7 +152,7 @@ To implement an HTTP form, you need a pair of handlers:
 Advanced Example 3: Serving a Dynamic Website
 =============================================
 
-GCDWebServer provides an extension to the 'GCDWebServerDataResponse' class that can return HTML content generated from a template and a set of variables (using the format '%variable%').
+GCDWebServer provides an extension to the 'GCDWebServerDataResponse' class that can return HTML content generated from a template and a set of variables (using the format '%variable%'). It is a very basic template system and is really intended as a starting point to building more advanced template systems by subclassing 'GCDWebServerResponse'.
 
 Assuming you have a website directory in your app containing HTML template files along with the corresponding CSS, scripts and images, it's pretty easy to turn it into a dynamic website:
 
