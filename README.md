@@ -19,25 +19,114 @@ Requirements:
 * OS X 10.7 or later
 * iOS 5.0 or later
 
-Example 1: Hello World
-======================
+Hello World
+===========
 
 A simple HTTP server that runs on port 8080 and returns a "Hello World" HTML page to any request:
 
 ```objectivec
-// Create server and add default handler
-GCDWebServer* webServer = [[GCDWebServer alloc] init];
-[webServer addDefaultHandlerForMethod:@"GET"
-                         requestClass:[GCDWebServerRequest class]
-                         processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+#import "GCDWebServer.h"
+
+int main(int argc, const char* argv[]) {
+  @autoreleasepool {
+    
+    // Create server and add default handler
+    GCDWebServer* webServer = [[GCDWebServer alloc] init];
+    [webServer addDefaultHandlerForMethod:@"GET"
+                             requestClass:[GCDWebServerRequest class]
+                             processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+      
+      return [GCDWebServerDataResponse responseWithHTML:@"<html><body><p>Hello World</p></body></html>"];
+      
+    }];
+    
+    // Run server on port 8080 until SIGINT received
+    [webServer runWithPort:8080];
+    
+    // Destroy server
+    [webServer release];
+    
+  }
+  return 0;
+}
+```
+
+Serving a Static Website
+========================
+
+GCDWebServer includes a built-in handler that can recursively serve a directory (it also lets you control how the "Cache-Control" header should be set):
+
+```objectivec
+#import "GCDWebServer.h"
+
+int main(int argc, const char* argv[]) {
+  @autoreleasepool {
+    
+    GCDWebServer* webServer = [[GCDWebServer alloc] init];
+    [webServer addHandlerForBasePath:@"/" localPath:NSHomeDirectory() indexFilename:nil cacheAge:3600];
+    [webServer runWithPort:8080];
+    [webServer release];
+    
+  }
+  return 0;
+}
+```
+
+How it Works
+============
+
+TBD
+
+
+Advanced Example 1: Implementing HTTP Redirects
+===============================================
+
+Here's an example handler that redirects "/" to "/index.html" using the convenience method on 'GCDWebServerResponse' (it sets the HTTP status code and 'Location' header automatically):
+
+```objectivec
+[self addHandlerForMethod:@"GET"
+                     path:@"/"
+             requestClass:[GCDWebServerRequest class]
+             processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+    
+  return [GCDWebServerResponse responseWithRedirect:[NSURL URLWithString:@"index.html" relativeToURL:request.URL] permanent:NO];
+    
+}];
+```
+
+Advanced Example 2: Implementing Forms
+======================================
+
+To implement an HTTP form, you need a pair of handlers:
+* The GET handler does not expect any body in the HTTP request and therefore uses the 'GCDWebServerRequest' class. The handler generates a response containing a simple HTML form.
+* The POST handler expects the form values to be in the body of the HTTP request and percent-encoded. Fortunately, GCDWebServer provides the request class 'GCDWebServerURLEncodedFormRequest' which can automatically parse such bodies. The handler simply echoes back the value from the user submitted form.
+
+```objectivec
+[webServer addHandlerForMethod:@"GET"
+                          path:@"/"
+                  requestClass:[GCDWebServerRequest class]
+                  processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
   
-  return [GCDWebServerDataResponse responseWithHTML:@"<html><body><p>Hello World</p></body></html>"];
+  NSString* html = @" \
+    <html><body> \
+      <form name=\"input\" action=\"/\" method=\"post\" enctype=\"application/x-www-form-urlencoded\"> \
+      Value: <input type=\"text\" name=\"value\"> \
+      <input type=\"submit\" value=\"Submit\"> \
+      </form> \
+    </body></html> \
+  ";
+  return [GCDWebServerDataResponse responseWithHTML:html];
   
 }];
 
-// Run server on port 8080 until SIGINT received
-[webServer runWithPort:8080];
-
-// Destroy server
-[webServer release];
+[webServer addHandlerForMethod:@"POST"
+                          path:@"/"
+                  requestClass:[GCDWebServerURLEncodedFormRequest class]
+                  processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+  
+  NSString* value = [[(GCDWebServerURLEncodedFormRequest*)request arguments] objectForKey:@"value"];
+  NSString* html = [NSString stringWithFormat:@"<html><body><p>%@</p></body></html>", value];
+  return [GCDWebServerDataResponse responseWithHTML:html];
+  
+}];
 ```
