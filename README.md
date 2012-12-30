@@ -146,10 +146,6 @@ To implement an HTTP form, you need a pair of handlers:
 Advanced Example 3: WiFi Downloads and Uploads in iOS App
 =========================================================
 
-GCDWebServer was originally written for the [ComicFlow](http://itunes.apple.com/us/app/comicflow/id409290355?mt=8) comic reader app for iPad.
+GCDWebServer was originally written for the [ComicFlow](http://itunes.apple.com/us/app/comicflow/id409290355?mt=8) comic reader app for iPad. It uses it to provide a web server for people to upload and download comic files directly over WiFi.
 
-The ComicRead
-
-See ComicFlow iPad app
-https://code.google.com/p/comicflow/
-
+ComicFlow is [entirely open-source](https://code.google.com/p/comicflow/) and you can see how it uses GCDWebServer in the [AppDelegate.m](https://code.google.com/p/comicflow/source/browse/Classes/AppDelegate.m) file.
