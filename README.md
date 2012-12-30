@@ -10,11 +10,13 @@ GCDWebServer is a lightweight GCD based HTTP 1.1 server for Mac & iOS apps writt
 * Minimal number of source files and no dependencies on third-party source code
 * Available under a friendly [New BSD License](../master/LICENSE)
 
-What's not supported (yet?):
-* Keep-alive connections
-* Authentication
-* HTTPS
+What's not available out of the box but can be implemented on top of the API:
+* Authentication like Basic Authentication
 * Web forms submitted using "multipart/mixed"
+
+What's not supported (but not really required from an embedded HTTP server):
+* Keep-alive connections
+* HTTPS
 
 Requirements:
 * OS X 10.7 or later
