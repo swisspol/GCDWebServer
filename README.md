@@ -104,7 +104,8 @@ Here's an example handler that redirects "/" to "/index.html" using the convenie
              requestClass:[GCDWebServerRequest class]
              processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
     
-  return [GCDWebServerResponse responseWithRedirect:[NSURL URLWithString:@"index.html" relativeToURL:request.URL] permanent:NO];
+  return [GCDWebServerResponse responseWithRedirect:[NSURL URLWithString:@"index.html" relativeToURL:request.URL]
+                                          permanent:NO];
     
 }];
 ```
