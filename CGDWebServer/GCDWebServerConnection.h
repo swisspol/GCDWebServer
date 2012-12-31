@@ -50,7 +50,7 @@
 @end
 
 @interface GCDWebServerConnection (Subclassing)
-- (void) open;
-- (GCDWebServerResponse*) processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block;
-- (void) close;
+- (void)open;
+- (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block;
+- (void)close;
 @end

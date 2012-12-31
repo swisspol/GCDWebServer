@@ -33,15 +33,15 @@
 
 @synthesize contentType=_type, contentLength=_length, statusCode=_status, cacheControlMaxAge=_maxAge, additionalHeaders=_headers;
 
-+ (GCDWebServerResponse*) response {
++(GCDWebServerResponse*) response {
   return [[[[self class] alloc] init] autorelease];
 }
 
-- (id) init {
+- (id)init {
   return [self initWithContentType:nil contentLength:0];
 }
 
-- (id) initWithContentType:(NSString*)type contentLength:(NSUInteger)length {
+- (id)initWithContentType:(NSString*)type contentLength:(NSUInteger)length {
   if ((self = [super init])) {
     _type = [type copy];
     _length = length;
@@ -56,18 +56,18 @@
   return self;
 }
 
-- (void) dealloc {
+- (void)dealloc {
   [_type release];
   [_headers release];
   
   [super dealloc];
 }
 
-- (void) setValue:(NSString*)value forAdditionalHeader:(NSString*)header {
+- (void)setValue:(NSString*)value forAdditionalHeader:(NSString*)header {
   [_headers setValue:value forKey:header];
 }
 
-- (BOOL) hasBody {
+- (BOOL)hasBody {
   return _type ? YES : NO;
 }
 
@@ -75,17 +75,17 @@
 
 @implementation GCDWebServerResponse (Subclassing)
 
-- (BOOL) open {
+- (BOOL)open {
   [self doesNotRecognizeSelector:_cmd];
   return NO;
 }
 
-- (NSInteger) read:(void*)buffer maxLength:(NSUInteger)length {
+- (NSInteger)read:(void*)buffer maxLength:(NSUInteger)length {
   [self doesNotRecognizeSelector:_cmd];
   return -1;
 }
 
-- (BOOL) close {
+- (BOOL)close {
   [self doesNotRecognizeSelector:_cmd];
   return NO;
 }
@@ -94,22 +94,22 @@
 
 @implementation GCDWebServerResponse (Extensions)
 
-+ (GCDWebServerResponse*) responseWithStatusCode:(NSInteger)statusCode {
++ (GCDWebServerResponse*)responseWithStatusCode:(NSInteger)statusCode {
   return [[[self alloc] initWithStatusCode:statusCode] autorelease];
 }
 
-+ (GCDWebServerResponse*) responseWithRedirect:(NSURL*)location permanent:(BOOL)permanent {
++ (GCDWebServerResponse*)responseWithRedirect:(NSURL*)location permanent:(BOOL)permanent {
   return [[[self alloc] initWithRedirect:location permanent:permanent] autorelease];
 }
 
-- (id) initWithStatusCode:(NSInteger)statusCode {
+- (id)initWithStatusCode:(NSInteger)statusCode {
   if ((self = [self initWithContentType:nil contentLength:0])) {
     self.statusCode = statusCode;
   }
   return self;
 }
 
-- (id) initWithRedirect:(NSURL*)location permanent:(BOOL)permanent {
+- (id)initWithRedirect:(NSURL*)location permanent:(BOOL)permanent {
   if ((self = [self initWithContentType:nil contentLength:0])) {
     self.statusCode = permanent ? 301 : 307;
     [self setValue:[location absoluteString] forAdditionalHeader:@"Location"];
@@ -121,11 +121,11 @@
 
 @implementation GCDWebServerDataResponse
 
-+ (GCDWebServerDataResponse*) responseWithData:(NSData*)data contentType:(NSString*)type {
++ (GCDWebServerDataResponse*)responseWithData:(NSData*)data contentType:(NSString*)type {
   return [[[[self class] alloc] initWithData:data contentType:type] autorelease];
 }
 
-- (id) initWithData:(NSData*)data contentType:(NSString*)type {
+- (id)initWithData:(NSData*)data contentType:(NSString*)type {
   if (data == nil) {
     DNOT_REACHED();
     [self release];
@@ -139,20 +139,20 @@
   return self;
 }
 
-- (void) dealloc {
+- (void)dealloc {
   DCHECK(_offset < 0);
   [_data release];
   
   [super dealloc];
 }
 
-- (BOOL) open {
+- (BOOL)open {
   DCHECK(_offset < 0);
   _offset = 0;
   return YES;
 }
 
-- (NSInteger) read:(void*)buffer maxLength:(NSUInteger)length {
+- (NSInteger)read:(void*)buffer maxLength:(NSUInteger)length {
   DCHECK(_offset >= 0);
   NSInteger size = 0;
   if (_offset < _data.length) {
@@ -163,7 +163,7 @@
   return size;
 }
 
-- (BOOL) close {
+- (BOOL)close {
   DCHECK(_offset >= 0);
   _offset = -1;
   return YES;
@@ -173,19 +173,19 @@
 
 @implementation GCDWebServerDataResponse (Extensions)
 
-+ (GCDWebServerDataResponse*) responseWithText:(NSString*)text {
++ (GCDWebServerDataResponse*)responseWithText:(NSString*)text {
   return [[[self alloc] initWithText:text] autorelease];
 }
 
-+ (GCDWebServerDataResponse*) responseWithHTML:(NSString*)html {
++ (GCDWebServerDataResponse*)responseWithHTML:(NSString*)html {
   return [[[self alloc] initWithHTML:html] autorelease];
 }
 
-+ (GCDWebServerDataResponse*) responseWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables {
++ (GCDWebServerDataResponse*)responseWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables {
   return [[[self alloc] initWithHTMLTemplate:path variables:variables] autorelease];
 }
 
-- (id) initWithText:(NSString*)text {
+- (id)initWithText:(NSString*)text {
   NSData* data = [text dataUsingEncoding:NSUTF8StringEncoding];
   if (data == nil) {
     DNOT_REACHED();
@@ -195,7 +195,7 @@
   return [self initWithData:data contentType:@"text/plain; charset=utf-8"];
 }
 
-- (id) initWithHTML:(NSString*)html {
+- (id)initWithHTML:(NSString*)html {
   NSData* data = [html dataUsingEncoding:NSUTF8StringEncoding];
   if (data == nil) {
     DNOT_REACHED();
@@ -205,7 +205,7 @@
   return [self initWithData:data contentType:@"text/html; charset=utf-8"];
 }
 
-- (id) initWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables {
+- (id)initWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables {
   NSMutableString* html = [[NSMutableString alloc] initWithContentsOfFile:path encoding:NSUTF8StringEncoding error:NULL];
   [variables enumerateKeysAndObjectsUsingBlock:^(NSString* key, NSString* value, BOOL* stop) {
     [html replaceOccurrencesOfString:[NSString stringWithFormat:@"%%%@%%", key] withString:value options:0 range:NSMakeRange(0, html.length)];
@@ -219,19 +219,19 @@
 
 @implementation GCDWebServerFileResponse
 
-+ (GCDWebServerFileResponse*) responseWithFile:(NSString*)path {
++ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path {
   return [[[[self class] alloc] initWithFile:path] autorelease];
 }
 
-+ (GCDWebServerFileResponse*) responseWithFile:(NSString*)path isAttachment:(BOOL)attachment {
++ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path isAttachment:(BOOL)attachment {
   return [[[[self class] alloc] initWithFile:path isAttachment:attachment] autorelease];
 }
 
-- (id) initWithFile:(NSString*)path {
+- (id)initWithFile:(NSString*)path {
   return [self initWithFile:path isAttachment:NO];
 }
 
-- (id) initWithFile:(NSString*)path isAttachment:(BOOL)attachment {
+- (id)initWithFile:(NSString*)path isAttachment:(BOOL)attachment {
   struct stat info;
   if (lstat([path fileSystemRepresentation], &info) || !(info.st_mode & S_IFREG)) {
     DNOT_REACHED();
@@ -259,25 +259,25 @@
   return self;
 }
 
-- (void) dealloc {
+- (void)dealloc {
   DCHECK(_file <= 0);
   [_path release];
   
   [super dealloc];
 }
 
-- (BOOL) open {
+- (BOOL)open {
   DCHECK(_file <= 0);
   _file = open([_path fileSystemRepresentation], O_NOFOLLOW | O_RDONLY);
   return (_file > 0 ? YES : NO);
 }
 
-- (NSInteger) read:(void*)buffer maxLength:(NSUInteger)length {
+- (NSInteger)read:(void*)buffer maxLength:(NSUInteger)length {
   DCHECK(_file > 0);
   return read(_file, buffer, length);
 }
 
-- (BOOL) close {
+- (BOOL)close {
   DCHECK(_file > 0);
   int result = close(_file);
   _file = 0;

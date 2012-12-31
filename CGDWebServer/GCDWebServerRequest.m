@@ -72,7 +72,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 
 @synthesize method=_method, URL=_url, headers=_headers, path=_path, query=_query, contentType=_type, contentLength=_length;
 
-- (id) initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
+- (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
   if ((self = [super init])) {
     _method = [method copy];
     _url = [url retain];
@@ -96,7 +96,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
   return self;
 }
 
-- (void) dealloc {
+- (void)dealloc {
   [_method release];
   [_url release];
   [_headers release];
@@ -107,7 +107,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
   [super dealloc];
 }
 
-- (BOOL) hasBody {
+- (BOOL)hasBody {
   return _type ? YES : NO;
 }
 
@@ -115,17 +115,17 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 
 @implementation GCDWebServerRequest (Subclassing)
 
-- (BOOL) open {
+- (BOOL)open {
   [self doesNotRecognizeSelector:_cmd];
   return NO;
 }
 
-- (NSInteger) write:(const void*)buffer maxLength:(NSUInteger)length {
+- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length {
   [self doesNotRecognizeSelector:_cmd];
   return -1;
 }
 
-- (BOOL) close {
+- (BOOL)close {
   [self doesNotRecognizeSelector:_cmd];
   return NO;
 }
@@ -136,26 +136,26 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 
 @synthesize data=_data;
 
-- (void) dealloc {
+- (void)dealloc {
   DCHECK(_data != nil);
   [_data release];
   
   [super dealloc];
 }
 
-- (BOOL) open {
+- (BOOL)open {
   DCHECK(_data == nil);
   _data = [[NSMutableData alloc] initWithCapacity:self.contentLength];
   return _data ? YES : NO;
 }
 
-- (NSInteger) write:(const void*)buffer maxLength:(NSUInteger)length {
+- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length {
   DCHECK(_data != nil);
   [_data appendBytes:buffer length:length];
   return length;
 }
 
-- (BOOL) close {
+- (BOOL)close {
   DCHECK(_data != nil);
   return YES;
 }
@@ -166,14 +166,14 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 
 @synthesize filePath=_filePath;
 
-- (id) initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
+- (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
   if ((self = [super initWithMethod:method url:url headers:headers path:path query:query])) {
     _filePath = [[NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]] retain];
   }
   return self;
 }
 
-- (void) dealloc {
+- (void)dealloc {
   DCHECK(_file < 0);
   unlink([_filePath fileSystemRepresentation]);
   [_filePath release];
@@ -181,18 +181,18 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
   [super dealloc];
 }
 
-- (BOOL) open {
+- (BOOL)open {
   DCHECK(_file == 0);
   _file = open([_filePath fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
   return (_file > 0 ? YES : NO);
 }
 
-- (NSInteger) write:(const void*)buffer maxLength:(NSUInteger)length {
+- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length {
   DCHECK(_file > 0);
   return write(_file, buffer, length);
 }
 
-- (BOOL) close {
+- (BOOL)close {
   DCHECK(_file > 0);
   int result = close(_file);
   _file = -1;
@@ -205,17 +205,17 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 
 @synthesize arguments=_arguments;
 
-+ (NSString*) mimeType {
++ (NSString*)mimeType {
   return @"application/x-www-form-urlencoded";
 }
 
-- (void) dealloc {
+- (void)dealloc {
   [_arguments release];
   
   [super dealloc];
 }
 
-- (BOOL) close {
+- (BOOL)close {
   if (![super close]) {
     return NO;
   }
@@ -234,7 +234,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 
 @synthesize contentType=_contentType, mimeType=_mimeType;
 
-- (id) initWithContentType:(NSString*)contentType {
+- (id)initWithContentType:(NSString*)contentType {
   if ((self = [super init])) {
     _contentType = [contentType copy];
     NSArray* components = [_contentType componentsSeparatedByString:@";"];
@@ -248,7 +248,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
   return self;
 }
 
-- (void) dealloc {
+- (void)dealloc {
   [_contentType release];
   [_mimeType release];
   
@@ -261,7 +261,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 
 @synthesize data=_data, string=_string;
 
-- (id) initWithContentType:(NSString*)contentType data:(NSData*)data {
+- (id)initWithContentType:(NSString*)contentType data:(NSData*)data {
   if ((self = [super initWithContentType:contentType])) {
     _data = [data retain];
     
@@ -273,14 +273,14 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
   return self;
 }
 
-- (void) dealloc {
+- (void)dealloc {
   [_data release];
   [_string release];
   
   [super dealloc];
 }
 
-- (NSString*) description {
+- (NSString*)description {
   return [NSString stringWithFormat:@"<%@ | '%@' | %i bytes>", [self class], self.mimeType, (int)_data.length];
 }
 
@@ -290,7 +290,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 
 @synthesize fileName=_fileName, temporaryPath=_temporaryPath;
 
-- (id) initWithContentType:(NSString*)contentType fileName:(NSString*)fileName temporaryPath:(NSString*)temporaryPath {
+- (id)initWithContentType:(NSString*)contentType fileName:(NSString*)fileName temporaryPath:(NSString*)temporaryPath {
   if ((self = [super initWithContentType:contentType])) {
     _fileName = [fileName copy];
     _temporaryPath = [temporaryPath copy];
@@ -298,7 +298,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
   return self;
 }
 
-- (void) dealloc {
+- (void)dealloc {
   unlink([_temporaryPath fileSystemRepresentation]);
   
   [_fileName release];
@@ -307,7 +307,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
   [super dealloc];
 }
 
-- (NSString*) description {
+- (NSString*)description {
   return [NSString stringWithFormat:@"<%@ | '%@' | '%@>'", [self class], self.mimeType, _fileName];
 }
 
@@ -317,7 +317,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 
 @synthesize arguments=_arguments, files=_files;
 
-+ (void) initialize {
++ (void)initialize {
   if (_newlineData == nil) {
     _newlineData = [[NSData alloc] initWithBytes:"\r\n" length:2];
     DCHECK(_newlineData);
@@ -332,11 +332,11 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
   }
 }
 
-+ (NSString*) mimeType {
++ (NSString*)mimeType {
   return @"multipart/form-data";
 }
 
-- (id) initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
+- (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
   if ((self = [super initWithMethod:method url:url headers:headers path:path query:query])) {
     NSString* boundary = _ExtractHeaderParameter(self.contentType, @"boundary");
     if (boundary) {
@@ -354,7 +354,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
   return self;
 }
 
-- (BOOL) open {
+- (BOOL)open {
   DCHECK(_parserData == nil);
   _parserData = [[NSMutableData alloc] initWithCapacity:kMultiPartBufferSize];
   _parserState = kParserState_Start;
@@ -362,7 +362,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 }
 
 // http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4
-- (BOOL) _parseData {
+- (BOOL)_parseData {
   BOOL success = YES;
   
   if (_parserState == kParserState_Headers) {
@@ -479,13 +479,13 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
   return success;
 }
 
-- (NSInteger) write:(const void*)buffer maxLength:(NSUInteger)length {
+- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length {
   DCHECK(_parserData != nil);
   [_parserData appendBytes:buffer length:length];
   return ([self _parseData] ? length : -1);
 }
 
-- (BOOL) close {
+- (BOOL)close {
   DCHECK(_parserData != nil);
   [_parserData release];
   _parserData = nil;
@@ -500,7 +500,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
   return (_parserState == kParserState_End ? YES : NO);
 }
 
-- (void) dealloc {
+- (void)dealloc {
   DCHECK(_parserData == nil);
   [_arguments release];
   [_files release];

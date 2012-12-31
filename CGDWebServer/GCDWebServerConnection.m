@@ -48,7 +48,7 @@ static dispatch_queue_t _formatterQueue = NULL;
 
 @implementation GCDWebServerConnection (Read)
 
-- (void) _readBufferWithLength:(NSUInteger)length completionBlock:(ReadBufferCompletionBlock)block {
+- (void)_readBufferWithLength:(NSUInteger)length completionBlock:(ReadBufferCompletionBlock)block {
   dispatch_read(_socket, length, kReadWriteQueue, ^(dispatch_data_t buffer, int error) {
     
     @autoreleasepool {
@@ -75,7 +75,7 @@ static dispatch_queue_t _formatterQueue = NULL;
   });
 }
 
-- (void) _readDataWithCompletionBlock:(ReadDataCompletionBlock)block {
+- (void)_readDataWithCompletionBlock:(ReadDataCompletionBlock)block {
   [self _readBufferWithLength:SIZE_T_MAX completionBlock:^(dispatch_data_t buffer) {
     
     if (buffer) {
@@ -93,7 +93,7 @@ static dispatch_queue_t _formatterQueue = NULL;
   }];
 }
 
-- (void) _readHeadersWithCompletionBlock:(ReadHeadersCompletionBlock)block {
+- (void)_readHeadersWithCompletionBlock:(ReadHeadersCompletionBlock)block {
   DCHECK(_requestMessage);
   NSMutableData* data = [NSMutableData dataWithCapacity:kHeadersReadBuffer];
   [self _readBufferWithLength:SIZE_T_MAX completionBlock:^(dispatch_data_t buffer) {
@@ -127,7 +127,7 @@ static dispatch_queue_t _formatterQueue = NULL;
   }];
 }
 
-- (void) _readBodyWithRemainingLength:(NSUInteger)length completionBlock:(ReadBodyCompletionBlock)block {
+- (void)_readBodyWithRemainingLength:(NSUInteger)length completionBlock:(ReadBodyCompletionBlock)block {
   DCHECK([_request hasBody]);
   [self _readBufferWithLength:length completionBlock:^(dispatch_data_t buffer) {
     
@@ -166,7 +166,7 @@ static dispatch_queue_t _formatterQueue = NULL;
 
 @implementation GCDWebServerConnection (Write)
 
-- (void) _writeBuffer:(dispatch_data_t)buffer withCompletionBlock:(WriteBufferCompletionBlock)block {
+- (void)_writeBuffer:(dispatch_data_t)buffer withCompletionBlock:(WriteBufferCompletionBlock)block {
   size_t size = dispatch_data_get_size(buffer);
   dispatch_write(_socket, buffer, kReadWriteQueue, ^(dispatch_data_t data, int error) {
     
@@ -185,7 +185,7 @@ static dispatch_queue_t _formatterQueue = NULL;
   });
 }
 
-- (void) _writeData:(NSData*)data withCompletionBlock:(WriteDataCompletionBlock)block {
+- (void)_writeData:(NSData*)data withCompletionBlock:(WriteDataCompletionBlock)block {
   [data retain];
   dispatch_data_t buffer = dispatch_data_create(data.bytes, data.length, dispatch_get_current_queue(), ^{
     [data release];
@@ -194,14 +194,14 @@ static dispatch_queue_t _formatterQueue = NULL;
   dispatch_release(buffer);
 }
 
-- (void) _writeHeadersWithCompletionBlock:(WriteHeadersCompletionBlock)block {
+- (void)_writeHeadersWithCompletionBlock:(WriteHeadersCompletionBlock)block {
   DCHECK(_responseMessage);
   CFDataRef message = CFHTTPMessageCopySerializedMessage(_responseMessage);
   [self _writeData:(NSData*)message withCompletionBlock:block];
   CFRelease(message);
 }
 
-- (void) _writeBodyWithCompletionBlock:(WriteBodyCompletionBlock)block {
+- (void)_writeBodyWithCompletionBlock:(WriteBodyCompletionBlock)block {
   DCHECK([_response hasBody]);
   void* buffer = malloc(kBodyWriteBufferSize);
   NSInteger result = [_response read:buffer maxLength:kBodyWriteBufferSize];
@@ -233,7 +233,7 @@ static dispatch_queue_t _formatterQueue = NULL;
 
 @synthesize server=_server, address=_address, totalBytesRead=_bytesRead, totalBytesWritten=_bytesWritten;
 
-+ (void) initialize {
++ (void)initialize {
   DCHECK([NSThread isMainThread]);  // NSDateFormatter should be initialized on main thread
   if (_separatorData == nil) {
     _separatorData = [[NSData alloc] initWithBytes:"\r\n\r\n" length:4];
@@ -258,7 +258,7 @@ static dispatch_queue_t _formatterQueue = NULL;
   }
 }
 
-- (void) _initializeResponseHeadersWithStatusCode:(NSInteger)statusCode {
+- (void)_initializeResponseHeadersWithStatusCode:(NSInteger)statusCode {
   _responseMessage = CFHTTPMessageCreateResponse(kCFAllocatorDefault, statusCode, NULL, kCFHTTPVersion1_1);
   CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Connection"), CFSTR("Close"));
   CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Server"), (CFStringRef)[[_server class] serverName]);
@@ -268,7 +268,7 @@ static dispatch_queue_t _formatterQueue = NULL;
   });
 }
 
-- (void) _abortWithStatusCode:(NSUInteger)statusCode {
+- (void)_abortWithStatusCode:(NSUInteger)statusCode {
   DCHECK(_responseMessage == NULL);
   DCHECK((statusCode >= 400) && (statusCode < 600));
   [self _initializeResponseHeadersWithStatusCode:statusCode];
@@ -279,7 +279,7 @@ static dispatch_queue_t _formatterQueue = NULL;
 }
 
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
-- (void) _processRequest {
+- (void)_processRequest {
   DCHECK(_responseMessage == NULL);
   
   GCDWebServerResponse* response = [self processRequest:_request withBlock:_handler.processBlock];
@@ -323,7 +323,7 @@ static dispatch_queue_t _formatterQueue = NULL;
   
 }
 
-- (void) _readRequestBody:(NSData*)initialData {
+- (void)_readRequestBody:(NSData*)initialData {
   if ([_request open]) {
     NSInteger length = _request.contentLength;
     if (initialData.length) {
@@ -364,7 +364,7 @@ static dispatch_queue_t _formatterQueue = NULL;
   }
 }
 
-- (void) _readRequestHeaders {
+- (void)_readRequestHeaders {
   _requestMessage = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, true);
   [self _readHeadersWithCompletionBlock:^(NSData* extraData) {
     
@@ -426,7 +426,7 @@ static dispatch_queue_t _formatterQueue = NULL;
   }];
 }
 
-- (id) initWithServer:(GCDWebServer*)server address:(NSData*)address socket:(CFSocketNativeHandle)socket {
+- (id)initWithServer:(GCDWebServer*)server address:(NSData*)address socket:(CFSocketNativeHandle)socket {
   if ((self = [super init])) {
     _server = [server retain];
     _address = [address retain];
@@ -437,7 +437,7 @@ static dispatch_queue_t _formatterQueue = NULL;
   return self;
 }
 
-- (void) dealloc {
+- (void)dealloc {
   [self close];
   
   [_server release];
@@ -460,12 +460,12 @@ static dispatch_queue_t _formatterQueue = NULL;
 
 @implementation GCDWebServerConnection (Subclassing)
 
-- (void) open {
+- (void)open {
   LOG_DEBUG(@"Did open connection on socket %i", _socket);
   [self _readRequestHeaders];
 }
 
-- (GCDWebServerResponse*) processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block {
+- (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block {
   LOG_DEBUG(@"Connection on socket %i processing %@ request for \"%@\" (%i bytes body)", _socket, _request.method, _request.path, _request.contentLength);
   GCDWebServerResponse* response = nil;
   @try {
@@ -477,7 +477,7 @@ static dispatch_queue_t _formatterQueue = NULL;
   return response;
 }
 
-- (void) close {
+- (void)close {
   close(_socket);
   LOG_DEBUG(@"Did close connection on socket %i", _socket);
 }

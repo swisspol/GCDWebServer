@@ -44,14 +44,14 @@
 @property(nonatomic, readonly) NSDictionary* query;  // May be nil
 @property(nonatomic, readonly) NSString* contentType;  // Automatically parsed from headers (nil if request has no body)
 @property(nonatomic, readonly) NSUInteger contentLength;  // Automatically parsed from headers
-- (id) initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query;
-- (BOOL) hasBody;  // Convenience method
+- (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query;
+- (BOOL)hasBody;  // Convenience method
 @end
 
 @interface GCDWebServerRequest (Subclassing)
-- (BOOL) open;  // Implementation required
-- (NSInteger) write:(const void*)buffer maxLength:(NSUInteger)length;  // Implementation required
-- (BOOL) close;  // Implementation required
+- (BOOL)open;  // Implementation required
+- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length;  // Implementation required
+- (BOOL)close;  // Implementation required
 @end
 
 @interface GCDWebServerDataRequest : GCDWebServerRequest {
@@ -74,7 +74,7 @@
   NSDictionary* _arguments;
 }
 @property(nonatomic, readonly) NSDictionary* arguments;  // Only valid after open / write / close sequence
-+ (NSString*) mimeType;
++ (NSString*)mimeType;
 @end
 
 @interface GCDWebServerMultiPart : NSObject {
@@ -121,5 +121,5 @@
 }
 @property(nonatomic, readonly) NSDictionary* arguments;  // Only valid after open / write / close sequence
 @property(nonatomic, readonly) NSDictionary* files;  // Only valid after open / write / close sequence
-+ (NSString*) mimeType;
++ (NSString*)mimeType;
 @end

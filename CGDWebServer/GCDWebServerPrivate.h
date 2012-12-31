@@ -93,7 +93,7 @@ NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form);
 #endif
 
 @interface GCDWebServerConnection ()
-- (id) initWithServer:(GCDWebServer*)server address:(NSData*)address socket:(CFSocketNativeHandle)socket;
+- (id)initWithServer:(GCDWebServer*)server address:(NSData*)address socket:(CFSocketNativeHandle)socket;
 @end
 
 @interface GCDWebServer ()
@@ -107,5 +107,5 @@ NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form);
 }
 @property(nonatomic, readonly) GCDWebServerMatchBlock matchBlock;
 @property(nonatomic, readonly) GCDWebServerProcessBlock processBlock;
-- (id) initWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
+- (id)initWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
 @end
