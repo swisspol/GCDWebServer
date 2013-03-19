@@ -186,7 +186,6 @@ static void _SocketCallBack(CFSocketRef socket, CFSocketCallBackType type, CFDat
 
 - (BOOL)startWithRunloop:(NSRunLoop*)runloop port:(NSUInteger)port bonjourName:(NSString*)name {
   DCHECK(runloop);
-  DCHECK(port);
   DCHECK(_runLoop == nil);
   CFSocketContext context = {0, self, NULL, NULL, NULL};
   _socket = CFSocketCreate(kCFAllocatorDefault, PF_INET, SOCK_STREAM, IPPROTO_TCP, kCFSocketAcceptCallBack, _SocketCallBack, &context);
@@ -203,10 +202,21 @@ static void _SocketCallBack(CFSocketRef socket, CFSocketCallBackType type, CFDat
     if (CFSocketSetAddress(_socket, (CFDataRef)[NSData dataWithBytes:&addr4 length:sizeof(addr4)]) == kCFSocketSuccess) {
       CFRunLoopSourceRef source = CFSocketCreateRunLoopSource(kCFAllocatorDefault, _socket, 0);
       CFRunLoopAddSource([runloop getCFRunLoop], source, kCFRunLoopCommonModes);
+      if (port == 0) {
+        // determine the actual port we are listening on
+        CFDataRef addressData = CFSocketCopyAddress(_socket);
+        NSAssert(addressData, @"Failed to determine address. Aborting...");
+        struct sockaddr_in*	sockaddr = (struct sockaddr_in*)CFDataGetBytePtr(addressData);
+        _port = ntohs(sockaddr->sin_port);
+        CFRelease(addressData);
+      } else {
+        _port = port;
+      }
+      
       CFRelease(source);
       
       if (name) {
-        _service = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), CFSTR("_http._tcp"), (CFStringRef)name, port);
+        _service = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), CFSTR("_http._tcp"), (CFStringRef)name, _port);
         if (_service) {
           CFNetServiceClientContext context = {0, self, NULL, NULL, NULL};
           CFNetServiceSetClient(_service, _NetServiceClientCallBack, &context);
@@ -218,9 +228,8 @@ static void _SocketCallBack(CFSocketRef socket, CFSocketCallBackType type, CFDat
         }
       }
       
-      _port = port;
       _runLoop = [runloop retain];
-      LOG_VERBOSE(@"%@ started on port %i", [self class], (int)port);
+      LOG_VERBOSE(@"%@ started on port %i", [self class], (int)_port);
     } else {
       LOG_ERROR(@"Failed binding socket");
       CFRelease(_socket);
