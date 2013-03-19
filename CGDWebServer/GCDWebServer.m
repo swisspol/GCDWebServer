@@ -205,7 +205,6 @@ static void _SocketCallBack(CFSocketRef socket, CFSocketCallBackType type, CFDat
       if (port == 0) {
         // determine the actual port we are listening on
         CFDataRef addressData = CFSocketCopyAddress(_socket);
-        NSAssert(addressData, @"Failed to determine address. Aborting...");
         struct sockaddr_in* sockaddr = (struct sockaddr_in*)CFDataGetBytePtr(addressData);
         _port = ntohs(sockaddr->sin_port);
         CFRelease(addressData);
