@@ -105,6 +105,7 @@ static dispatch_queue_t _formatterQueue = NULL;
       });
       NSRange range = [data rangeOfData:_separatorData options:0 range:NSMakeRange(0, data.length)];
       if (range.location == NSNotFound) {
+        CFHTTPMessageAppendBytes(_requestMessage, [data bytes], [data length]);
         [self _readHeadersWithCompletionBlock:block];
       } else {
         NSUInteger length = range.location + range.length;
