@@ -95,17 +95,22 @@ static dispatch_queue_t _formatterQueue = NULL;
 
 - (void)_readHeadersWithCompletionBlock:(ReadHeadersCompletionBlock)block {
   DCHECK(_requestMessage);
-  NSMutableData* data = [NSMutableData dataWithCapacity:kHeadersReadBuffer];
   [self _readBufferWithLength:SIZE_T_MAX completionBlock:^(dispatch_data_t buffer) {
     
     if (buffer) {
+      NSMutableData* data = [NSMutableData dataWithCapacity:kHeadersReadBuffer];
       dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t offset, const void* buffer, size_t size) {
         [data appendBytes:buffer length:size];
         return true;
       });
       NSRange range = [data rangeOfData:_separatorData options:0 range:NSMakeRange(0, data.length)];
       if (range.location == NSNotFound) {
-        [self _readHeadersWithCompletionBlock:block];
+        if (CFHTTPMessageAppendBytes(_requestMessage, data.bytes, data.length)) {
+          [self _readHeadersWithCompletionBlock:block];
+        } else {
+          LOG_ERROR(@"Failed appending request headers data from socket %i", _socket);
+          block(nil);
+        }
       } else {
         NSUInteger length = range.location + range.length;
         if (CFHTTPMessageAppendBytes(_requestMessage, data.bytes, length)) {
