@@ -83,7 +83,7 @@ You start by creating an instance of the 'GCDWebServer' class. Note that you can
 
 Then you add one or more "handlers" to the server: each handler gets a chance to handle an incoming web request and provide a response. Handlers are called in a LIFO queue, so the latest added handler overrides any previously added ones.
 
-Finally you start the server on a given port. Note that even if built on GCD, GCDWebServer still requires a runloop to be around (by default the main thread runloop is used). This is because there is no CGD API at this point to handle listening sockets, so it must be done using CFSocket which requires a runloop. However, the runloop is only used to accept the connection: immediately afterwards, the connection handling is dispatched to GCD queues.
+Finally you start the server on a given port.
 
 Understanding GCDWebServer Architecture
 =======================================

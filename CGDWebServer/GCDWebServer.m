@@ -34,6 +34,8 @@
 
 #import "GCDWebServerPrivate.h"
 
+#define kMaxPendingConnections 16
+
 static BOOL _run;
 
 NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
@@ -134,7 +136,7 @@ static void _SignalHandler(int signal) {
 }
 
 - (void)dealloc {
-  if (_runLoop) {
+  if (_source) {
     [self stop];
   }
   
@@ -144,19 +146,19 @@ static void _SignalHandler(int signal) {
 }
 
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)handlerBlock {
-  DCHECK(_runLoop == nil);
+  DCHECK(_source == NULL);
   GCDWebServerHandler* handler = [[GCDWebServerHandler alloc] initWithMatchBlock:matchBlock processBlock:handlerBlock];
   [_handlers insertObject:handler atIndex:0];
   [handler release];
 }
 
 - (void)removeAllHandlers {
-  DCHECK(_runLoop == nil);
+  DCHECK(_source == NULL);
   [_handlers removeAllObjects];
 }
 
 - (BOOL)start {
-  return [self startWithRunloop:[NSRunLoop mainRunLoop] port:8080 bonjourName:@""];
+  return [self startWithPort:8080 bonjourName:@""];
 }
 
 static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* error, void* info) {
@@ -169,29 +171,13 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
   }
 }
 
-static void _SocketCallBack(CFSocketRef socket, CFSocketCallBackType type, CFDataRef address, const void* data, void* info) {
-  if (type == kCFSocketAcceptCallBack) {
-    CFSocketNativeHandle handle = *(CFSocketNativeHandle*)data;
-    int set = 1;
-    setsockopt(handle, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));  // Make sure this socket cannot generate SIG_PIPE
-    @autoreleasepool {
-      Class class = [[(GCDWebServer*)info class] connectionClass];
-      GCDWebServerConnection* connection = [[class alloc] initWithServer:(GCDWebServer*)info address:(NSData*)address socket:handle];
-      [connection release];  // Connection will automatically retain itself while opened
-    }
-  } else {
-    DNOT_REACHED();
-  }
-}
-
-- (BOOL)startWithRunloop:(NSRunLoop*)runloop port:(NSUInteger)port bonjourName:(NSString*)name {
-  DCHECK(runloop);
-  DCHECK(_runLoop == nil);
-  CFSocketContext context = {0, self, NULL, NULL, NULL};
-  _socket = CFSocketCreate(kCFAllocatorDefault, PF_INET, SOCK_STREAM, IPPROTO_TCP, kCFSocketAcceptCallBack, _SocketCallBack, &context);
-  if (_socket) {
+- (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name {
+  DCHECK(_source == NULL);
+  int listeningSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+  if (listeningSocket > 0) {
     int yes = 1;
-    setsockopt(CFSocketGetNative(_socket), SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+    setsockopt(listeningSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+    setsockopt(listeningSocket, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(yes));
     
     struct sockaddr_in addr4;
     bzero(&addr4, sizeof(addr4));
@@ -199,66 +185,104 @@ static void _SocketCallBack(CFSocketRef socket, CFSocketCallBackType type, CFDat
     addr4.sin_family = AF_INET;
     addr4.sin_port = htons(port);
     addr4.sin_addr.s_addr = htonl(INADDR_ANY);
-    if (CFSocketSetAddress(_socket, (CFDataRef)[NSData dataWithBytes:&addr4 length:sizeof(addr4)]) == kCFSocketSuccess) {
-      CFRunLoopSourceRef source = CFSocketCreateRunLoopSource(kCFAllocatorDefault, _socket, 0);
-      CFRunLoopAddSource([runloop getCFRunLoop], source, kCFRunLoopCommonModes);
-      if (port == 0) {  // Determine the actual port we are listening on
-        CFDataRef addressData = CFSocketCopyAddress(_socket);
-        struct sockaddr_in* sockaddr = (struct sockaddr_in*)CFDataGetBytePtr(addressData);
-        DCHECK(sockaddr);
-        _port = ntohs(sockaddr->sin_port);
-        CFRelease(addressData);
-      } else {
-        _port = port;
-      }
-      CFRelease(source);
-      
-      if (name) {
-        _service = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), CFSTR("_http._tcp"), (CFStringRef)name, _port);
-        if (_service) {
-          CFNetServiceClientContext context = {0, self, NULL, NULL, NULL};
-          CFNetServiceSetClient(_service, _NetServiceClientCallBack, &context);
-          CFNetServiceScheduleWithRunLoop(_service, [runloop getCFRunLoop], kCFRunLoopCommonModes);
-          CFStreamError error = {0};
-          CFNetServiceRegisterWithOptions(_service, 0, &error);
+    if (bind(listeningSocket, (void*)&addr4, sizeof(addr4)) == 0) {
+      if (listen(listeningSocket, kMaxPendingConnections) == 0) {
+        _source = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, listeningSocket, 0, kGCDWebServerGCDQueue);
+        dispatch_source_set_cancel_handler(_source, ^{
+          
+          @autoreleasepool {
+            int result = close(listeningSocket);
+            if (result != 0) {
+              LOG_ERROR(@"Failed closing socket (%i): %s", errno, strerror(errno));
+            } else {
+              LOG_DEBUG(@"Closed listening socket");
+            }
+          }
+          
+        });
+        dispatch_source_set_event_handler(_source, ^{
+          
+          @autoreleasepool {
+            struct sockaddr addr;
+            socklen_t addrlen = sizeof(addr);
+            int socket = accept(listeningSocket, &addr, &addrlen);
+            if (socket > 0) {
+              int yes = 1;
+              setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(yes));  // Make sure this socket cannot generate SIG_PIPE
+              
+              NSData* data = [NSData dataWithBytes:&addr length:addrlen];
+              Class connectionClass = [[self class] connectionClass];
+              GCDWebServerConnection* connection = [[connectionClass alloc] initWithServer:self address:data socket:socket];
+              [connection release];  // Connection will automatically retain itself while opened
+            } else {
+              LOG_ERROR(@"Failed accepting socket (%i): %s", errno, strerror(errno));
+            }
+          }
+          
+        });
+        
+        if (port == 0) {  // Determine the actual port we are listening on
+          struct sockaddr addr;
+          socklen_t addrlen = sizeof(addr);
+          if (getsockname(listeningSocket, &addr, &addrlen) == 0) {
+            struct sockaddr_in* sockaddr = (struct sockaddr_in*)&addr;
+            _port = ntohs(sockaddr->sin_port);
+          } else {
+            LOG_ERROR(@"Failed retrieving socket address (%i): %s", errno, strerror(errno));
+          }
         } else {
-          LOG_ERROR(@"Failed creating CFNetService");
+          _port = port;
         }
+        
+        if (name) {
+          _service = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), CFSTR("_http._tcp"), (CFStringRef)name, _port);
+          if (_service) {
+            CFNetServiceClientContext context = {0, self, NULL, NULL, NULL};
+            CFNetServiceSetClient(_service, _NetServiceClientCallBack, &context);
+            CFNetServiceScheduleWithRunLoop(_service, CFRunLoopGetMain(), kCFRunLoopCommonModes);
+            CFStreamError error = {0};
+            CFNetServiceRegisterWithOptions(_service, 0, &error);
+          } else {
+            LOG_ERROR(@"Failed creating CFNetService");
+          }
+        }
+        
+        dispatch_resume(_source);
+        LOG_VERBOSE(@"%@ started on port %i", [self class], (int)_port);
+      } else {
+        LOG_ERROR(@"Failed listening on socket (%i): %s", errno, strerror(errno));
+        close(listeningSocket);
       }
-      
-      _runLoop = [runloop retain];
-      LOG_VERBOSE(@"%@ started on port %i", [self class], (int)_port);
     } else {
-      LOG_ERROR(@"Failed binding socket");
-      CFRelease(_socket);
-      _socket = NULL;
+      LOG_ERROR(@"Failed binding socket (%i): %s", errno, strerror(errno));
+      close(listeningSocket);
     }
   } else {
-    LOG_ERROR(@"Failed creating CFSocket");
+    LOG_ERROR(@"Failed creating socket (%i): %s", errno, strerror(errno));
   }
-  return (_runLoop != nil ? YES : NO);
+  return (_source ? YES : NO);
 }
 
 - (BOOL)isRunning {
-  return (_runLoop != nil ? YES : NO);
+  return (_source ? YES : NO);
 }
 
 - (void)stop {
-  DCHECK(_runLoop != nil);
-  if (_socket) {
+  DCHECK(_source != NULL);
+  if (_source) {
     if (_service) {
-      CFNetServiceUnscheduleFromRunLoop(_service, [_runLoop getCFRunLoop], kCFRunLoopCommonModes);
+      CFNetServiceUnscheduleFromRunLoop(_service, CFRunLoopGetMain(), kCFRunLoopCommonModes);
       CFNetServiceSetClient(_service, NULL, NULL);
       CFRelease(_service);
+      _service = NULL;
     }
     
-    CFSocketInvalidate(_socket);
-    CFRelease(_socket);
-    _socket = NULL;
+    dispatch_source_cancel(_source);  // This will close the socket
+    dispatch_release(_source);
+    _source = NULL;
+    
     LOG_VERBOSE(@"%@ stopped", [self class]);
   }
-  [_runLoop release];
-  _runLoop = nil;
   _port = 0;
 }
 
@@ -283,9 +307,9 @@ static void _SocketCallBack(CFSocketRef socket, CFSocketCallBackType type, CFDat
   _run = YES;
   void* handler = signal(SIGINT, _SignalHandler);
   if (handler != SIG_ERR) {
-    if ([self startWithRunloop:[NSRunLoop currentRunLoop] port:port bonjourName:@""]) {
+    if ([self startWithPort:port bonjourName:@""]) {
       while (_run) {
-        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
+        CFRunLoopRunInMode(kCFRunLoopDefaultMode, 1.0, true);
       }
       [self stop];
       success = YES;

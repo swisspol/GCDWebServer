@@ -27,7 +27,6 @@
 
 #import "GCDWebServerPrivate.h"
 
-#define kReadWriteQueue dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
 #define kHeadersReadBuffer 1024
 #define kBodyWriteBufferSize (32 * 1024)
 
@@ -49,7 +48,7 @@ static dispatch_queue_t _formatterQueue = NULL;
 @implementation GCDWebServerConnection (Read)
 
 - (void)_readBufferWithLength:(NSUInteger)length completionBlock:(ReadBufferCompletionBlock)block {
-  dispatch_read(_socket, length, kReadWriteQueue, ^(dispatch_data_t buffer, int error) {
+  dispatch_read(_socket, length, kGCDWebServerGCDQueue, ^(dispatch_data_t buffer, int error) {
     
     @autoreleasepool {
       if (error == 0) {
@@ -173,7 +172,7 @@ static dispatch_queue_t _formatterQueue = NULL;
 
 - (void)_writeBuffer:(dispatch_data_t)buffer withCompletionBlock:(WriteBufferCompletionBlock)block {
   size_t size = dispatch_data_get_size(buffer);
-  dispatch_write(_socket, buffer, kReadWriteQueue, ^(dispatch_data_t data, int error) {
+  dispatch_write(_socket, buffer, kGCDWebServerGCDQueue, ^(dispatch_data_t data, int error) {
     
     @autoreleasepool {
       if (error == 0) {
@@ -483,7 +482,10 @@ static dispatch_queue_t _formatterQueue = NULL;
 }
 
 - (void)close {
-  close(_socket);
+  int result = close(_socket);
+  if (result != 0) {
+    LOG_ERROR(@"Failed closing socket %i for connection (%i): %s", _socket, errno, strerror(errno));
+  }
   LOG_DEBUG(@"Did close connection on socket %i", _socket);
 }
 

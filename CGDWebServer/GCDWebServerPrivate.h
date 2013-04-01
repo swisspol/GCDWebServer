@@ -79,6 +79,7 @@ static inline void __LogMessage(long level, NSString* format, ...) {
 #endif
 
 #define kGCDWebServerDefaultMimeType @"application/octet-stream"
+#define kGCDWebServerGCDQueue dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
 
 #ifdef __cplusplus
 extern "C" {

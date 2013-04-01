@@ -36,8 +36,7 @@ typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* r
   NSMutableArray* _handlers;
   
   NSUInteger _port;
-  NSRunLoop* _runLoop;
-  CFSocketRef _socket;
+  dispatch_source_t _source;
   CFNetServiceRef _service;
 }
 @property(nonatomic, readonly, getter=isRunning) BOOL running;
@@ -45,8 +44,8 @@ typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* r
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
 - (void)removeAllHandlers;
 
-- (BOOL)start;  // Default is main runloop, 8080 port and computer name
-- (BOOL)startWithRunloop:(NSRunLoop*)runloop port:(NSUInteger)port bonjourName:(NSString*)name;  // Pass nil name to disable Bonjour or empty string to use computer name
+- (BOOL)start;  // Default is 8080 port and computer name
+- (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name;  // Pass nil name to disable Bonjour or empty string to use computer name
 - (void)stop;
 @end
 
