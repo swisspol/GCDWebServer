@@ -202,16 +202,15 @@ static void _SocketCallBack(CFSocketRef socket, CFSocketCallBackType type, CFDat
     if (CFSocketSetAddress(_socket, (CFDataRef)[NSData dataWithBytes:&addr4 length:sizeof(addr4)]) == kCFSocketSuccess) {
       CFRunLoopSourceRef source = CFSocketCreateRunLoopSource(kCFAllocatorDefault, _socket, 0);
       CFRunLoopAddSource([runloop getCFRunLoop], source, kCFRunLoopCommonModes);
-      if (port == 0) {
-        // determine the actual port we are listening on
+      if (port == 0) {  // Determine the actual port we are listening on
         CFDataRef addressData = CFSocketCopyAddress(_socket);
         struct sockaddr_in* sockaddr = (struct sockaddr_in*)CFDataGetBytePtr(addressData);
+        DCHECK(sockaddr);
         _port = ntohs(sockaddr->sin_port);
         CFRelease(addressData);
       } else {
         _port = port;
       }
-      
       CFRelease(source);
       
       if (name) {
