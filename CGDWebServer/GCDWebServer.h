@@ -41,11 +41,14 @@ typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* r
 }
 @property(nonatomic, readonly, getter=isRunning) BOOL running;
 @property(nonatomic, readonly) NSUInteger port;
+@property(nonatomic, readonly) int maxPendingConnections;
+
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
 - (void)removeAllHandlers;
 
 - (BOOL)start;  // Default is 8080 port and computer name
 - (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name;  // Pass nil name to disable Bonjour or empty string to use computer name
+- (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name maxPendingConnections:(int)maxPendingConnections;
 - (void)stop;
 @end
 
