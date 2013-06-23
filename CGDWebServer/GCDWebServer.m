@@ -174,7 +174,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
     return [self startWithPort:port bonjourName:name maxPendingConnections:_maxPendingConnections]; // maxPendingConnections defaults to 16
 }
 
-- (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name maxPendingConnections:(int)maxPendingConnections {
+- (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name maxPendingConnections:(NSUInteger)maxPendingConnections {
     DCHECK(_source == NULL);
     if (maxPendingConnections > SOMAXCONN) {
         // We could truncate maxPendingConnections to SOMAXCONN here but let's not do this. listen(int, int) does that internally already.
