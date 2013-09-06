@@ -1,6 +1,8 @@
 Overview
 ========
-
+This is a clone of the GCDWebServer project to add more emphasis on using it for debugging other apps as an embedded REPL, especially iOS apps. It was developed to support the book *Getting Started with LevelDB.*
+Original Overview
+------------------------
 GCDWebServer is a lightweight GCD based HTTP 1.1 server designed to be embedded in Mac & iOS apps. It was written from scratch with the following goals in mind:
 * Entirely built with an event-driven design using [Grand Central Dispatch](http://en.wikipedia.org/wiki/Grand_Central_Dispatch) for maximum performance and concurrency
 * Well designed API for easy integration and customization
