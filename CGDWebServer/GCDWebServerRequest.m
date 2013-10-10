@@ -1,31 +1,9 @@
 /*
  Copyright (c) 2012-2013, Pierre-Olivier Latour
  All rights reserved.
- 
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions are met:
- * Redistributions of source code must retain the above copyright
- notice, this list of conditions and the following disclaimer.
- * Redistributions in binary form must reproduce the above copyright
- notice, this list of conditions and the following disclaimer in the
- documentation and/or other materials provided with the distribution.
- * Neither the name of the <organization> nor the
- names of its contributors may be used to endorse or promote products
- derived from this software without specific prior written permission.
- 
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
- DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import "GCDWebServerPrivate.h"
+#import "GCDWebServer.h"
 
 #define kMultiPartBufferSize (256 * 1024)
 
@@ -54,7 +32,6 @@ static NSString* _ExtractHeaderParameter(NSString* header, NSString* attribute) 
         [scanner scanUpToCharactersFromSet:[NSCharacterSet whitespaceCharacterSet] intoString:&value];
       }
     }
-    [scanner release];
   }
   return value;
 }
@@ -75,73 +52,37 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 - (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
   if ((self = [super init])) {
     _method = [method copy];
-    _url = [url retain];
-    _headers = [headers retain];
+    _url = url;
+    _headers = headers;
     _path = [path copy];
-    _query = [query retain];
+    _query = query;
     
-    _type = [[_headers objectForKey:@"Content-Type"] retain];
+    _type = [_headers objectForKey:@"Content-Type"];
     NSInteger length = [[_headers objectForKey:@"Content-Length"] integerValue];
     if (length < 0) {
       DNOT_REACHED();
-      [self release];
       return nil;
     }
     _length = length;
-    
-    if ((_length > 0) && (_type == nil)) {
-      _type = [kGCDWebServerDefaultMimeType copy];
-    }
+    if ((_length > 0) && (_type == nil))  _type = [kGCDWebServerDefaultMimeType copy];
   }
   return self;
 }
+- (BOOL)hasBody {  return _type ? YES : NO;	}
 
-- (void)dealloc {
-  [_method release];
-  [_url release];
-  [_headers release];
-  [_path release];
-  [_query release];
-  [_type release];
-  
-  [super dealloc];
-}
+#pragma mark - Subclassing
 
-- (BOOL)hasBody {
-  return _type ? YES : NO;
-}
-
-@end
-
-@implementation GCDWebServerRequest (Subclassing)
-
-- (BOOL)open {
-  [self doesNotRecognizeSelector:_cmd];
-  return NO;
-}
+- (BOOL)open { return [self doesNotRecognizeSelector:_cmd], NO;  }
+- (BOOL)close { return [self doesNotRecognizeSelector:_cmd], NO; }
 
 - (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length {
-  [self doesNotRecognizeSelector:_cmd];
-  return -1;
+	return [self doesNotRecognizeSelector:_cmd], -1;
 }
-
-- (BOOL)close {
-  [self doesNotRecognizeSelector:_cmd];
-  return NO;
-}
-
 @end
 
 @implementation GCDWebServerDataRequest
 
 @synthesize data=_data;
-
-- (void)dealloc {
-  DCHECK(_data != nil);
-  [_data release];
-  
-  [super dealloc];
-}
 
 - (BOOL)open {
   DCHECK(_data == nil);
@@ -168,17 +109,13 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 
 - (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
   if ((self = [super initWithMethod:method url:url headers:headers path:path query:query])) {
-    _filePath = [[NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]] retain];
+    _filePath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]];
   }
   return self;
 }
 
-- (void)dealloc {
-  DCHECK(_file < 0);
+- (void)dealloc {	  DCHECK(_file < 0);
   unlink([_filePath fileSystemRepresentation]);
-  [_filePath release];
-  
-  [super dealloc];
 }
 
 - (BOOL)open {
@@ -208,13 +145,6 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 + (NSString*)mimeType {
   return @"application/x-www-form-urlencoded";
 }
-
-- (void)dealloc {
-  [_arguments release];
-  
-  [super dealloc];
-}
-
 - (BOOL)close {
   if (![super close]) {
     return NO;
@@ -222,9 +152,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
   
   NSString* charset = _ExtractHeaderParameter(self.contentType, @"charset");
   NSString* string = [[NSString alloc] initWithData:self.data encoding:_StringEncodingFromCharset(charset)];
-  _arguments = [GCDWebServerParseURLEncodedForm(string) retain];
-  [string release];
-  
+  _arguments = GCDWebServerParseURLEncodedForm(string);
   return (_arguments ? YES : NO);
 }
 
@@ -237,24 +165,12 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 - (id)initWithContentType:(NSString*)contentType {
   if ((self = [super init])) {
     _contentType = [contentType copy];
-    NSArray* components = [_contentType componentsSeparatedByString:@";"];
-    if (components.count) {
-      _mimeType = [[[components objectAtIndex:0] lowercaseString] retain];
-    }
-    if (_mimeType == nil) {
-      _mimeType = @"text/plain";
-    }
+    NSArray* components = 	  [_contentType componentsSeparatedByString:@";"];
+    if (components.count)  	_mimeType = [components[0] lowercaseString];
+    if (_mimeType == nil)	 	_mimeType = @"text/plain";
   }
   return self;
 }
-
-- (void)dealloc {
-  [_contentType release];
-  [_mimeType release];
-  
-  [super dealloc];
-}
-
 @end
 
 @implementation GCDWebServerMultiPartArgument
@@ -263,27 +179,13 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 
 - (id)initWithContentType:(NSString*)contentType data:(NSData*)data {
   if ((self = [super initWithContentType:contentType])) {
-    _data = [data retain];
-    
-    if ([self.mimeType hasPrefix:@"text/"]) {
-      NSString* charset = _ExtractHeaderParameter(self.contentType, @"charset");
-      _string = [[NSString alloc] initWithData:_data encoding:_StringEncodingFromCharset(charset)];
-    }
+    _data = data;
+    if ([self.mimeType hasPrefix:@"text/"])
+      _string = [[NSString alloc] initWithData:_data encoding:_StringEncodingFromCharset(_ExtractHeaderParameter(self.contentType, @"charset"))];
   }
   return self;
 }
-
-- (void)dealloc {
-  [_data release];
-  [_string release];
-  
-  [super dealloc];
-}
-
-- (NSString*)description {
-  return [NSString stringWithFormat:@"<%@ | '%@' | %i bytes>", [self class], self.mimeType, (int)_data.length];
-}
-
+- (NSString*)description { return [NSString stringWithFormat:@"<%@ | '%@' | %i bytes>", [self class], self.mimeType, (int)_data.length];	}
 @end
 
 @implementation GCDWebServerMultiPartFile
@@ -300,11 +202,6 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 
 - (void)dealloc {
   unlink([_temporaryPath fileSystemRepresentation]);
-  
-  [_fileName release];
-  [_temporaryPath release];
-  
-  [super dealloc];
 }
 
 - (NSString*)description {
@@ -340,11 +237,10 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
   if ((self = [super initWithMethod:method url:url headers:headers path:path query:query])) {
     NSString* boundary = _ExtractHeaderParameter(self.contentType, @"boundary");
     if (boundary) {
-      _boundary = [[[NSString stringWithFormat:@"--%@", boundary] dataUsingEncoding:NSASCIIStringEncoding] retain];
+      _boundary = [[NSString stringWithFormat:@"--%@", boundary] dataUsingEncoding:NSASCIIStringEncoding];
     }
     if (_boundary == nil) {
       DNOT_REACHED();
-      [self release];
       return nil;
     }
     
@@ -368,14 +264,9 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
   if (_parserState == kParserState_Headers) {
     NSRange range = [_parserData rangeOfData:_newlinesData options:0 range:NSMakeRange(0, _parserData.length)];
     if (range.location != NSNotFound) {
-      
-      [_controlName release];
       _controlName = nil;
-      [_fileName release];
       _fileName = nil;
-      [_contentType release];
       _contentType = nil;
-      [_tmpPath release];
       _tmpPath = nil;
       CFHTTPMessageRef message = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, true);
       const char* temp = "GET / HTTP/1.0\r\n";
@@ -384,33 +275,28 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
       if (CFHTTPMessageIsHeaderComplete(message)) {
         NSString* controlName = nil;
         NSString* fileName = nil;
-        NSDictionary* headers = [(id)CFHTTPMessageCopyAllHeaderFields(message) autorelease];
+        NSDictionary* headers = (__bridge NSDictionary*)CFHTTPMessageCopyAllHeaderFields(message);
         NSString* contentDisposition = [headers objectForKey:@"Content-Disposition"];
         if ([[contentDisposition lowercaseString] hasPrefix:@"form-data;"]) {
           controlName = _ExtractHeaderParameter(contentDisposition, @"name");
           fileName = _ExtractHeaderParameter(contentDisposition, @"filename");
         }
         _controlName = [controlName copy];
-        _fileName = [fileName copy];
-        _contentType = [[headers objectForKey:@"Content-Type"] retain];
+        _fileName 	= [fileName copy];
+        _contentType = [headers objectForKey:@"Content-Type"];
       }
       CFRelease(message);
       if (_controlName) {
         if (_fileName) {
           NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]];
           _tmpFile = open([path fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-          if (_tmpFile > 0) {
-            _tmpPath = [path copy];
-          } else {
+          if (_tmpFile > 0) _tmpPath = [path copy];
+			 else {
             DNOT_REACHED();
             success = NO;
           }
         }
-      } else {
-        DNOT_REACHED();
-        success = NO;
-      }
-      
+      } else {  DNOT_REACHED(); success = NO;   }
       [_parserData replaceBytesInRange:NSMakeRange(0, range.location + range.length) withBytes:NULL length:0];
       _parserState = kParserState_Content;
     }
@@ -434,7 +320,6 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
                 _tmpFile = 0;
                 GCDWebServerMultiPartFile* file = [[GCDWebServerMultiPartFile alloc] initWithContentType:_contentType fileName:_fileName temporaryPath:_tmpPath];
                 [_files setObject:file forKey:_controlName];
-                [file release];
               } else {
                 DNOT_REACHED();
                 success = NO;
@@ -443,14 +328,11 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
               DNOT_REACHED();
               success = NO;
             }
-            [_tmpPath release];
             _tmpPath = nil;
           } else {
             NSData* data = [[NSData alloc] initWithBytesNoCopy:(void*)dataBytes length:dataLength freeWhenDone:NO];
             GCDWebServerMultiPartArgument* argument = [[GCDWebServerMultiPartArgument alloc] initWithContentType:_contentType data:data];
             [_arguments setObject:argument forKey:_controlName];
-            [argument release];
-            [data release];
           }
         }
         
@@ -487,26 +369,16 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 
 - (BOOL)close {
   DCHECK(_parserData != nil);
-  [_parserData release];
   _parserData = nil;
-  [_controlName release];
-  [_fileName release];
-  [_contentType release];
   if (_tmpFile > 0) {
     close(_tmpFile);
     unlink([_tmpPath fileSystemRepresentation]);
   }
-  [_tmpPath release];
   return (_parserState == kParserState_End ? YES : NO);
 }
 
 - (void)dealloc {
   DCHECK(_parserData == nil);
-  [_arguments release];
-  [_files release];
-  [_boundary release];
-  
-  [super dealloc];
 }
 
 @end
