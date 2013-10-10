@@ -4,9 +4,14 @@
 #import <MobileCoreServices/MobileCoreServices.h>
 #endif
 #import <netinet/in.h>
-#import "GCDWebServerPrivate.h"
+#import "GCDWebServer.h"
 
 #define kMaxPendingConnections 16
+
+@interface GCDWebServerConnection ()
+- (id)initWithServer:(GCDWebServer*)server address:(NSData*)address socket:(CFSocketNativeHandle)socket;
+@end
+
 
 static BOOL _run;
 
@@ -15,17 +20,17 @@ NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
 	static NSDictionary* _overrides = nil; _overrides = _overrides ?: @{@"css":@"text/css"};
 
 	return  extension.length ? _overrides[extension.lowercaseString] :
-	[(id)UTTypeCopyPreferredTagWithClass(
+	(id)CFBridgingRelease(UTTypeCopyPreferredTagWithClass(
 													 UTTypeCreatePreferredIdentifierForTag(	kUTTagClassFilenameExtension,
-																										(CFStringRef)extension, NULL),
-													 kUTTagClassMIMEType) autorelease];
+																										(__bridge CFStringRef)extension, NULL),
+													 kUTTagClassMIMEType));
 }
 
 NSString* GCDWebServerUnescapeURLString(NSString* string) {
 
-	return [(id)CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault,
+	return (id)CFBridgingRelease(CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault,
 																							  (CFStringRef)string, CFSTR(""),
-																							  kCFStringEncodingUTF8) autorelease];
+																							  kCFStringEncodingUTF8));
 }
 
 NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
@@ -47,7 +52,6 @@ NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
 		if ([scanner isAtEnd])  break;
 		[scanner setScanLocation:([scanner scanLocation] + 1)];
 	}
-	[scanner release];
 	return parameters;
 }
 
@@ -59,16 +63,15 @@ static void _SignalHandler(int signal) {  _run = NO;  printf("\n"); }
 
 - (id)initWithMatchBlock:(GCDWebServerMatchBlock)matchBlock
 				processBlock:(GCDWebServerProcessBlock)processBlock {	if (self != super.init) return nil;
-	_matchBlock = Block_copy(matchBlock);
-	_processBlock = Block_copy(processBlock); 													return self; }
+_matchBlock = [matchBlock copy];
+	_processBlock = [processBlock copy]; 													return self; }
 
-- (void)dealloc {	Block_release(_matchBlock);  Block_release(_processBlock);  [super dealloc]; }
 
 @end
 
 @implementation GCDWebServer
 
-@synthesize handlers=_handlers, port=_port;
+
 
 + (void)initialize {
 	[GCDWebServerConnection class];  // Initialize class immediately to make sure it happens on the main thread
@@ -76,7 +79,7 @@ static void _SignalHandler(int signal) {  _run = NO;  printf("\n"); }
 
 - (id)init { if (self != super.init) return nil; _handlers = NSMutableArray.new; return self; }
 
-- (void)dealloc {  if (_source) [self stop]; [_handlers release];  [super dealloc]; }
+- (void)dealloc {  if (_source) [self stop];    }
 
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock
 						  processBlock:(GCDWebServerProcessBlock)handlerBlock {  DCHECK(_source == NULL);
@@ -123,9 +126,10 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 						if (socket > 0) {	int yes = 1;
 							setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(yes));  // Make sure this socket cannot generate SIG_PIPE
 							NSData* data = [NSData dataWithBytes:&addr length:addrlen];
-							Class connectionClass = [[self class] connectionClass];
-							GCDWebServerConnection* connection = [connectionClass.alloc initWithServer:self address:data socket:socket];
-							[connection release];  // Connection will automatically retain itself while opened
+							Class connectionClass = [self.class connectionClass];
+							//	GCDWebServerConnection* connection =
+							[[connectionClass.alloc initWithServer:self address:data socket:socket] self];
+							// Connection will automatically retain itself while opened
 						} else LOG_ERROR(@"Failed accepting socket (%i): %s", errno, strerror(errno));
 					}
 				});
@@ -139,9 +143,9 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 					} else LOG_ERROR(@"Failed retrieving socket address (%i): %s", errno, strerror(errno));
 				} else _port = port;
 				if (name) {
-					_service = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), CFSTR("_http._tcp"), (CFStringRef)name, _port);
+					_service = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), CFSTR("_http._tcp"), (__bridge CFStringRef)name, _port);
 					if (_service) {
-						CFNetServiceClientContext context = {0, self, NULL, NULL, NULL};
+						CFNetServiceClientContext context = {0, (__bridge void *)(self), NULL, NULL, NULL};
 						CFNetServiceSetClient(_service, _NetServiceClientCallBack, &context);
 						CFNetServiceScheduleWithRunLoop(_service, CFRunLoopGetMain(), kCFRunLoopCommonModes);
 						CFStreamError error = {0};
@@ -210,11 +214,11 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 																		  NSDictionary * requestHeaders,
 																		      NSString * urlPath,
 																		  NSDictionary * urlQuery) {
-	return [[class.alloc initWithMethod:requestMethod
+	return [class.alloc initWithMethod:requestMethod
 											  url:requestURL
 										 headers:requestHeaders
 											 path:urlPath
-											query:urlQuery] autorelease];	} processBlock:block];
+											query:urlQuery];	} processBlock:block];
 }
 
 - (GCDWebServerResponse*)_responseWithContentsOfFile:(NSString*)path {
@@ -249,12 +253,13 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 
 - (void)addHandlerForBasePath:(NSString*)basePath localPath:(NSString*)localPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)cacheAge {
 	if ([basePath hasPrefix:@"/"] && [basePath hasSuffix:@"/"]) {
+		__weak GCDWebServer *bSelf = self;
 		[self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
 
 			return ![requestMethod isEqualToString:@"GET"] || ![urlPath hasPrefix:basePath] ? nil :
-					  [[GCDWebServerRequest.alloc initWithMethod:requestMethod url:requestURL
+					  [GCDWebServerRequest.alloc initWithMethod:requestMethod url:requestURL
 					  												 headers:requestHeaders path:urlPath
-																		query:urlQuery] autorelease];
+																		query:urlQuery];
 
 		} processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
 
@@ -265,10 +270,11 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 				if (isDirectory) {
 					if (indexFilename) {
 						NSString* indexPath = [filePath stringByAppendingPathComponent:indexFilename];
-						if ([NSFileManager.defaultManager fileExistsAtPath:indexPath isDirectory:&isDirectory] && !isDirectory) return [self _responseWithContentsOfFile:indexPath];
+						if ([NSFileManager.defaultManager fileExistsAtPath:indexPath isDirectory:&isDirectory] && !isDirectory)
+							return [bSelf _responseWithContentsOfFile:indexPath];
 					}
-						 		response = [self _responseWithContentsOfDirectory:filePath];
-				} else 		response = [self _responseWithContentsOfFile:filePath];
+						 		response = [bSelf _responseWithContentsOfDirectory:filePath];
+				} else 		response = [bSelf _responseWithContentsOfFile:filePath];
 			}
 			if (response) 	response.cacheControlMaxAge = cacheAge;
 			else				response = [GCDWebServerResponse responseWithStatusCode:404];
@@ -289,7 +295,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 
 			return ![requestMethod isEqualToString:method] ||
 					  [urlPath caseInsensitiveCompare:path] != NSOrderedSame ? nil
-					: [[class.alloc initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery] autorelease];
+					: [class.alloc initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery];
 
 		} processBlock:block];
 	} else DNOT_REACHED();
@@ -310,8 +316,8 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 			return ![requestMethod isEqualToString:method] ||
 					 ![expression firstMatchInString:urlPath options:0 range:NSMakeRange(0, urlPath.length)]
 				?   nil
-				:    [[class.alloc initWithMethod:requestMethod url:requestURL
-												  headers:requestHeaders path:urlPath query:urlQuery] autorelease];
+				:    [class.alloc initWithMethod:requestMethod url:requestURL
+												  headers:requestHeaders path:urlPath query:urlQuery];
 
 		} processBlock:block];
 	} else DNOT_REACHED();

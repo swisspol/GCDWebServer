@@ -1,12 +1,13 @@
 
 #import <sys/stat.h>
-#import "GCDWebServerPrivate.h"
+#import "GCDWebServerResponse.h"
+#import "GCDWebServer.h"
 
 @implementation GCDWebServerResponse		@synthesize 	additionalHeaders= _headers, statusCode=_status,
 																			cacheControlMaxAge=_maxAge,  contentLength=_length,
 																												  contentType=_type;
 
-+(GCDWebServerResponse*) response 				{ return [[self.class.alloc init] autorelease]; }
++(GCDWebServerResponse*) response 				{ return [self.class.alloc init]; }
 - (id)init 												{ return [self initWithContentType:nil contentLength:0]; }
 - (id)initWithContentType:(NSString*)type
 				contentLength:(NSUInteger)length { if (self != super.init) return nil;
@@ -14,7 +15,6 @@
 	_type = [type copy];	_length = length; _status = 200; _maxAge = 0; _headers = NSMutableDictionary.new;
 	_type = _length && !_type ? [kGCDWebServerDefaultMimeType copy] : _type;			return self;
 }
-- (void) dealloc 								{ [_type release]; [_headers release]; [super dealloc]; }
 - (void) setValue:	  (NSString*)val
 	forAdditionalHeader:(NSString*)hdr 	{ [_headers setValue:val forKey:hdr]; }
 - (BOOL) hasBody 								{  return _type ? YES : NO; }
@@ -27,11 +27,9 @@
 
 #pragma mark - Extensions
 
-+ (GCDWebServerResponse*)responseWithStatusCode:(NSInteger)statusCode {
-  return [[self.alloc initWithStatusCode:statusCode] autorelease];
-}
++ (GCDWebServerResponse*)responseWithStatusCode:(NSInteger)statusCode { return [self.alloc initWithStatusCode:statusCode];  }
 + (GCDWebServerResponse*)responseWithRedirect:(NSURL*)location permanent:(BOOL)permanent {
-  return [[self.alloc initWithRedirect:location permanent:permanent] autorelease];
+  return [self.alloc initWithRedirect:location permanent:permanent];
 }
 - (id)initWithStatusCode:(NSInteger)statusCode {
   if ((self = [self initWithContentType:nil contentLength:0])) self.statusCode = statusCode; return self;
@@ -47,15 +45,12 @@
 
 @implementation GCDWebServerDataResponse
 
-+ (GCDWebServerDataResponse*)responseWithData:(NSData*)data contentType:(NSString*)type {
-  return [[[[self class] alloc] initWithData:data contentType:type] autorelease];
-}
++ (GCDWebServerDataResponse*)responseWithData:(NSData*)data contentType:(NSString*)type {  return [self.class.alloc initWithData:data contentType:type]; }
 - (id)initWithData:(NSData*)data contentType:(NSString*)type {
- return !data ? DNOT_REACHED(), [self release], nil :
-			(self = [super initWithContentType:type contentLength:data.length]) ?
-			_data = [data retain], _offset = -1, self : self;
+
+	if (!data || !(self = [super initWithContentType:type contentLength:data.length])) return DNOT_REACHED(), nil;
+	_data = data, _offset = -1;  return self;
 }
-- (void) dealloc 	{ DCHECK(_offset < 0);  [_data release];   [super dealloc]; }
 - (BOOL) open 		{ DCHECK(_offset < 0);	 _offset = 0;		  return YES; 		}
 - (NSInteger)read:(void*)buffer maxLength:(NSUInteger)length {  DCHECK(_offset >= 0);
   NSInteger size = 0;
@@ -70,23 +65,20 @@
 
 @implementation GCDWebServerDataResponse (Extensions)
 
-+ (GCDWebServerDataResponse*)responseWithText:(NSString*)text {
-  return [[self.alloc initWithText:text] autorelease];
-}
-+ (GCDWebServerDataResponse*)responseWithHTML:(NSString*)html {
-  return [[self.alloc initWithHTML:html] autorelease];
-}
++ (GCDWebServerDataResponse*)responseWithText:(NSString*)text { return [self.alloc initWithText:text];  	}
++ (GCDWebServerDataResponse*)responseWithHTML:(NSString*)html { return [self.alloc initWithHTML:html];		}
 + (GCDWebServerDataResponse*)responseWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables {
-  return [[self.alloc initWithHTMLTemplate:path variables:variables] autorelease];
+  return [self.alloc initWithHTMLTemplate:path variables:variables];
 }
 - (id)initWithText:(NSString*)text {  NSData* data;
-  return !(data = [text dataUsingEncoding:NSUTF8StringEncoding]) ? DNOT_REACHED(), [self release], nil
-  		:	[self initWithData:data contentType:@"text/plain; charset=utf-8"];
+
+	if (!(data = [text dataUsingEncoding:NSUTF8StringEncoding])) { DNOT_REACHED(); return nil; }
+	return [self initWithData:data contentType:@"text/plain; charset=utf-8"];
 }
 - (id)initWithHTML:(NSString*)html { NSData* data;
-  return !(data = [html dataUsingEncoding:NSUTF8StringEncoding])
-  						?  DNOT_REACHED(), [self release], nil
-						: [self initWithData:data contentType:@"text/html; charset=utf-8"];
+
+	if (!(data = [html dataUsingEncoding:NSUTF8StringEncoding]))  { DNOT_REACHED(); return nil; }
+	return  [self initWithData:data contentType:@"text/html; charset=utf-8"];
 }
 - (id)initWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables {
   NSMutableString* html = [NSMutableString.alloc initWithContentsOfFile:path
@@ -95,7 +87,7 @@
     [html replaceOccurrencesOfString:[NSString stringWithFormat:@"%%%@%%", key] withString:value
 																		  options:0 range:NSMakeRange(0, html.length)];
   }];
-  id response = [self initWithHTML:html]; [html release];
+  id response = [self initWithHTML:html];
   return response;
 }
 @end
@@ -103,16 +95,16 @@
 @implementation GCDWebServerFileResponse
 
 + (GCDWebServerFileResponse*)responseWithFile:(NSString*)path {
-  return [[self.class.alloc initWithFile:path] autorelease];
+  return [self.class.alloc initWithFile:path];
 }
 + (GCDWebServerFileResponse*)responseWithFile:(NSString*)path isAttachment:(BOOL)attachment {
-  return [[self.class.alloc initWithFile:path isAttachment:attachment] autorelease];
+  return [self.class.alloc initWithFile:path isAttachment:attachment];
 }
 - (id)initWithFile:(NSString*)path { return [self initWithFile:path isAttachment:NO];  }
 - (id)initWithFile:(NSString*)path isAttachment:(BOOL)attachment {  struct stat info;
 
   if (lstat([path fileSystemRepresentation], &info) || !(info.st_mode & S_IFREG)) {
-    DNOT_REACHED();   [self release];   return nil;
+    DNOT_REACHED();  return nil;
   }
   NSString* type = GCDWebServerGetMimeTypeForExtension([path pathExtension]) ?: kGCDWebServerDefaultMimeType;
   if ((self = [super initWithContentType:type contentLength:info.st_size])) {
@@ -122,13 +114,12 @@
       NSString* fileName = data ? [NSString.alloc initWithData:data encoding:NSISOLatin1StringEncoding] : nil;
       if (fileName) {
         [self setValue:[NSString stringWithFormat:@"attachment; filename=\"%@\"", fileName] forAdditionalHeader:@"Content-Disposition"];
-        [fileName release];
       } else  DNOT_REACHED();
     }
   }
   return self;
 }
-- (void)dealloc { DCHECK(_file <= 0); [_path release]; [super dealloc];  }
+
 - (BOOL)open {  DCHECK(_file <= 0); _file = open([_path fileSystemRepresentation], O_NOFOLLOW | O_RDONLY);
   return (_file > 0 ? YES : NO);
 }

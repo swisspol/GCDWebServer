@@ -1,11 +1,9 @@
 
 #import "GCDWebServer.h"
 
-@class 		  GCDWebServerHandler ;
 @interface GCDWebServerConnection : NSObject {
 @private     GCDWebServerResponse * _response;
   	           GCDWebServerRequest * _request;
-              GCDWebServerHandler * _handler;
   							GCDWebServer * _server;
 									NSData * _address;
   				 CFSocketNativeHandle   _socket;

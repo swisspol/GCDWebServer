@@ -35,7 +35,6 @@
 		E221127D1690B63A0048D2B2 /* GCDWebServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GCDWebServer.m; path = CGDWebServer/GCDWebServer.m; sourceTree = "<group>"; };
 		E221127E1690B63A0048D2B2 /* GCDWebServerConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GCDWebServerConnection.h; path = CGDWebServer/GCDWebServerConnection.h; sourceTree = "<group>"; };
 		E221127F1690B63A0048D2B2 /* GCDWebServerConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GCDWebServerConnection.m; path = CGDWebServer/GCDWebServerConnection.m; sourceTree = "<group>"; };
-		E22112801690B63A0048D2B2 /* GCDWebServerPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GCDWebServerPrivate.h; path = CGDWebServer/GCDWebServerPrivate.h; sourceTree = "<group>"; };
 		E22112811690B63A0048D2B2 /* GCDWebServerRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GCDWebServerRequest.h; path = CGDWebServer/GCDWebServerRequest.h; sourceTree = "<group>"; };
 		E22112821690B63A0048D2B2 /* GCDWebServerRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GCDWebServerRequest.m; path = CGDWebServer/GCDWebServerRequest.m; sourceTree = "<group>"; };
 		E22112831690B63A0048D2B2 /* GCDWebServerResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GCDWebServerResponse.h; path = CGDWebServer/GCDWebServerResponse.h; sourceTree = "<group>"; };
@@ -81,7 +80,6 @@
 				E221127D1690B63A0048D2B2 /* GCDWebServer.m */,
 				E221127E1690B63A0048D2B2 /* GCDWebServerConnection.h */,
 				E221127F1690B63A0048D2B2 /* GCDWebServerConnection.m */,
-				E22112801690B63A0048D2B2 /* GCDWebServerPrivate.h */,
 				E22112811690B63A0048D2B2 /* GCDWebServerRequest.h */,
 				E22112821690B63A0048D2B2 /* GCDWebServerRequest.m */,
 				E22112831690B63A0048D2B2 /* GCDWebServerResponse.h */,
@@ -240,7 +238,8 @@
 		1DEB928608733DD80010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = macosx;
@@ -250,7 +249,8 @@
 		1DEB928708733DD80010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = macosx;

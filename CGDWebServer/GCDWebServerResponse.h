@@ -10,13 +10,13 @@
 				              NSString * _type;
 								 NSInteger   _status;
 			               NSUInteger   _length, _maxAge;
-				   NSMutableDictionary * _headers;
+				   NSMutableDictionary * __weak _headers;
 }
 @property (readonly)      NSString * contentType;
 @property (readonly) 	NSUInteger 	 contentLength;
 @property(nonatomic) 	 NSInteger 	 statusCode;  // Default is 200
 @property(nonatomic)    NSUInteger 	 cacheControlMaxAge;  // Default is 0 seconds i.e. "no-cache"
-@property (readonly)  NSDictionary * additionalHeaders;
+@property (weak, readonly)  NSDictionary * additionalHeaders;
 @property (readonly)          BOOL   hasBody;  // Convenience method
 
 + (instancetype) response;

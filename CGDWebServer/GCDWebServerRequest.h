@@ -3,9 +3,9 @@
 
 @interface GCDWebServerRequest : NSObject {	@private
 
-									NSURL * _url;
-						  NSDictionary * _headers,
-											* _query;
+									NSURL * __weak _url;
+						  NSDictionary * __weak _headers,
+											* __weak _query;
 								NSString * _method,
 											* _path,
 											* _type;
@@ -14,9 +14,9 @@
 @property(readonly)     NSString * method,
 										   * path,
 											* contentType;  	// Automa. parsed from headers (nil if request has no body)
-@property(readonly) NSDictionary * headers,
+@property(weak, readonly) NSDictionary * headers,
 											* query; 		 	// May be nil;
-@property(readonly) 			NSURL * URL;
+@property(weak, readonly) 			NSURL * URL;
 @property(readonly) 	 NSUInteger   contentLength;  // Automatically parsed from headers
 @property(readonly) 			 BOOL   hasBody;  		// Convenience method
 
@@ -34,12 +34,12 @@
 @property(readonly) 				  NSData * data;  // Only valid after open / write / close sequence
 @end
 
-@interface 		GCDWebServerFileRequest : GCDWebServerRequest { @private  NSString* _filePath;  int _file; }
-@property(readonly)			   NSString * filePath;  // Only valid after open / write / close sequence
+@interface 		GCDWebServerFileRequest : GCDWebServerRequest { @private  NSString* __weak _filePath;  int _file; }
+@property(weak, readonly)			   NSString * filePath;  // Only valid after open / write / close sequence
 @end
 
-@interface GCDWebServerURLEncodedFormRequest : GCDWebServerDataRequest { @private  NSDictionary* _arguments; }
-@property(readonly)			     NSDictionary * arguments;  // Only valid after open / write / close sequence
+@interface GCDWebServerURLEncodedFormRequest : GCDWebServerDataRequest { @private  NSDictionary* __weak _arguments; }
+@property(weak, readonly)			     NSDictionary * arguments;  // Only valid after open / write / close sequence
 + (NSString*)mimeType;
 @end
 
@@ -48,8 +48,8 @@
 													* mimeType;  // Defaults to "text/plain" per specifications if undefined
 @end
 
-@interface GCDWebServerMultiPartArgument : GCDWebServerMultiPart { @private  NSData* _data; NSString* _string; }
-@property(readonly) 					 NSData * data;
+@interface GCDWebServerMultiPartArgument : GCDWebServerMultiPart { @private  NSData* __weak _data; NSString* _string; }
+@property(weak, readonly) 					 NSData * data;
 @property(readonly) 				  NSString * string;  // May be nil (only valid for text mime types
 @end
 

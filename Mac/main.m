@@ -56,7 +56,6 @@ int main(int argc, const char* argv[]) {
       
     }
     success = [webServer runWithPort:9999];
-    [webServer release];
   }
   return success ? 0 : -1;
 }
