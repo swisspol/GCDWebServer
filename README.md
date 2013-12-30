@@ -203,4 +203,4 @@ Final Example: File Downloads and Uploads From iOS App
 
 GCDWebServer was originally written for the [ComicFlow](http://itunes.apple.com/us/app/comicflow/id409290355?mt=8) comic reader app for iPad. It uses it to provide a web server for people to upload and download comic files directly over WiFi to and from the app.
 
-ComicFlow is [entirely open-source](https://code.google.com/p/comicflow/) and you can see how it uses GCDWebServer in the [WebServer.m](http://code.google.com/p/comicflow/source/browse/Classes/WebServer.m) file.
+ComicFlow is [entirely open-source](https://github.com/swisspol/ComicFlow) and you can see how it uses GCDWebServer in the [WebServer.m](https://github.com/swisspol/ComicFlow/blob/master/Classes/WebServer.m) file.
