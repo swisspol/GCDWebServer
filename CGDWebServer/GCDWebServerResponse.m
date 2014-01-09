@@ -33,8 +33,8 @@
 
 @synthesize contentType=_type, contentLength=_length, statusCode=_status, cacheControlMaxAge=_maxAge, additionalHeaders=_headers;
 
-+(GCDWebServerResponse*) response {
-  return [[[[self class] alloc] init] autorelease];
++ (GCDWebServerResponse*)response {
+  return ARC_AUTORELEASE([[[self class] alloc] init]);
 }
 
 - (id)init {
@@ -57,10 +57,10 @@
 }
 
 - (void)dealloc {
-  [_type release];
-  [_headers release];
+  ARC_RELEASE(_type);
+  ARC_RELEASE(_headers);
   
-  [super dealloc];
+  ARC_DEALLOC(super);
 }
 
 - (void)setValue:(NSString*)value forAdditionalHeader:(NSString*)header {
@@ -95,11 +95,11 @@
 @implementation GCDWebServerResponse (Extensions)
 
 + (GCDWebServerResponse*)responseWithStatusCode:(NSInteger)statusCode {
-  return [[[self alloc] initWithStatusCode:statusCode] autorelease];
+  return ARC_AUTORELEASE([[self alloc] initWithStatusCode:statusCode]);
 }
 
 + (GCDWebServerResponse*)responseWithRedirect:(NSURL*)location permanent:(BOOL)permanent {
-  return [[[self alloc] initWithRedirect:location permanent:permanent] autorelease];
+  return ARC_AUTORELEASE([[self alloc] initWithRedirect:location permanent:permanent]);
 }
 
 - (id)initWithStatusCode:(NSInteger)statusCode {
@@ -122,18 +122,18 @@
 @implementation GCDWebServerDataResponse
 
 + (GCDWebServerDataResponse*)responseWithData:(NSData*)data contentType:(NSString*)type {
-  return [[[[self class] alloc] initWithData:data contentType:type] autorelease];
+  return ARC_AUTORELEASE([[[self class] alloc] initWithData:data contentType:type]);
 }
 
 - (id)initWithData:(NSData*)data contentType:(NSString*)type {
   if (data == nil) {
     DNOT_REACHED();
-    [self release];
+    ARC_RELEASE(self);
     return nil;
   }
   
   if ((self = [super initWithContentType:type contentLength:data.length])) {
-    _data = [data retain];
+    _data = ARC_RETAIN(data);
     _offset = -1;
   }
   return self;
@@ -141,9 +141,9 @@
 
 - (void)dealloc {
   DCHECK(_offset < 0);
-  [_data release];
+  ARC_RELEASE(_data);
   
-  [super dealloc];
+  ARC_DEALLOC(super);
 }
 
 - (BOOL)open {
@@ -174,22 +174,22 @@
 @implementation GCDWebServerDataResponse (Extensions)
 
 + (GCDWebServerDataResponse*)responseWithText:(NSString*)text {
-  return [[[self alloc] initWithText:text] autorelease];
+  return ARC_AUTORELEASE([[self alloc] initWithText:text]);
 }
 
 + (GCDWebServerDataResponse*)responseWithHTML:(NSString*)html {
-  return [[[self alloc] initWithHTML:html] autorelease];
+  return ARC_AUTORELEASE([[self alloc] initWithHTML:html]);
 }
 
 + (GCDWebServerDataResponse*)responseWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables {
-  return [[[self alloc] initWithHTMLTemplate:path variables:variables] autorelease];
+  return ARC_AUTORELEASE([[self alloc] initWithHTMLTemplate:path variables:variables]);
 }
 
 - (id)initWithText:(NSString*)text {
   NSData* data = [text dataUsingEncoding:NSUTF8StringEncoding];
   if (data == nil) {
     DNOT_REACHED();
-    [self release];
+    ARC_RELEASE(self);
     return nil;
   }
   return [self initWithData:data contentType:@"text/plain; charset=utf-8"];
@@ -199,7 +199,7 @@
   NSData* data = [html dataUsingEncoding:NSUTF8StringEncoding];
   if (data == nil) {
     DNOT_REACHED();
-    [self release];
+    ARC_RELEASE(self);
     return nil;
   }
   return [self initWithData:data contentType:@"text/html; charset=utf-8"];
@@ -211,7 +211,7 @@
     [html replaceOccurrencesOfString:[NSString stringWithFormat:@"%%%@%%", key] withString:value options:0 range:NSMakeRange(0, html.length)];
   }];
   id response = [self initWithHTML:html];
-  [html release];
+  ARC_RELEASE(html);
   return response;
 }
 
@@ -220,11 +220,11 @@
 @implementation GCDWebServerFileResponse
 
 + (GCDWebServerFileResponse*)responseWithFile:(NSString*)path {
-  return [[[[self class] alloc] initWithFile:path] autorelease];
+  return ARC_AUTORELEASE([[[self class] alloc] initWithFile:path]);
 }
 
 + (GCDWebServerFileResponse*)responseWithFile:(NSString*)path isAttachment:(BOOL)attachment {
-  return [[[[self class] alloc] initWithFile:path isAttachment:attachment] autorelease];
+  return ARC_AUTORELEASE([[[self class] alloc] initWithFile:path isAttachment:attachment]);
 }
 
 - (id)initWithFile:(NSString*)path {
@@ -235,7 +235,7 @@
   struct stat info;
   if (lstat([path fileSystemRepresentation], &info) || !(info.st_mode & S_IFREG)) {
     DNOT_REACHED();
-    [self release];
+    ARC_RELEASE(self);
     return nil;
   }
   NSString* type = GCDWebServerGetMimeTypeForExtension([path pathExtension]);
@@ -250,7 +250,7 @@
       NSString* fileName = data ? [[NSString alloc] initWithData:data encoding:NSISOLatin1StringEncoding] : nil;
       if (fileName) {
         [self setValue:[NSString stringWithFormat:@"attachment; filename=\"%@\"", fileName] forAdditionalHeader:@"Content-Disposition"];
-        [fileName release];
+        ARC_RELEASE(fileName);
       } else {
         DNOT_REACHED();
       }
@@ -261,9 +261,9 @@
 
 - (void)dealloc {
   DCHECK(_file <= 0);
-  [_path release];
+  ARC_RELEASE(_path);
   
-  [super dealloc];
+  ARC_DEALLOC(super);
 }
 
 - (BOOL)open {

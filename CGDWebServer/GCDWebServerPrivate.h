@@ -25,6 +25,22 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if __has_feature(objc_arc)
+#define ARC_BRIDGE __bridge
+#define ARC_BRIDGE_RELEASE(__OBJECT__) CFBridgingRelease(__OBJECT__)
+#define ARC_RETAIN(__OBJECT__) __OBJECT__
+#define ARC_RELEASE(__OBJECT__)
+#define ARC_AUTORELEASE(__OBJECT__) __OBJECT__
+#define ARC_DEALLOC(__OBJECT__)
+#else
+#define ARC_BRIDGE
+#define ARC_BRIDGE_RELEASE(__OBJECT__) [(id)__OBJECT__ autorelease]
+#define ARC_RETAIN(__OBJECT__) [__OBJECT__ retain]
+#define ARC_RELEASE(__OBJECT__) [__OBJECT__ release]
+#define ARC_AUTORELEASE(__OBJECT__) [__OBJECT__ autorelease]
+#define ARC_DEALLOC(__OBJECT__) [__OBJECT__ dealloc]
+#endif
+
 #import "GCDWebServerConnection.h"
 
 #ifdef __GCDWEBSERVER_LOGGING_HEADER__
@@ -47,7 +63,7 @@ static inline void __LogMessage(long level, NSString* format, ...) {
     NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
     va_end(arguments);
     printf("[%s] %s\n", levelNames[level], [message UTF8String]);
-    [message release];
+    ARC_RELEASE(message);
   }
 }
 

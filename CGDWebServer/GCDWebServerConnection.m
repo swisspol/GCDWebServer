@@ -84,7 +84,7 @@ static dispatch_queue_t _formatterQueue = NULL;
         return true;
       });
       block(data);
-      [data release];
+      ARC_RELEASE(data);
     } else {
       block(nil);
     }
@@ -190,9 +190,15 @@ static dispatch_queue_t _formatterQueue = NULL;
 }
 
 - (void)_writeData:(NSData*)data withCompletionBlock:(WriteDataCompletionBlock)block {
+#if !__has_feature(objc_arc)
   [data retain];
+#endif
   dispatch_data_t buffer = dispatch_data_create(data.bytes, data.length, dispatch_get_current_queue(), ^{
+#if __has_feature(objc_arc)
+    [data self];  // Keeps ARC from releasing data too early
+#else
     [data release];
+#endif
   });
   [self _writeBuffer:buffer withCompletionBlock:block];
   dispatch_release(buffer);
@@ -201,7 +207,7 @@ static dispatch_queue_t _formatterQueue = NULL;
 - (void)_writeHeadersWithCompletionBlock:(WriteHeadersCompletionBlock)block {
   DCHECK(_responseMessage);
   CFDataRef message = CFHTTPMessageCopySerializedMessage(_responseMessage);
-  [self _writeData:(NSData*)message withCompletionBlock:block];
+  [self _writeData:(ARC_BRIDGE NSData*)message withCompletionBlock:block];
   CFRelease(message);
 }
 
@@ -245,7 +251,11 @@ static dispatch_queue_t _formatterQueue = NULL;
   }
   if (_continueData == nil) {
     CFHTTPMessageRef message = CFHTTPMessageCreateResponse(kCFAllocatorDefault, 100, NULL, kCFHTTPVersion1_1);
+#if __has_feature(objc_arc)
+    _continueData = CFBridgingRelease(CFHTTPMessageCopySerializedMessage(message));
+#else
     _continueData = (NSData*)CFHTTPMessageCopySerializedMessage(message);
+#endif
     CFRelease(message);
     DCHECK(_continueData);
   }
@@ -253,7 +263,7 @@ static dispatch_queue_t _formatterQueue = NULL;
     _dateFormatter = [[NSDateFormatter alloc] init];
     _dateFormatter.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
     _dateFormatter.dateFormat = @"EEE',' dd MMM yyyy HH':'mm':'ss 'GMT'";
-    _dateFormatter.locale = [[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"] autorelease];
+    _dateFormatter.locale = ARC_AUTORELEASE([[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]);
     DCHECK(_dateFormatter);
   }
   if (_formatterQueue == NULL) {
@@ -265,10 +275,10 @@ static dispatch_queue_t _formatterQueue = NULL;
 - (void)_initializeResponseHeadersWithStatusCode:(NSInteger)statusCode {
   _responseMessage = CFHTTPMessageCreateResponse(kCFAllocatorDefault, statusCode, NULL, kCFHTTPVersion1_1);
   CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Connection"), CFSTR("Close"));
-  CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Server"), (CFStringRef)[[_server class] serverName]);
+  CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Server"), (ARC_BRIDGE CFStringRef)[[_server class] serverName]);
   dispatch_sync(_formatterQueue, ^{
     NSString* date = [_dateFormatter stringFromDate:[NSDate date]];
-    CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Date"), (CFStringRef)date);
+    CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Date"), (ARC_BRIDGE CFStringRef)date);
   });
 }
 
@@ -288,23 +298,23 @@ static dispatch_queue_t _formatterQueue = NULL;
   
   GCDWebServerResponse* response = [self processRequest:_request withBlock:_handler.processBlock];
   if (![response hasBody] || [response open]) {
-    _response = [response retain];
+    _response = ARC_RETAIN(response);
   }
   
   if (_response) {
     [self _initializeResponseHeadersWithStatusCode:_response.statusCode];
     NSUInteger maxAge = _response.cacheControlMaxAge;
     if (maxAge > 0) {
-      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Cache-Control"), (CFStringRef)[NSString stringWithFormat:@"max-age=%i, public", (int)maxAge]);
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Cache-Control"), (ARC_BRIDGE CFStringRef)[NSString stringWithFormat:@"max-age=%i, public", (int)maxAge]);
     } else {
       CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Cache-Control"), CFSTR("no-cache"));
     }
     [_response.additionalHeaders enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL* stop) {
-      CFHTTPMessageSetHeaderFieldValue(_responseMessage, (CFStringRef)key, (CFStringRef)obj);
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, (ARC_BRIDGE CFStringRef)key, (ARC_BRIDGE CFStringRef)obj);
     }];
     if ([_response hasBody]) {
-      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Type"), (CFStringRef)_response.contentType);
-      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Length"), (CFStringRef)[NSString stringWithFormat:@"%i", (int)_response.contentLength]);
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Type"), (ARC_BRIDGE CFStringRef)_response.contentType);
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Length"), (ARC_BRIDGE CFStringRef)[NSString stringWithFormat:@"%i", (int)_response.contentLength]);
     }
     [self _writeHeadersWithCompletionBlock:^(BOOL success) {
       
@@ -373,22 +383,22 @@ static dispatch_queue_t _formatterQueue = NULL;
   [self _readHeadersWithCompletionBlock:^(NSData* extraData) {
     
     if (extraData) {
-      NSString* requestMethod = [[(id)CFHTTPMessageCopyRequestMethod(_requestMessage) autorelease] uppercaseString];
+      NSString* requestMethod = [ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestMethod(_requestMessage)) uppercaseString];
       DCHECK(requestMethod);
-      NSURL* requestURL = [(id)CFHTTPMessageCopyRequestURL(_requestMessage) autorelease];
+      NSURL* requestURL = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestURL(_requestMessage));
       DCHECK(requestURL);
-      NSString* requestPath = GCDWebServerUnescapeURLString([(id)CFURLCopyPath((CFURLRef)requestURL) autorelease]);  // Don't use -[NSURL path] which strips the ending slash
+      NSString* requestPath = GCDWebServerUnescapeURLString(ARC_BRIDGE_RELEASE(CFURLCopyPath((CFURLRef)requestURL)));  // Don't use -[NSURL path] which strips the ending slash
       DCHECK(requestPath);
       NSDictionary* requestQuery = nil;
-      NSString* queryString = [(id)CFURLCopyQueryString((CFURLRef)requestURL, NULL) autorelease];  // Don't use -[NSURL query] to make sure query is not unescaped;
+      NSString* queryString = ARC_BRIDGE_RELEASE(CFURLCopyQueryString((CFURLRef)requestURL, NULL));  // Don't use -[NSURL query] to make sure query is not unescaped;
       if (queryString.length) {
         requestQuery = GCDWebServerParseURLEncodedForm(queryString);
         DCHECK(requestQuery);
       }
-      NSDictionary* requestHeaders = [(id)CFHTTPMessageCopyAllHeaderFields(_requestMessage) autorelease];
+      NSDictionary* requestHeaders = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyAllHeaderFields(_requestMessage));
       DCHECK(requestHeaders);
       for (_handler in _server.handlers) {
-        _request = [_handler.matchBlock(requestMethod, requestURL, requestHeaders, requestPath, requestQuery) retain];
+        _request = ARC_RETAIN(_handler.matchBlock(requestMethod, requestURL, requestHeaders, requestPath, requestQuery));
         if (_request) {
           break;
         }
@@ -396,7 +406,7 @@ static dispatch_queue_t _formatterQueue = NULL;
       if (_request) {
         if (_request.hasBody) {
           if (extraData.length <= _request.contentLength) {
-            NSString* expectHeader = [(id)CFHTTPMessageCopyHeaderFieldValue(_requestMessage, CFSTR("Expect")) autorelease];
+            NSString* expectHeader = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyHeaderFieldValue(_requestMessage, CFSTR("Expect")));
             if (expectHeader) {
               if ([expectHeader caseInsensitiveCompare:@"100-continue"] == NSOrderedSame) {
                 [self _writeData:_continueData withCompletionBlock:^(BOOL success) {
@@ -432,8 +442,8 @@ static dispatch_queue_t _formatterQueue = NULL;
 
 - (id)initWithServer:(GCDWebServer*)server address:(NSData*)address socket:(CFSocketNativeHandle)socket {
   if ((self = [super init])) {
-    _server = [server retain];
-    _address = [address retain];
+    _server = ARC_RETAIN(server);
+    _address = ARC_RETAIN(address);
     _socket = socket;
     
     [self open];
@@ -444,20 +454,20 @@ static dispatch_queue_t _formatterQueue = NULL;
 - (void)dealloc {
   [self close];
   
-  [_server release];
-  [_address release];
+  ARC_RELEASE(_server);
+  ARC_RELEASE(_address);
   
   if (_requestMessage) {
     CFRelease(_requestMessage);
   }
-  [_request release];
+  ARC_RELEASE(_request);
   
   if (_responseMessage) {
     CFRelease(_responseMessage);
   }
-  [_response release];
+  ARC_RELEASE(_response);
   
-  [super dealloc];
+  ARC_DEALLOC(super);
 }
 
 @end

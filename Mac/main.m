@@ -81,7 +81,9 @@ int main(int argc, const char* argv[]) {
       
     }
     success = [webServer runWithPort:8080];
+#if !__has_feature(objc_arc)
     [webServer release];
+#endif
   }
   return success ? 0 : -1;
 }

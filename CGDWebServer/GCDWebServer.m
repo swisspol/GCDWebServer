@@ -50,9 +50,9 @@ NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
   if (extension.length) {
     mimeType = [_overrides objectForKey:extension];
     if (mimeType == nil) {
-      CFStringRef uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (CFStringRef)extension, NULL);
+      CFStringRef uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (ARC_BRIDGE CFStringRef)extension, NULL);
       if (uti) {
-        mimeType = [(id)UTTypeCopyPreferredTagWithClass(uti, kUTTagClassMIMEType) autorelease];
+        mimeType = ARC_BRIDGE_RELEASE(UTTypeCopyPreferredTagWithClass(uti, kUTTagClassMIMEType));
         CFRelease(uti);
       }
     }
@@ -61,8 +61,8 @@ NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
 }
 
 NSString* GCDWebServerUnescapeURLString(NSString* string) {
-  return [(id)CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault, (CFStringRef)string, CFSTR(""),
-                                                                      kCFStringEncodingUTF8) autorelease];
+  return ARC_BRIDGE_RELEASE(CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault, (CFStringRef)string, CFSTR(""),
+                                                                                   kCFStringEncodingUTF8));
 }
 
 NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
@@ -90,7 +90,7 @@ NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
     }
     [scanner setScanLocation:([scanner scanLocation] + 1)];
   }
-  [scanner release];
+  ARC_RELEASE(scanner);
   return parameters;
 }
 
@@ -105,17 +105,17 @@ static void _SignalHandler(int signal) {
 
 - (id)initWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock {
   if ((self = [super init])) {
-    _matchBlock = Block_copy(matchBlock);
-    _processBlock = Block_copy(processBlock);
+    _matchBlock = [matchBlock copy];
+    _processBlock = [processBlock copy];
   }
   return self;
 }
 
 - (void)dealloc {
-  Block_release(_matchBlock);
-  Block_release(_processBlock);
+  ARC_RELEASE(_matchBlock);
+  ARC_RELEASE(_processBlock);
   
-  [super dealloc];
+  ARC_DEALLOC(super);
 }
 
 @end
@@ -140,16 +140,16 @@ static void _SignalHandler(int signal) {
     [self stop];
   }
   
-  [_handlers release];
+  ARC_RELEASE(_handlers);
   
-  [super dealloc];
+  ARC_DEALLOC(super);
 }
 
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)handlerBlock {
   DCHECK(_source == NULL);
   GCDWebServerHandler* handler = [[GCDWebServerHandler alloc] initWithMatchBlock:matchBlock processBlock:handlerBlock];
   [_handlers insertObject:handler atIndex:0];
-  [handler release];
+  ARC_RELEASE(handler);
 }
 
 - (void)removeAllHandlers {
@@ -212,8 +212,12 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
               
               NSData* data = [NSData dataWithBytes:&addr length:addrlen];
               Class connectionClass = [[self class] connectionClass];
-              GCDWebServerConnection* connection = [[connectionClass alloc] initWithServer:self address:data socket:socket];
-              [connection release];  // Connection will automatically retain itself while opened
+              GCDWebServerConnection* connection = [[connectionClass alloc] initWithServer:self address:data socket:socket];  // Connection will automatically retain itself while opened
+#if __has_feature(objc_arc)
+              [connection self];  // Prevent compiler from complaining about unused variable / useless statement
+#else
+              [connection release];
+#endif
             } else {
               LOG_ERROR(@"Failed accepting socket (%i): %s", errno, strerror(errno));
             }
@@ -235,9 +239,9 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
         }
         
         if (name) {
-          _service = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), CFSTR("_http._tcp"), (CFStringRef)name, _port);
+          _service = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), CFSTR("_http._tcp"), (ARC_BRIDGE CFStringRef)name, _port);
           if (_service) {
-            CFNetServiceClientContext context = {0, self, NULL, NULL, NULL};
+            CFNetServiceClientContext context = {0, (ARC_BRIDGE void*)self, NULL, NULL, NULL};
             CFNetServiceSetClient(_service, _NetServiceClientCallBack, &context);
             CFNetServiceScheduleWithRunLoop(_service, CFRunLoopGetMain(), kCFRunLoopCommonModes);
             CFStreamError error = {0};
@@ -326,7 +330,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 - (void)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)class processBlock:(GCDWebServerProcessBlock)block {
   [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
     
-    return [[[class alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery] autorelease];
+    return ARC_AUTORELEASE([[class alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
     
   } processBlock:block];
 }
@@ -363,6 +367,11 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 
 - (void)addHandlerForBasePath:(NSString*)basePath localPath:(NSString*)localPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)cacheAge {
   if ([basePath hasPrefix:@"/"] && [basePath hasSuffix:@"/"]) {
+#if __has_feature(objc_arc)
+    __unsafe_unretained GCDWebServer* server = self;
+#else
+    GCDWebServer* server = self;
+#endif
     [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
       
       if (![requestMethod isEqualToString:@"GET"]) {
@@ -371,7 +380,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
       if (![urlPath hasPrefix:basePath]) {
         return nil;
       }
-      return [[[GCDWebServerRequest alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery] autorelease];
+      return ARC_AUTORELEASE([[GCDWebServerRequest alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
       
     } processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
       
@@ -383,12 +392,12 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
           if (indexFilename) {
             NSString* indexPath = [filePath stringByAppendingPathComponent:indexFilename];
             if ([[NSFileManager defaultManager] fileExistsAtPath:indexPath isDirectory:&isDirectory] && !isDirectory) {
-              return [self _responseWithContentsOfFile:indexPath];
+              return [server _responseWithContentsOfFile:indexPath];
             }
           }
-          response = [self _responseWithContentsOfDirectory:filePath];
+          response = [server _responseWithContentsOfDirectory:filePath];
         } else {
-          response = [self _responseWithContentsOfFile:filePath];
+          response = [server _responseWithContentsOfFile:filePath];
         }
       }
       if (response) {
@@ -414,7 +423,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
       if ([urlPath caseInsensitiveCompare:path] != NSOrderedSame) {
         return nil;
       }
-      return [[[class alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery] autorelease];
+      return ARC_AUTORELEASE([[class alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
       
     } processBlock:block];
   } else {
@@ -433,7 +442,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
       if ([expression firstMatchInString:urlPath options:0 range:NSMakeRange(0, urlPath.length)] == nil) {
         return nil;
       }
-      return [[[class alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery] autorelease];
+      return ARC_AUTORELEASE([[class alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
       
     } processBlock:block];
   } else {

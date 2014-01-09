@@ -29,11 +29,15 @@
 
 @implementation AppDelegate
 
+#if !__has_feature(objc_arc)
+
 - (void)dealloc {
   [_window release];
   
   [super dealloc];
 }
+
+#endif
 
 - (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
   _window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];

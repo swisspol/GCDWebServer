@@ -6,6 +6,21 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		E274F876187E77D8009E0582 /* Build All */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = E274F879187E77D8009E0582 /* Build configuration list for PBXAggregateTarget "Build All" */;
+			buildPhases = (
+			);
+			dependencies = (
+				E274F87D187E77E5009E0582 /* PBXTargetDependency */,
+				E274F87B187E77E3009E0582 /* PBXTargetDependency */,
+			);
+			name = "Build All";
+			productName = "Build All";
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		E208D149167B76B700500836 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E208D148167B76B700500836 /* CFNetwork.framework */; };
 		E208D1B3167BB17E00500836 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E208D1B2167BB17E00500836 /* CoreServices.framework */; };
@@ -24,6 +39,23 @@
 		E221129B1690B7B10048D2B2 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E221129A1690B7B10048D2B2 /* UIKit.framework */; };
 		E221129D1690B7BA0048D2B2 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E221129C1690B7BA0048D2B2 /* MobileCoreServices.framework */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		E274F87A187E77E3009E0582 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8DD76FA90486AB0100D96B5E;
+			remoteInfo = "GCDWebServer (Mac)";
+		};
+		E274F87C187E77E5009E0582 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E22112591690B4DE0048D2B2;
+			remoteInfo = "GCDWebServer (iOS)";
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		8DD76FB20486AB0100D96B5E /* GCDWebServer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GCDWebServer; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -207,6 +239,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				E274F876187E77D8009E0582 /* Build All */,
 				8DD76FA90486AB0100D96B5E /* GCDWebServer (Mac) */,
 				E22112591690B4DE0048D2B2 /* GCDWebServer (iOS) */,
 			);
@@ -241,11 +274,23 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		E274F87B187E77E3009E0582 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8DD76FA90486AB0100D96B5E /* GCDWebServer (Mac) */;
+			targetProxy = E274F87A187E77E3009E0582 /* PBXContainerItemProxy */;
+		};
+		E274F87D187E77E5009E0582 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E22112591690B4DE0048D2B2 /* GCDWebServer (iOS) */;
+			targetProxy = E274F87C187E77E5009E0582 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
 		1DEB928608733DD80010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = macosx;
@@ -255,7 +300,6 @@
 		1DEB928708733DD80010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = macosx;
@@ -265,6 +309,7 @@
 		1DEB928A08733DD80010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				ONLY_ACTIVE_ARCH = YES;
 				WARNING_CFLAGS = "-Wall";
@@ -274,10 +319,8 @@
 		1DEB928B08733DD80010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					NDEBUG,
-					NS_BLOCK_ASSERTIONS,
-				);
+				CLANG_ENABLE_OBJC_ARC = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = NDEBUG;
 				WARNING_CFLAGS = "-Wall";
 			};
 			name = Release;
@@ -308,6 +351,20 @@
 			};
 			name = Release;
 		};
+		E274F877187E77D8009E0582 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		E274F878187E77D8009E0582 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -334,6 +391,15 @@
 			buildConfigurations = (
 				E22112761690B4DF0048D2B2 /* Debug */,
 				E22112771690B4DF0048D2B2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E274F879187E77D8009E0582 /* Build configuration list for PBXAggregateTarget "Build All" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E274F877187E77D8009E0582 /* Debug */,
+				E274F878187E77D8009E0582 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
