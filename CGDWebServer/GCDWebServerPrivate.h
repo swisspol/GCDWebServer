@@ -62,7 +62,7 @@ static inline void __LogMessage(long level, NSString* format, ...) {
     va_start(arguments, format);
     NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
     va_end(arguments);
-    printf("[%s] %s\n", levelNames[level], [message UTF8String]);
+    fprintf(stderr, "[%s] %s\n", levelNames[level], [message UTF8String]);
     ARC_RELEASE(message);
   }
 }
