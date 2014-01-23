@@ -244,7 +244,6 @@ static dispatch_queue_t _formatterQueue = NULL;
 @synthesize server=_server, address=_address, totalBytesRead=_bytesRead, totalBytesWritten=_bytesWritten;
 
 + (void)initialize {
-  DCHECK([NSThread isMainThread]);  // NSDateFormatter should be initialized on main thread
   if (_separatorData == nil) {
     _separatorData = [[NSData alloc] initWithBytes:"\r\n\r\n" length:4];
     DCHECK(_separatorData);
@@ -260,6 +259,7 @@ static dispatch_queue_t _formatterQueue = NULL;
     DCHECK(_continueData);
   }
   if (_dateFormatter == nil) {
+    DCHECK([NSThread isMainThread]);  // NSDateFormatter should be initialized on main thread
     _dateFormatter = [[NSDateFormatter alloc] init];
     _dateFormatter.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
     _dateFormatter.dateFormat = @"EEE',' dd MMM yyyy HH':'mm':'ss 'GMT'";
