@@ -201,7 +201,7 @@ static dispatch_queue_t _formatterQueue = NULL;
 #endif
   });
   [self _writeBuffer:buffer withCompletionBlock:block];
-  dispatch_release(buffer);
+  ARC_DISPATCH_RELEASE(buffer);
 }
 
 - (void)_writeHeadersWithCompletionBlock:(WriteHeadersCompletionBlock)block {
@@ -226,7 +226,7 @@ static dispatch_queue_t _formatterQueue = NULL;
       }
       
     }];
-    dispatch_release(wrapper);
+    ARC_DISPATCH_RELEASE(wrapper);
   } else if (result < 0) {
     LOG_ERROR(@"Failed reading response body on socket %i (error %i)", _socket, (int)result);
     block(NO);

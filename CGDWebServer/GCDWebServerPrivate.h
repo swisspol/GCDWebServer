@@ -25,6 +25,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#import <TargetConditionals.h>
+
 #if __has_feature(objc_arc)
 #define ARC_BRIDGE __bridge
 #define ARC_BRIDGE_RELEASE(__OBJECT__) CFBridgingRelease(__OBJECT__)
@@ -32,6 +34,11 @@
 #define ARC_RELEASE(__OBJECT__)
 #define ARC_AUTORELEASE(__OBJECT__) __OBJECT__
 #define ARC_DEALLOC(__OBJECT__)
+#if (TARGET_OS_IPHONE && (__IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_6_0)) || (!TARGET_OS_IPHONE && (__MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_10_8))
+#define ARC_DISPATCH_RELEASE(__OBJECT__)
+#else
+#define ARC_DISPATCH_RELEASE(__OBJECT__) dispatch_release(__OBJECT__)
+#endif
 #else
 #define ARC_BRIDGE
 #define ARC_BRIDGE_RELEASE(__OBJECT__) [(id)__OBJECT__ autorelease]
@@ -39,6 +46,7 @@
 #define ARC_RELEASE(__OBJECT__) [__OBJECT__ release]
 #define ARC_AUTORELEASE(__OBJECT__) [__OBJECT__ autorelease]
 #define ARC_DEALLOC(__OBJECT__) [__OBJECT__ dealloc]
+#define ARC_DISPATCH_RELEASE(__OBJECT__) dispatch_release(__OBJECT__)
 #endif
 
 #import "GCDWebServerConnection.h"

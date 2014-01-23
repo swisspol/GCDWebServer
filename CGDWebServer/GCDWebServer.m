@@ -282,7 +282,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
     }
     
     dispatch_source_cancel(_source);  // This will close the socket
-    dispatch_release(_source);
+    ARC_DISPATCH_RELEASE(_source);
     _source = NULL;
     
     LOG_VERBOSE(@"%@ stopped", [self class]);
