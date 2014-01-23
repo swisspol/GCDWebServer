@@ -146,7 +146,8 @@ static void _SignalHandler(int signal) {
 }
 
 - (NSString*)bonjourName {
-  return _service ? ARC_BRIDGE_RELEASE(CFStringCreateCopy(kCFAllocatorDefault, CFNetServiceGetName(_service))) : nil;
+  CFStringRef name = _service ? CFNetServiceGetName(_service) : NULL;
+  return name && CFStringGetLength(name) ? ARC_BRIDGE_RELEASE(CFStringCreateCopy(kCFAllocatorDefault, name)) : nil;
 }
 
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)handlerBlock {
