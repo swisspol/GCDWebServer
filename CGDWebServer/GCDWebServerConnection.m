@@ -193,7 +193,7 @@ static dispatch_queue_t _formatterQueue = NULL;
 #if !__has_feature(objc_arc)
   [data retain];
 #endif
-  dispatch_data_t buffer = dispatch_data_create(data.bytes, data.length, dispatch_get_current_queue(), ^{
+  dispatch_data_t buffer = dispatch_data_create(data.bytes, data.length, dispatch_get_main_queue(), ^{
 #if __has_feature(objc_arc)
     [data self];  // Keeps ARC from releasing data too early
 #else
