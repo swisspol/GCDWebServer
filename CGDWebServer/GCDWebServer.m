@@ -145,6 +145,10 @@ static void _SignalHandler(int signal) {
   ARC_DEALLOC(super);
 }
 
+- (NSString*)bonjourName {
+  return _service ? ARC_BRIDGE_RELEASE(CFStringCreateCopy(kCFAllocatorDefault, CFNetServiceGetName(_service))) : nil;
+}
+
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)handlerBlock {
   DCHECK(_source == NULL);
   GCDWebServerHandler* handler = [[GCDWebServerHandler alloc] initWithMatchBlock:matchBlock processBlock:handlerBlock];
@@ -166,7 +170,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
     if (error->error) {
       LOG_ERROR(@"Bonjour error %i (domain %i)", error->error, (int)error->domain);
     } else {
-      LOG_VERBOSE(@"Registered Bonjour service \"%@\" with type '%@' on port %i", CFNetServiceGetName(service), CFNetServiceGetType(service), CFNetServiceGetPortNumber(service));
+      LOG_VERBOSE(@"Registered Bonjour service \"%@\" in domain \"%@\" with type '%@' on port %i", CFNetServiceGetName(service), CFNetServiceGetDomain(service), CFNetServiceGetType(service), CFNetServiceGetPortNumber(service));
     }
   }
 }

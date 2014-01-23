@@ -41,6 +41,7 @@ typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* r
 }
 @property(nonatomic, readonly, getter=isRunning) BOOL running;
 @property(nonatomic, readonly) NSUInteger port;
+@property(nonatomic, readonly) NSString* bonjourName;  // Only non-nil if Bonjour registration is active
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
 - (void)removeAllHandlers;
 
