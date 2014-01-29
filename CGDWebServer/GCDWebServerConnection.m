@@ -336,24 +336,25 @@ static dispatch_queue_t _formatterQueue = NULL;
   }
 }
 
--(void) _handleChunkFinishedAndHasError:(BOOL) error
-{
+-(void) _handleChunkFinishedAndHasError:(BOOL) error {
     [_request close];
-    if ( error )
+    if ( error ) {
         [self _abortWithStatusCode:500];
-    else
+    } else {
         [self _processRequest];
+    }
 }
 
--(NSInteger) _handleWriteChunkData:(const void *)data length:(NSInteger)length chunkRestSize:(NSInteger) chunkRestSize
-{
-    if ( chunkRestSize <= 2 )   //the last \r\n needn't write to request
+-(NSInteger) _handleWriteChunkData:(const void *)data length:(NSInteger)length chunkRestSize:(NSInteger) chunkRestSize {
+    if ( chunkRestSize <= 2 ) {  //the last \r\n needn't write to request
         return length;
-    else if (length < chunkRestSize - 2)
+    } else if (length < chunkRestSize - 2) {
         return [_request write:data maxLength:length];
+    }
     NSInteger res = [_request write:data maxLength:chunkRestSize - 2];
-    if ( res != chunkRestSize - 2)
+    if ( res != chunkRestSize - 2) {
         return res;
+    }
     return length;
 }
 
@@ -366,39 +367,46 @@ static dispatch_queue_t _formatterQueue = NULL;
     for (;;) {
         if ( lastChunkRest ) {
             NSInteger toWrite = nLength > lastChunkRest ? lastChunkRest : nLength;
-            if ( toWrite && [self _handleWriteChunkData:data length:toWrite chunkRestSize:lastChunkRest] != toWrite )
+            if ( toWrite && [self _handleWriteChunkData:data length:toWrite chunkRestSize:lastChunkRest] != toWrite ) {
+                ARC_RELEASE( lastData );
                 return [self _handleChunkFinishedAndHasError:YES];
+            }
             data += toWrite;
             nLength -= toWrite;
             lastChunkRest -= toWrite;
         }
         if ( lastChunkRest == 0 ) {
-            if ( lastChunkSize == 0 )
+            if ( lastChunkSize == 0 ) {
+                ARC_RELEASE( lastData );
                 return [self _handleChunkFinishedAndHasError:NO];
+            }
             
             const char * pEnd = (const char *)memchr( data, '\n', nLength);
             if ( pEnd != nil ) {
                 lastChunkSize = 0;
                 for ( const char * p = data; p < pEnd; ++p ) {
                     char ch = *p;
-                    if ( ch >= '0' && ch <= '9' )
+                    if ( ch >= '0' && ch <= '9' ) {
                         lastChunkSize = lastChunkSize * 16 + ch - '0';
-                    else if ( ch >= 'A' && ch <= 'F' )
+                    } else if ( ch >= 'A' && ch <= 'F' ) {
                         lastChunkSize = lastChunkSize * 16 + ch - 'A' + 10;
-                    else if ( ch >= 'a' && ch <= 'f' )
+                    } else if ( ch >= 'a' && ch <= 'f' ) {
                         lastChunkSize = lastChunkSize * 16 + ch - 'a' + 10;
-                    else
+                    } else {
                         break;
+                    }
                 }
                 nLength -= pEnd + 1 - data;
                 data = pEnd + 1;
                 lastChunkRest = lastChunkSize + 2; //include the last \r\n
-                if ( lastChunkRest && nLength )
+                if ( lastChunkRest && nLength ) {
                     continue;
+                }
             }
         }
-        if ( nLength != 0 )
+        if ( nLength != 0 ) {
             [lastData replaceBytesInRange:NSMakeRange(0,nLength) withBytes:data length:nLength];
+        }
         [lastData setLength:nLength];
         
         [self _readBufferWithLength:SIZE_T_MAX completionBlock:^(dispatch_data_t buffer) {
@@ -409,6 +417,7 @@ static dispatch_queue_t _formatterQueue = NULL;
                 });
                 [weakSelf _handleChunk:lastData lastChunkRest:lastChunkRest lastChunkSize:lastChunkSize];
             } else {
+                ARC_RELEASE( lastData );
                 [weakSelf _handleChunkFinishedAndHasError:YES];
             }
         }];
@@ -421,7 +430,8 @@ static dispatch_queue_t _formatterQueue = NULL;
     NSInteger length = _request.contentLength;
       
     if ( length == NSIntegerMax ) {//chunked
-        NSMutableData * lastData = [NSMutableData dataWithCapacity:1024];
+        NSMutableData * lastData = ARC_AUTORELEASE([NSMutableData dataWithCapacity:1024]);
+        DCHECK( lastData );
         [lastData appendData:initialData];
         [self _handleChunk:lastData lastChunkRest:0 lastChunkSize:NSIntegerMax];
         return;
