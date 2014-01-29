@@ -244,7 +244,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
         }
         
         if (name) {
-          _service = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), CFSTR("_http._tcp"), (ARC_BRIDGE CFStringRef)name, _port);
+          _service = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), CFSTR("_http._tcp"), (ARC_BRIDGE CFStringRef)name, (SInt32)_port);
           if (_service) {
             CFNetServiceClientContext context = {0, (ARC_BRIDGE void*)self, NULL, NULL, NULL};
             CFNetServiceSetClient(_service, _NetServiceClientCallBack, &context);

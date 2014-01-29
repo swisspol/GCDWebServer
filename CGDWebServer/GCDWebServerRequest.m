@@ -429,7 +429,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
           const void* dataBytes = _parserData.bytes;
           NSUInteger dataLength = range.location - 2;
           if (_tmpPath) {
-            int result = write(_tmpFile, dataBytes, dataLength);
+            ssize_t result = write(_tmpFile, dataBytes, dataLength);
             if (result == dataLength) {
               if (close(_tmpFile) == 0) {
                 _tmpFile = 0;
@@ -467,7 +467,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
       NSUInteger margin = 2 * _boundary.length;
       if (_tmpPath && (_parserData.length > margin)) {
         NSUInteger length = _parserData.length - margin;
-        int result = write(_tmpFile, _parserData.bytes, length);
+        ssize_t result = write(_tmpFile, _parserData.bytes, length);
         if (result == length) {
           [_parserData replaceBytesInRange:NSMakeRange(0, length) withBytes:NULL length:0];
         } else {
