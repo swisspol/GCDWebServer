@@ -314,7 +314,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 - (BOOL)runWithPort:(NSUInteger)port {
   BOOL success = NO;
   _run = YES;
-  void* handler = signal(SIGINT, _SignalHandler);
+  void (*handler)(int) = signal(SIGINT, _SignalHandler);
   if (handler != SIG_ERR) {
     if ([self startWithPort:port bonjourName:@""]) {
       while (_run) {

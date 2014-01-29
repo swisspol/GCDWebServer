@@ -26,6 +26,7 @@
  */
 
 #import <TargetConditionals.h>
+#import <AvailabilityMacros.h>
 
 #if __has_feature(objc_arc)
 #define ARC_BRIDGE __bridge

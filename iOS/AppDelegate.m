@@ -29,6 +29,8 @@
 
 @implementation AppDelegate
 
+@synthesize window=_window;
+
 #if !__has_feature(objc_arc)
 
 - (void)dealloc {
