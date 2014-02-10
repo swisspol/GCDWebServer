@@ -243,7 +243,7 @@
     type = kGCDWebServerDefaultMimeType;
   }
   
-  if ((self = [super initWithContentType:type contentLength:(NSUInteger)info.st_size])) {
+  if ((self = [super initWithContentType:type contentLength:info.st_size])) {
     _path = [path copy];
     if (attachment) {  // TODO: Use http://tools.ietf.org/html/rfc5987 to encode file names with special characters instead of using lossy conversion to ISO 8859-1
       NSData* data = [[path lastPathComponent] dataUsingEncoding:NSISOLatin1StringEncoding allowLossyConversion:YES];
