@@ -10,7 +10,7 @@ GCDWebServer is a lightweight GCD based HTTP 1.1 server designed to be embedded 
 * Available under a friendly [New BSD License](LICENSE)
 
 What's not available out of the box but can be implemented on top of the API:
-* Authentication like Basic Authentication
+* Authentication like [Basic Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication)
 * Web forms submitted using "multipart/mixed"
 
 What's not supported (but not really required from an embedded HTTP server):
