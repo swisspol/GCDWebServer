@@ -224,7 +224,7 @@ static dispatch_queue_t _formatterQueue = NULL;
       } else {
         block(NO);
       }
-      
+        free(buffer);
     }];
     ARC_DISPATCH_RELEASE(wrapper);
   } else if (result < 0) {
