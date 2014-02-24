@@ -76,11 +76,11 @@ static inline void __LogMessage(long level, NSString* format, ...) {
   }
 }
 
-#define LOG_VERBOSE(...) __LogMessage(1, __VA_ARGS__)
-#define LOG_INFO(...) __LogMessage(2, __VA_ARGS__)
-#define LOG_WARNING(...) __LogMessage(3, __VA_ARGS__)
-#define LOG_ERROR(...) __LogMessage(4, __VA_ARGS__)
-#define LOG_EXCEPTION(__EXCEPTION__) __LogMessage(5, @"%@", __EXCEPTION__)
+#define GCDWS_LOG_VERBOSE(...) __LogMessage(1, __VA_ARGS__)
+#define GCDWS_LOG_INFO(...) __LogMessage(2, __VA_ARGS__)
+#define GCDWS_LOG_WARNING(...) __LogMessage(3, __VA_ARGS__)
+#define GCDWS_LOG_ERROR(...) __LogMessage(4, __VA_ARGS__)
+#define GCDWS_LOG_EXCEPTION(__EXCEPTION__) __LogMessage(5, @"%@", __EXCEPTION__)
 
 #ifdef NDEBUG
 
@@ -97,7 +97,7 @@ static inline void __LogMessage(long level, NSString* format, ...) {
     } \
   } while (0)
 #define DNOT_REACHED() abort()
-#define LOG_DEBUG(...) __LogMessage(0, __VA_ARGS__)
+#define GCDWS_LOG_DEBUG(...) __LogMessage(0, __VA_ARGS__)
 
 #endif
 
