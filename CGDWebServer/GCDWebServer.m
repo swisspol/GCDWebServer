@@ -62,7 +62,7 @@ NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
 
 NSString* GCDWebServerUnescapeURLString(NSString* string) {
   return ARC_BRIDGE_RELEASE(CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault, (CFStringRef)string, CFSTR(""),
-                                                                                   kCFStringEncodingUTF8));
+                                                                                    kCFStringEncodingUTF8));
 }
 
 NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
@@ -83,7 +83,11 @@ NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
     
     key = [key stringByReplacingOccurrencesOfString:@"+" withString:@" "];
     value = [value stringByReplacingOccurrencesOfString:@"+" withString:@" "];
-    [parameters setObject:GCDWebServerUnescapeURLString(value) forKey:GCDWebServerUnescapeURLString(key)];
+    if (key && value) {
+      [parameters setObject:GCDWebServerUnescapeURLString(value) forKey:GCDWebServerUnescapeURLString(key)];
+    } else {
+      DNOT_REACHED();
+    }
     
     if ([scanner isAtEnd]) {
       break;
