@@ -336,10 +336,10 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 
 @implementation GCDWebServer (Handlers)
 
-- (void)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)class processBlock:(GCDWebServerProcessBlock)block {
+- (void)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block {
   [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
     
-    return ARC_AUTORELEASE([[class alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
+    return ARC_AUTORELEASE([[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
     
   } processBlock:block];
 }
@@ -374,7 +374,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
   return [GCDWebServerDataResponse responseWithHTML:html];
 }
 
-- (void)addHandlerForBasePath:(NSString*)basePath localPath:(NSString*)localPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)cacheAge {
+- (void)addHandlerForBasePath:(NSString*)basePath localPath:(NSString*)localPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)age {
   if ([basePath hasPrefix:@"/"] && [basePath hasSuffix:@"/"]) {
 #if __has_feature(objc_arc)
     __unsafe_unretained GCDWebServer* server = self;
@@ -410,7 +410,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
         }
       }
       if (response) {
-        response.cacheControlMaxAge = cacheAge;
+        response.cacheControlMaxAge = age;
       } else {
         response = [GCDWebServerResponse responseWithStatusCode:404];
       }
@@ -422,8 +422,8 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
   }
 }
 
-- (void)addHandlerForMethod:(NSString*)method path:(NSString*)path requestClass:(Class)class processBlock:(GCDWebServerProcessBlock)block {
-  if ([path hasPrefix:@"/"] && [class isSubclassOfClass:[GCDWebServerRequest class]]) {
+- (void)addHandlerForMethod:(NSString*)method path:(NSString*)path requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block {
+  if ([path hasPrefix:@"/"] && [aClass isSubclassOfClass:[GCDWebServerRequest class]]) {
     [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
       
       if (![requestMethod isEqualToString:method]) {
@@ -432,7 +432,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
       if ([urlPath caseInsensitiveCompare:path] != NSOrderedSame) {
         return nil;
       }
-      return ARC_AUTORELEASE([[class alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
+      return ARC_AUTORELEASE([[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
       
     } processBlock:block];
   } else {
@@ -440,9 +440,9 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
   }
 }
 
-- (void)addHandlerForMethod:(NSString*)method pathRegex:(NSString*)regex requestClass:(Class)class processBlock:(GCDWebServerProcessBlock)block {
+- (void)addHandlerForMethod:(NSString*)method pathRegex:(NSString*)regex requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block {
   NSRegularExpression* expression = [NSRegularExpression regularExpressionWithPattern:regex options:NSRegularExpressionCaseInsensitive error:NULL];
-  if (expression && [class isSubclassOfClass:[GCDWebServerRequest class]]) {
+  if (expression && [aClass isSubclassOfClass:[GCDWebServerRequest class]]) {
     [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
       
       if (![requestMethod isEqualToString:method]) {
@@ -451,7 +451,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
       if ([expression firstMatchInString:urlPath options:0 range:NSMakeRange(0, urlPath.length)] == nil) {
         return nil;
       }
-      return ARC_AUTORELEASE([[class alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
+      return ARC_AUTORELEASE([[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
       
     } processBlock:block];
   } else {
