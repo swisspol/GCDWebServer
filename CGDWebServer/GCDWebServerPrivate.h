@@ -126,11 +126,7 @@ NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form);
 @property(nonatomic, readonly) NSArray* handlers;
 @end
 
-@interface GCDWebServerHandler : NSObject {
-@private
-  GCDWebServerMatchBlock _matchBlock;
-  GCDWebServerProcessBlock _processBlock;
-}
+@interface GCDWebServerHandler : NSObject
 @property(nonatomic, readonly) GCDWebServerMatchBlock matchBlock;
 @property(nonatomic, readonly) GCDWebServerProcessBlock processBlock;
 - (id)initWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;

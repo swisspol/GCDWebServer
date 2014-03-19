@@ -45,6 +45,22 @@ static NSData* _continueData = nil;
 static NSDateFormatter* _dateFormatter = nil;
 static dispatch_queue_t _formatterQueue = NULL;
 
+@interface GCDWebServerConnection () {
+@private
+  GCDWebServer* _server;
+  NSData* _address;
+  CFSocketNativeHandle _socket;
+  NSUInteger _bytesRead;
+  NSUInteger _bytesWritten;
+  
+  CFHTTPMessageRef _requestMessage;
+  GCDWebServerRequest* _request;
+  GCDWebServerHandler* _handler;
+  CFHTTPMessageRef _responseMessage;
+  GCDWebServerResponse* _response;
+}
+@end
+
 @implementation GCDWebServerConnection (Read)
 
 - (void)_readBufferWithLength:(NSUInteger)length completionBlock:(ReadBufferCompletionBlock)block {

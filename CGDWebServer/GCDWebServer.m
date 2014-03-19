@@ -36,6 +36,23 @@
 
 #define kMaxPendingConnections 16
 
+@interface GCDWebServer () {
+@private
+  NSMutableArray* _handlers;
+  
+  NSUInteger _port;
+  dispatch_source_t _source;
+  CFNetServiceRef _service;
+}
+@end
+
+@interface GCDWebServerHandler () {
+@private
+  GCDWebServerMatchBlock _matchBlock;
+  GCDWebServerProcessBlock _processBlock;
+}
+@end
+
 static BOOL _run;
 
 NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {

@@ -29,6 +29,30 @@
 
 #import "GCDWebServerPrivate.h"
 
+@interface GCDWebServerResponse () {
+@private
+  NSString* _type;
+  NSUInteger _length;
+  NSInteger _status;
+  NSUInteger _maxAge;
+  NSMutableDictionary* _headers;
+}
+@end
+
+@interface GCDWebServerDataResponse () {
+@private
+  NSData* _data;
+  NSInteger _offset;
+}
+@end
+
+@interface GCDWebServerFileResponse () {
+@private
+  NSString* _path;
+  int _file;
+}
+@end
+
 @implementation GCDWebServerResponse
 
 @synthesize contentType=_type, contentLength=_length, statusCode=_status, cacheControlMaxAge=_maxAge, additionalHeaders=_headers;

@@ -31,14 +31,7 @@
 typedef GCDWebServerRequest* (^GCDWebServerMatchBlock)(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery);
 typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* request);
 
-@interface GCDWebServer : NSObject {
-@private
-  NSMutableArray* _handlers;
-  
-  NSUInteger _port;
-  dispatch_source_t _source;
-  CFNetServiceRef _service;
-}
+@interface GCDWebServer : NSObject
 @property(nonatomic, readonly, getter=isRunning) BOOL running;
 @property(nonatomic, readonly) NSUInteger port;
 @property(nonatomic, readonly) NSString* bonjourName;  // Only non-nil if Bonjour registration is active

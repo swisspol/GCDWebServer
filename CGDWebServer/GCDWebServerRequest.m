@@ -37,6 +37,69 @@ enum {
   kParserState_End
 };
 
+@interface GCDWebServerRequest () {
+@private
+  NSString* _method;
+  NSURL* _url;
+  NSDictionary* _headers;
+  NSString* _path;
+  NSDictionary* _query;
+  NSString* _type;
+  NSUInteger _length;
+}
+@end
+
+@interface GCDWebServerDataRequest () {
+@private
+  NSMutableData* _data;
+}
+@end
+
+@interface GCDWebServerFileRequest () {
+@private
+  NSString* _filePath;
+  int _file;
+}
+@end
+
+@interface GCDWebServerMultiPart () {
+@private
+  NSString* _contentType;
+  NSString* _mimeType;
+}
+@end
+
+@interface GCDWebServerMultiPartArgument () {
+@private
+  NSData* _data;
+  NSString* _string;
+}
+@end
+
+@interface GCDWebServerMultiPartFile () {
+@private
+  NSString* _fileName;
+  NSString* _temporaryPath;
+}
+@end
+
+@interface GCDWebServerMultiPartFormRequest () {
+@private
+  NSData* _boundary;
+  
+  NSUInteger _parserState;
+  NSMutableData* _parserData;
+  NSString* _controlName;
+  NSString* _fileName;
+  NSString* _contentType;
+  NSString* _tmpPath;
+  int _tmpFile;
+  
+  NSMutableDictionary* _arguments;
+  NSMutableDictionary* _files;
+}
+@end
+
 static NSData* _newlineData = nil;
 static NSData* _newlinesData = nil;
 static NSData* _dashNewlineData = nil;
