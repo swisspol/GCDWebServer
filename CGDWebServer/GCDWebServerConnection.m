@@ -72,6 +72,7 @@ static dispatch_queue_t _formatterQueue = NULL;
         if (size > 0) {
           LOG_DEBUG(@"Connection received %i bytes on socket %i", size, _socket);
           _bytesRead += size;
+          [self didUpdateBytesRead];
           block(buffer);
         } else {
           if (_bytesRead > 0) {
@@ -195,6 +196,7 @@ static dispatch_queue_t _formatterQueue = NULL;
         DCHECK(data == NULL);
         LOG_DEBUG(@"Connection sent %i bytes on socket %i", size, _socket);
         _bytesWritten += size;
+        [self didUpdateBytesWritten];
         block(YES);
       } else {
         LOG_ERROR(@"Error while writing to socket %i: %s (%i)", _socket, strerror(error), error);
@@ -493,6 +495,14 @@ static dispatch_queue_t _formatterQueue = NULL;
 - (void)open {
   LOG_DEBUG(@"Did open connection on socket %i", _socket);
   [self _readRequestHeaders];
+}
+
+- (void)didUpdateBytesRead {
+  ;
+}
+
+- (void)didUpdateBytesWritten {
+  ;
 }
 
 - (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block {

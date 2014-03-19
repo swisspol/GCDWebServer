@@ -38,6 +38,8 @@
 
 @interface GCDWebServerConnection (Subclassing)
 - (void)open;
+- (void)didUpdateBytesRead;  // Called from arbitrary thread after @totalBytesRead is updated - Default implementation does nothing
+- (void)didUpdateBytesWritten;  // Called from arbitrary thread after @totalBytesWritten is updated - Default implementation does nothing
 - (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block;
 - (void)close;
 @end
