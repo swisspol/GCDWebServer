@@ -18,8 +18,8 @@ What's not supported (but not really required from an embedded HTTP server):
 * HTTPS
 
 Requirements:
-* OS X 10.7 or later
-* iOS 5.0 or later
+* OS X 10.7 or later (x86_64)
+* iOS 5.0 or later (armv7, armv7s or arm64)
 
 Hello World
 ===========
