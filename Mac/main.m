@@ -34,11 +34,13 @@ int main(int argc, const char* argv[]) {
     GCDWebServer* webServer = [[GCDWebServer alloc] init];
     switch (mode) {
       
+      // Simply serve contents of home directory
       case 0: {
-        [webServer addHandlerForBasePath:@"/" localPath:NSHomeDirectory() indexFilename:nil cacheAge:0 allowRangeRequests:YES];
+        [webServer addGETHandlerForBasePath:@"/" directoryPath:NSHomeDirectory() indexFilename:nil cacheAge:0 allowRangeRequests:YES];
         break;
       }
       
+      // Renders a HTML page
       case 1: {
         [webServer addDefaultHandlerForMethod:@"GET"
                                  requestClass:[GCDWebServerRequest class]
@@ -50,6 +52,7 @@ int main(int argc, const char* argv[]) {
         break;
       }
       
+      // Implements an HTML form
       case 2: {
         [webServer addHandlerForMethod:@"GET"
                                   path:@"/"

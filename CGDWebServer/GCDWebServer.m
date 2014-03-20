@@ -361,96 +361,6 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
   } processBlock:block];
 }
 
-- (GCDWebServerResponse*)_responseWithContentsOfFile:(NSString*)path {
-  return [GCDWebServerFileResponse responseWithFile:path];
-}
-
-- (GCDWebServerResponse*)_responseWithPartialContentsOfFile:(NSString*)path byteRange:(NSRange)range {
-  return [GCDWebServerFileResponse responseWithFile:path byteRange:range];
-}
-
-- (GCDWebServerResponse*)_responseWithContentsOfDirectory:(NSString*)path {
-  NSDirectoryEnumerator* enumerator = [[NSFileManager defaultManager] enumeratorAtPath:path];
-  if (enumerator == nil) {
-    return nil;
-  }
-  NSMutableString* html = [NSMutableString string];
-  [html appendString:@"<html><body>\n"];
-  [html appendString:@"<ul>\n"];
-  for (NSString* file in enumerator) {
-    if (![file hasPrefix:@"."]) {
-      NSString* type = [[enumerator fileAttributes] objectForKey:NSFileType];
-      NSString* escapedFile = [file stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-      DCHECK(escapedFile);
-      if ([type isEqualToString:NSFileTypeRegular]) {
-        [html appendFormat:@"<li><a href=\"%@\">%@</a></li>\n", escapedFile, file];
-      } else if ([type isEqualToString:NSFileTypeDirectory]) {
-        [html appendFormat:@"<li><a href=\"%@/\">%@/</a></li>\n", escapedFile, file];
-      }
-    }
-    [enumerator skipDescendents];
-  }
-  [html appendString:@"</ul>\n"];
-  [html appendString:@"</body></html>\n"];
-  return [GCDWebServerDataResponse responseWithHTML:html];
-}
-
-- (void)addHandlerForBasePath:(NSString*)basePath localPath:(NSString*)localPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests {
-  if ([basePath hasPrefix:@"/"] && [basePath hasSuffix:@"/"]) {
-#if __has_feature(objc_arc)
-    __unsafe_unretained GCDWebServer* server = self;
-#else
-    GCDWebServer* server = self;
-#endif
-    [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
-      
-      if (![requestMethod isEqualToString:@"GET"]) {
-        return nil;
-      }
-      if (![urlPath hasPrefix:basePath]) {
-        return nil;
-      }
-      return ARC_AUTORELEASE([[GCDWebServerRequest alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
-      
-    } processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-      
-      GCDWebServerResponse* response = nil;
-      NSString* filePath = [localPath stringByAppendingPathComponent:[request.path substringFromIndex:basePath.length]];
-      BOOL isDirectory;
-      if ([[NSFileManager defaultManager] fileExistsAtPath:filePath isDirectory:&isDirectory]) {
-        if (isDirectory) {
-          if (indexFilename) {
-            NSString* indexPath = [filePath stringByAppendingPathComponent:indexFilename];
-            if ([[NSFileManager defaultManager] fileExistsAtPath:indexPath isDirectory:&isDirectory] && !isDirectory) {
-              return [server _responseWithContentsOfFile:indexPath];
-            }
-          }
-          response = [server _responseWithContentsOfDirectory:filePath];
-        } else if (allowRangeRequests) {
-          NSRange range = request.byteRange;
-          if ((range.location != NSNotFound) || (range.length > 0)) {
-            response = [server _responseWithPartialContentsOfFile:filePath byteRange:range];
-          } else {
-            response = [server _responseWithContentsOfFile:filePath];
-          }
-          [response setValue:@"bytes" forAdditionalHeader:@"Accept-Ranges"];
-        } else {
-          response = [server _responseWithContentsOfFile:filePath];
-        }
-      }
-      if (response) {
-        response.cacheControlMaxAge = cacheAge;
-      } else {
-        response = [GCDWebServerResponse responseWithStatusCode:404];
-      }
-      return response;
-      
-    }];
-  } else {
-    DNOT_REACHED();
-  }
-}
-
 - (void)addHandlerForMethod:(NSString*)method path:(NSString*)path requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block {
   if ([path hasPrefix:@"/"] && [aClass isSubclassOfClass:[GCDWebServerRequest class]]) {
     [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
@@ -483,6 +393,116 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
       return ARC_AUTORELEASE([[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
       
     } processBlock:block];
+  } else {
+    DNOT_REACHED();
+  }
+}
+
+@end
+
+@implementation GCDWebServer (GETHandlers)
+
+- (void)addGETHandlerForPath:(NSString*)path staticData:(NSData*)staticData contentType:(NSString*)contentType cacheAge:(NSUInteger)cacheAge {
+  GCDWebServerResponse* response = [GCDWebServerDataResponse responseWithData:staticData contentType:contentType];
+  response.cacheControlMaxAge = cacheAge;
+  [self addHandlerForMethod:@"GET" path:path requestClass:[GCDWebServerRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+    
+    return response;
+    
+  }];
+}
+
+- (void)addGETHandlerForPath:(NSString*)path filePath:(NSString*)filePath isAttachment:(BOOL)isAttachment cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests {
+  [self addHandlerForMethod:@"GET" path:path requestClass:[GCDWebServerRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+    
+    GCDWebServerResponse* response = nil;
+    if (allowRangeRequests) {
+      response = [GCDWebServerFileResponse responseWithFile:filePath byteRange:request.byteRange isAttachment:isAttachment];
+      [response setValue:@"bytes" forAdditionalHeader:@"Accept-Ranges"];
+    } else {
+      response = [GCDWebServerFileResponse responseWithFile:filePath isAttachment:isAttachment];
+    }
+    response.cacheControlMaxAge = cacheAge;
+    return response;
+    
+  }];
+}
+
+- (GCDWebServerResponse*)_responseWithContentsOfDirectory:(NSString*)path {
+  NSDirectoryEnumerator* enumerator = [[NSFileManager defaultManager] enumeratorAtPath:path];
+  if (enumerator == nil) {
+    return nil;
+  }
+  NSMutableString* html = [NSMutableString string];
+  [html appendString:@"<!DOCTYPE html>\n"];
+  [html appendString:@"<html><head><meta charset=\"utf-8\"></head><body>\n"];
+  [html appendString:@"<ul>\n"];
+  for (NSString* file in enumerator) {
+    if (![file hasPrefix:@"."]) {
+      NSString* type = [[enumerator fileAttributes] objectForKey:NSFileType];
+      NSString* escapedFile = [file stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+      DCHECK(escapedFile);
+      if ([type isEqualToString:NSFileTypeRegular]) {
+        [html appendFormat:@"<li><a href=\"%@\">%@</a></li>\n", escapedFile, file];
+      } else if ([type isEqualToString:NSFileTypeDirectory]) {
+        [html appendFormat:@"<li><a href=\"%@/\">%@/</a></li>\n", escapedFile, file];
+      }
+    }
+    [enumerator skipDescendents];
+  }
+  [html appendString:@"</ul>\n"];
+  [html appendString:@"</body></html>\n"];
+  return [GCDWebServerDataResponse responseWithHTML:html];
+}
+
+- (void)addGETHandlerForBasePath:(NSString*)basePath directoryPath:(NSString*)directoryPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests {
+  if ([basePath hasPrefix:@"/"] && [basePath hasSuffix:@"/"]) {
+#if __has_feature(objc_arc)
+    __unsafe_unretained GCDWebServer* server = self;
+#else
+    GCDWebServer* server = self;
+#endif
+    [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
+      
+      if (![requestMethod isEqualToString:@"GET"]) {
+        return nil;
+      }
+      if (![urlPath hasPrefix:basePath]) {
+        return nil;
+      }
+      return ARC_AUTORELEASE([[GCDWebServerRequest alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
+      
+    } processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+      
+      GCDWebServerResponse* response = nil;
+      NSString* filePath = [directoryPath stringByAppendingPathComponent:[request.path substringFromIndex:basePath.length]];
+      BOOL isDirectory;
+      if ([[NSFileManager defaultManager] fileExistsAtPath:filePath isDirectory:&isDirectory]) {
+        if (isDirectory) {
+          if (indexFilename) {
+            NSString* indexPath = [filePath stringByAppendingPathComponent:indexFilename];
+            if ([[NSFileManager defaultManager] fileExistsAtPath:indexPath isDirectory:&isDirectory] && !isDirectory) {
+              return [GCDWebServerFileResponse responseWithFile:indexPath];
+            }
+          }
+          response = [server _responseWithContentsOfDirectory:filePath];
+        } else  {
+          if (allowRangeRequests) {
+            response = [GCDWebServerFileResponse responseWithFile:filePath byteRange:request.byteRange];
+            [response setValue:@"bytes" forAdditionalHeader:@"Accept-Ranges"];
+          } else {
+            response = [GCDWebServerFileResponse responseWithFile:filePath];
+          }
+        }
+      }
+      if (response) {
+        response.cacheControlMaxAge = cacheAge;
+      } else {
+        response = [GCDWebServerResponse responseWithStatusCode:404];
+      }
+      return response;
+      
+    }];
   } else {
     DNOT_REACHED();
   }
