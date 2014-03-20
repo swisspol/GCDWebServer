@@ -29,10 +29,6 @@
 
 #import "GCDWebServer.h"
 
-@interface AppDelegate : UIResponder <UIApplicationDelegate> {
-@private
-  UIWindow* _window;
-  GCDWebServer* _webServer;
-}
+@interface AppDelegate : UIResponder <UIApplicationDelegate>
 @property(retain, nonatomic) UIWindow* window;
 @end

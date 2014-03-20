@@ -27,6 +27,13 @@
 
 #import "AppDelegate.h"
 
+@interface AppDelegate () {
+@private
+  UIWindow* _window;
+  GCDWebServer* _webServer;
+}
+@end
+
 @implementation AppDelegate
 
 @synthesize window=_window;

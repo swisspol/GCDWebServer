@@ -63,6 +63,12 @@ enum {
 }
 @end
 
+@interface GCDWebServerURLEncodedFormRequest () {
+@private
+  NSDictionary* _arguments;
+}
+@end
+
 @interface GCDWebServerMultiPart () {
 @private
   NSString* _contentType;

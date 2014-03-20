@@ -54,10 +54,7 @@
 @property(nonatomic, readonly) NSString* filePath;  // Only valid after open / write / close sequence
 @end
 
-@interface GCDWebServerURLEncodedFormRequest : GCDWebServerDataRequest {
-@private
-  NSDictionary* _arguments;
-}
+@interface GCDWebServerURLEncodedFormRequest : GCDWebServerDataRequest
 @property(nonatomic, readonly) NSDictionary* arguments;  // Only valid after open / write / close sequence
 + (NSString*)mimeType;
 @end
