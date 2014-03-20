@@ -181,7 +181,7 @@
 - (NSInteger)read:(void*)buffer maxLength:(NSUInteger)length {
   DCHECK(_offset >= 0);
   NSInteger size = 0;
-  if (_offset < _data.length) {
+  if (_offset < (NSInteger)_data.length) {
     size = MIN(_data.length - _offset, length);
     bcopy((char*)_data.bytes + _offset, buffer, size);
     _offset += size;
@@ -282,10 +282,10 @@
   }
   if ((range.location != NSNotFound) || (range.length > 0)) {
     if (range.location != NSNotFound) {
-      range.location = MIN(range.location, info.st_size);
+      range.location = MIN(range.location, (NSUInteger)info.st_size);
       range.length = MIN(range.length, info.st_size - range.location);
     } else {
-      range.length = MIN(range.length, info.st_size);
+      range.length = MIN(range.length, (NSUInteger)info.st_size);
       range.location = info.st_size - range.length;
     }
     if (range.length == 0) {
@@ -337,7 +337,7 @@
   if (_file <= 0) {
     return NO;
   }
-  if (lseek(_file, _offset, SEEK_SET) != _offset) {
+  if (lseek(_file, _offset, SEEK_SET) != (off_t)_offset) {
     close(_file);
     _file = 0;
     return NO;

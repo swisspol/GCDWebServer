@@ -529,7 +529,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
           NSUInteger dataLength = range.location - 2;
           if (_tmpPath) {
             ssize_t result = write(_tmpFile, dataBytes, dataLength);
-            if (result == dataLength) {
+            if (result == (ssize_t)dataLength) {
               if (close(_tmpFile) == 0) {
                 _tmpFile = 0;
                 GCDWebServerMultiPartFile* file = [[GCDWebServerMultiPartFile alloc] initWithContentType:_contentType fileName:_fileName temporaryPath:_tmpPath];
@@ -567,7 +567,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
       if (_tmpPath && (_parserData.length > margin)) {
         NSUInteger length = _parserData.length - margin;
         ssize_t result = write(_tmpFile, _parserData.bytes, length);
-        if (result == length) {
+        if (result == (ssize_t)length) {
           [_parserData replaceBytesInRange:NSMakeRange(0, length) withBytes:NULL length:0];
         } else {
           DNOT_REACHED();

@@ -157,7 +157,7 @@ static dispatch_queue_t _formatterQueue = NULL;
       if (remainingLength >= 0) {
         bool success = dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t offset, const void* buffer, size_t size) {
           NSInteger result = [_request write:buffer maxLength:size];
-          if (result != size) {
+          if (result != (NSInteger)size) {
             LOG_ERROR(@"Failed writing request body on socket %i (error %i)", _socket, (int)result);
             return false;
           }
@@ -173,8 +173,8 @@ static dispatch_queue_t _formatterQueue = NULL;
           block(NO);
         }
       } else {
-        DNOT_REACHED();
         block(NO);
+        DNOT_REACHED();
       }
     } else {
       block(NO);
@@ -360,7 +360,7 @@ static dispatch_queue_t _formatterQueue = NULL;
     NSInteger length = _request.contentLength;
     if (initialData.length) {
       NSInteger result = [_request write:initialData.bytes maxLength:initialData.length];
-      if (result == initialData.length) {
+      if (result == (NSInteger)initialData.length) {
         length -= initialData.length;
         DCHECK(length >= 0);
       } else {

@@ -314,7 +314,16 @@
 				CLANG_ENABLE_OBJC_ARC = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				ONLY_ACTIVE_ARCH = YES;
-				WARNING_CFLAGS = "-Wall";
+				WARNING_CFLAGS = (
+					"-Wall",
+					"-Weverything",
+					"-Wno-gnu-statement-expression",
+					"-Wno-direct-ivar-access",
+					"-Wno-implicit-retain-self",
+					"-Wno-assign-enum",
+					"-Wno-format-nonliteral",
+					"-Wno-cast-align",
+				);
 			};
 			name = Debug;
 		};
@@ -323,6 +332,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_ARC = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = NDEBUG;
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				WARNING_CFLAGS = "-Wall";
 			};
 			name = Release;
