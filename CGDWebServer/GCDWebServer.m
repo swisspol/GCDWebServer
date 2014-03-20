@@ -395,7 +395,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
   return [GCDWebServerDataResponse responseWithHTML:html];
 }
 
-- (void)addHandlerForBasePath:(NSString*)basePath localPath:(NSString*)localPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)age {
+- (void)addHandlerForBasePath:(NSString*)basePath localPath:(NSString*)localPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests {
   if ([basePath hasPrefix:@"/"] && [basePath hasSuffix:@"/"]) {
 #if __has_feature(objc_arc)
     __unsafe_unretained GCDWebServer* server = self;
@@ -426,7 +426,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
             }
           }
           response = [server _responseWithContentsOfDirectory:filePath];
-        } else {
+        } else if (allowRangeRequests) {
           NSRange range = request.byteRange;
           if ((range.location != NSNotFound) || (range.length > 0)) {
             response = [server _responseWithPartialContentsOfFile:filePath byteRange:range];
@@ -434,10 +434,12 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
             response = [server _responseWithContentsOfFile:filePath];
           }
           [response setValue:@"bytes" forAdditionalHeader:@"Accept-Ranges"];
+        } else {
+          response = [server _responseWithContentsOfFile:filePath];
         }
       }
       if (response) {
-        response.cacheControlMaxAge = age;
+        response.cacheControlMaxAge = cacheAge;
       } else {
         response = [GCDWebServerResponse responseWithStatusCode:404];
       }

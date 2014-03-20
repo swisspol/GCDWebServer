@@ -54,7 +54,7 @@ typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* r
 
 @interface GCDWebServer (Handlers)
 - (void)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block;
-- (void)addHandlerForBasePath:(NSString*)basePath localPath:(NSString*)localPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)age;  // Base path is recursive and case-sensitive
+- (void)addHandlerForBasePath:(NSString*)basePath localPath:(NSString*)localPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests;  // Base path is recursive and case-sensitive
 - (void)addHandlerForMethod:(NSString*)method path:(NSString*)path requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block;  // Path is case-insensitive
 - (void)addHandlerForMethod:(NSString*)method pathRegex:(NSString*)regex requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block;  // Regular expression is case-insensitive
 @end
