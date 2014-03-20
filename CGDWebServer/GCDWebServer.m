@@ -433,11 +433,11 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
           } else {
             response = [server _responseWithContentsOfFile:filePath];
           }
+          [response setValue:@"bytes" forAdditionalHeader:@"Accept-Ranges"];
         }
       }
       if (response) {
         response.cacheControlMaxAge = age;
-        [response setValue:@"bytes" forAdditionalHeader:@"Accept-Ranges"];
       } else {
         response = [GCDWebServerResponse responseWithStatusCode:404];
       }
