@@ -70,20 +70,20 @@ static dispatch_queue_t _formatterQueue = NULL;
       if (error == 0) {
         size_t size = dispatch_data_get_size(buffer);
         if (size > 0) {
-          LOG_DEBUG(@"Connection received %i bytes on socket %i", size, _socket);
+          GCDWS_LOG_DEBUG(@"Connection received %i bytes on socket %i", size, _socket);
           _bytesRead += size;
           [self didUpdateBytesRead];
           block(buffer);
         } else {
           if (_bytesRead > 0) {
-            LOG_ERROR(@"No more data available on socket %i", _socket);
+            GCDWS_LOG_ERROR(@"No more data available on socket %i", _socket);
           } else {
-            LOG_WARNING(@"No data received from socket %i", _socket);
+            GCDWS_LOG_WARNING(@"No data received from socket %i", _socket);
           }
           block(NULL);
         }
       } else {
-        LOG_ERROR(@"Error while reading from socket %i: %s (%i)", _socket, strerror(error), error);
+        GCDWS_LOG_ERROR(@"Error while reading from socket %i: %s (%i)", _socket, strerror(error), error);
         block(NULL);
       }
     }
@@ -124,7 +124,7 @@ static dispatch_queue_t _formatterQueue = NULL;
         if (CFHTTPMessageAppendBytes(_requestMessage, data.bytes, data.length)) {
           [self _readHeadersWithCompletionBlock:block];
         } else {
-          LOG_ERROR(@"Failed appending request headers data from socket %i", _socket);
+          GCDWS_LOG_ERROR(@"Failed appending request headers data from socket %i", _socket);
           block(nil);
         }
       } else {
@@ -133,11 +133,11 @@ static dispatch_queue_t _formatterQueue = NULL;
           if (CFHTTPMessageIsHeaderComplete(_requestMessage)) {
             block([data subdataWithRange:NSMakeRange(length, data.length - length)]);
           } else {
-            LOG_ERROR(@"Failed parsing request headers from socket %i", _socket);
+            GCDWS_LOG_ERROR(@"Failed parsing request headers from socket %i", _socket);
             block(nil);
           }
         } else {
-          LOG_ERROR(@"Failed appending request headers data from socket %i", _socket);
+          GCDWS_LOG_ERROR(@"Failed appending request headers data from socket %i", _socket);
           block(nil);
         }
       }
@@ -158,7 +158,7 @@ static dispatch_queue_t _formatterQueue = NULL;
         bool success = dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t offset, const void* buffer, size_t size) {
           NSInteger result = [_request write:buffer maxLength:size];
           if (result != size) {
-            LOG_ERROR(@"Failed writing request body on socket %i (error %i)", _socket, (int)result);
+            GCDWS_LOG_ERROR(@"Failed writing request body on socket %i (error %i)", _socket, (int)result);
             return false;
           }
           return true;
@@ -194,12 +194,12 @@ static dispatch_queue_t _formatterQueue = NULL;
     @autoreleasepool {
       if (error == 0) {
         DCHECK(data == NULL);
-        LOG_DEBUG(@"Connection sent %i bytes on socket %i", size, _socket);
+        GCDWS_LOG_DEBUG(@"Connection sent %i bytes on socket %i", size, _socket);
         _bytesWritten += size;
         [self didUpdateBytesWritten];
         block(YES);
       } else {
-        LOG_ERROR(@"Error while writing to socket %i: %s (%i)", _socket, strerror(error), error);
+        GCDWS_LOG_ERROR(@"Error while writing to socket %i: %s (%i)", _socket, strerror(error), error);
         block(NO);
       }
     }
@@ -246,7 +246,7 @@ static dispatch_queue_t _formatterQueue = NULL;
     }];
     ARC_DISPATCH_RELEASE(wrapper);
   } else if (result < 0) {
-    LOG_ERROR(@"Failed reading response body on socket %i (error %i)", _socket, (int)result);
+    GCDWS_LOG_ERROR(@"Failed reading response body on socket %i (error %i)", _socket, (int)result);
     block(NO);
     free(buffer);
   } else {
@@ -307,7 +307,7 @@ static dispatch_queue_t _formatterQueue = NULL;
   [self _writeHeadersWithCompletionBlock:^(BOOL success) {
     ;  // Nothing more to do
   }];
-  LOG_DEBUG(@"Connection aborted with status code %i on socket %i", statusCode, _socket);
+  GCDWS_LOG_DEBUG(@"Connection aborted with status code %i on socket %i", statusCode, _socket);
 }
 
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
@@ -364,7 +364,7 @@ static dispatch_queue_t _formatterQueue = NULL;
         length -= initialData.length;
         DCHECK(length >= 0);
       } else {
-        LOG_ERROR(@"Failed writing request body on socket %i (error %i)", _socket, (int)result);
+        GCDWS_LOG_ERROR(@"Failed writing request body on socket %i (error %i)", _socket, (int)result);
         length = -1;
       }
     }
@@ -435,14 +435,14 @@ static dispatch_queue_t _formatterQueue = NULL;
                   
                 }];
               } else {
-                LOG_ERROR(@"Unsupported 'Expect' / 'Content-Length' header combination on socket %i", _socket);
+                GCDWS_LOG_ERROR(@"Unsupported 'Expect' / 'Content-Length' header combination on socket %i", _socket);
                 [self _abortWithStatusCode:417];
               }
             } else {
               [self _readRequestBody:extraData];
             }
           } else {
-            LOG_ERROR(@"Unexpected 'Content-Length' header value on socket %i", _socket);
+            GCDWS_LOG_ERROR(@"Unexpected 'Content-Length' header value on socket %i", _socket);
             [self _abortWithStatusCode:400];
           }
         } else {
@@ -493,7 +493,7 @@ static dispatch_queue_t _formatterQueue = NULL;
 @implementation GCDWebServerConnection (Subclassing)
 
 - (void)open {
-  LOG_DEBUG(@"Did open connection on socket %i", _socket);
+  GCDWS_LOG_DEBUG(@"Did open connection on socket %i", _socket);
   [self _readRequestHeaders];
 }
 
@@ -506,13 +506,13 @@ static dispatch_queue_t _formatterQueue = NULL;
 }
 
 - (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block {
-  LOG_DEBUG(@"Connection on socket %i processing %@ request for \"%@\" (%i bytes body)", _socket, _request.method, _request.path, _request.contentLength);
+  GCDWS_LOG_DEBUG(@"Connection on socket %i processing %@ request for \"%@\" (%i bytes body)", _socket, _request.method, _request.path, _request.contentLength);
   GCDWebServerResponse* response = nil;
   @try {
     response = block(request);
   }
   @catch (NSException* exception) {
-    LOG_EXCEPTION(exception);
+    GCDWS_LOG_EXCEPTION(exception);
   }
   return response;
 }
@@ -520,9 +520,9 @@ static dispatch_queue_t _formatterQueue = NULL;
 - (void)close {
   int result = close(_socket);
   if (result != 0) {
-    LOG_ERROR(@"Failed closing socket %i for connection (%i): %s", _socket, errno, strerror(errno));
+    GCDWS_LOG_ERROR(@"Failed closing socket %i for connection (%i): %s", _socket, errno, strerror(errno));
   }
-  LOG_DEBUG(@"Did close connection on socket %i", _socket);
+  GCDWS_LOG_DEBUG(@"Did close connection on socket %i", _socket);
 }
 
 @end

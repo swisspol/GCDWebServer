@@ -190,9 +190,9 @@ static void _SignalHandler(int signal) {
 static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* error, void* info) {
   @autoreleasepool {
     if (error->error) {
-      LOG_ERROR(@"Bonjour error %i (domain %i)", error->error, (int)error->domain);
+      GCDWS_LOG_ERROR(@"Bonjour error %i (domain %i)", error->error, (int)error->domain);
     } else {
-      LOG_VERBOSE(@"Registered Bonjour service \"%@\" in domain \"%@\" with type '%@' on port %i", CFNetServiceGetName(service), CFNetServiceGetDomain(service), CFNetServiceGetType(service), CFNetServiceGetPortNumber(service));
+      GCDWS_LOG_VERBOSE(@"Registered Bonjour service \"%@\" in domain \"%@\" with type '%@' on port %i", CFNetServiceGetName(service), CFNetServiceGetDomain(service), CFNetServiceGetType(service), CFNetServiceGetPortNumber(service));
     }
   }
 }
@@ -219,9 +219,9 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
           @autoreleasepool {
             int result = close(listeningSocket);
             if (result != 0) {
-              LOG_ERROR(@"Failed closing socket (%i): %s", errno, strerror(errno));
+              GCDWS_LOG_ERROR(@"Failed closing socket (%i): %s", errno, strerror(errno));
             } else {
-              LOG_DEBUG(@"Closed listening socket");
+              GCDWS_LOG_DEBUG(@"Closed listening socket");
             }
           }
           
@@ -245,7 +245,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
               [connection release];
 #endif
             } else {
-              LOG_ERROR(@"Failed accepting socket (%i): %s", errno, strerror(errno));
+              GCDWS_LOG_ERROR(@"Failed accepting socket (%i): %s", errno, strerror(errno));
             }
           }
           
@@ -258,7 +258,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
             struct sockaddr_in* sockaddr = (struct sockaddr_in*)&addr;
             _port = ntohs(sockaddr->sin_port);
           } else {
-            LOG_ERROR(@"Failed retrieving socket address (%i): %s", errno, strerror(errno));
+            GCDWS_LOG_ERROR(@"Failed retrieving socket address (%i): %s", errno, strerror(errno));
           }
         } else {
           _port = port;
@@ -273,22 +273,22 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
             CFStreamError error = {0};
             CFNetServiceRegisterWithOptions(_service, 0, &error);
           } else {
-            LOG_ERROR(@"Failed creating CFNetService");
+            GCDWS_LOG_ERROR(@"Failed creating CFNetService");
           }
         }
         
         dispatch_resume(_source);
-        LOG_VERBOSE(@"%@ started on port %i", [self class], (int)_port);
+        GCDWS_LOG_VERBOSE(@"%@ started on port %i", [self class], (int)_port);
       } else {
-        LOG_ERROR(@"Failed listening on socket (%i): %s", errno, strerror(errno));
+        GCDWS_LOG_ERROR(@"Failed listening on socket (%i): %s", errno, strerror(errno));
         close(listeningSocket);
       }
     } else {
-      LOG_ERROR(@"Failed binding socket (%i): %s", errno, strerror(errno));
+      GCDWS_LOG_ERROR(@"Failed binding socket (%i): %s", errno, strerror(errno));
       close(listeningSocket);
     }
   } else {
-    LOG_ERROR(@"Failed creating socket (%i): %s", errno, strerror(errno));
+    GCDWS_LOG_ERROR(@"Failed creating socket (%i): %s", errno, strerror(errno));
   }
   return (_source ? YES : NO);
 }
@@ -311,7 +311,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
     ARC_DISPATCH_RELEASE(_source);
     _source = NULL;
     
-    LOG_VERBOSE(@"%@ stopped", [self class]);
+    GCDWS_LOG_VERBOSE(@"%@ stopped", [self class]);
   }
   _port = 0;
 }
