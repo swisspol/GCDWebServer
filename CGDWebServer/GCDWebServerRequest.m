@@ -46,6 +46,7 @@ enum {
   NSDictionary* _query;
   NSString* _type;
   NSUInteger _length;
+  NSRange _range;
 }
 @end
 
@@ -133,7 +134,7 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
 
 @implementation GCDWebServerRequest : NSObject
 
-@synthesize method=_method, URL=_url, headers=_headers, path=_path, query=_query, contentType=_type, contentLength=_length;
+@synthesize method=_method, URL=_url, headers=_headers, path=_path, query=_query, contentType=_type, contentLength=_length, byteRange=_range;
 
 - (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
   if ((self = [super init])) {
@@ -151,9 +152,38 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
       return nil;
     }
     _length = length;
-    
     if ((_length > 0) && (_type == nil)) {
       _type = [kGCDWebServerDefaultMimeType copy];
+    }
+    
+    _range = NSMakeRange(NSNotFound, 0);
+    NSString* rangeHeader = [[_headers objectForKey:@"Range"] lowercaseString];
+    if (rangeHeader) {
+      if ([rangeHeader hasPrefix:@"bytes="]) {
+        NSArray* components = [[rangeHeader substringFromIndex:6] componentsSeparatedByString:@","];
+        if (components.count == 1) {
+          components = [[components firstObject] componentsSeparatedByString:@"-"];
+          if (components.count == 2) {
+            NSString* startString = [components objectAtIndex:0];
+            NSInteger startValue = [startString integerValue];
+            NSString* endString = [components objectAtIndex:1];
+            NSInteger endValue = [endString integerValue];
+            if (startString.length && (startValue >= 0) && endString.length && (endValue >= startValue)) {  // The second 500 bytes: "500-999"
+              _range.location = startValue;
+              _range.length = endValue - startValue + 1;
+            } else if (startString.length && (startValue >= 0)) {  // The bytes after 9500 bytes: "9500-"
+              _range.location = startValue;
+              _range.length = NSUIntegerMax;
+            } else if (endString.length && (endValue > 0)) {  // The final 500 bytes: "-500"
+              _range.location = NSNotFound;
+              _range.length = endValue;
+            }
+          }
+        }
+      }
+      if ((_range.location == NSNotFound) && (_range.length == 0)) {  // Ignore "Range" header if syntactically invalid
+        LOG_WARNING(@"Failed to parse 'Range' header \"%@\" for url: %@", rangeHeader, url);
+      }
     }
   }
   return self;

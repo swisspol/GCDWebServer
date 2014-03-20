@@ -365,6 +365,10 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
   return [GCDWebServerFileResponse responseWithFile:path];
 }
 
+- (GCDWebServerResponse*)_responseWithPartialContentsOfFile:(NSString*)path byteRange:(NSRange)range {
+  return [GCDWebServerFileResponse responseWithFile:path byteRange:range];
+}
+
 - (GCDWebServerResponse*)_responseWithContentsOfDirectory:(NSString*)path {
   NSDirectoryEnumerator* enumerator = [[NSFileManager defaultManager] enumeratorAtPath:path];
   if (enumerator == nil) {
@@ -423,11 +427,17 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
           }
           response = [server _responseWithContentsOfDirectory:filePath];
         } else {
-          response = [server _responseWithContentsOfFile:filePath];
+          NSRange range = request.byteRange;
+          if ((range.location != NSNotFound) || (range.length > 0)) {
+            response = [server _responseWithPartialContentsOfFile:filePath byteRange:range];
+          } else {
+            response = [server _responseWithContentsOfFile:filePath];
+          }
         }
       }
       if (response) {
         response.cacheControlMaxAge = age;
+        [response setValue:@"bytes" forAdditionalHeader:@"Accept-Ranges"];
       } else {
         response = [GCDWebServerResponse responseWithStatusCode:404];
       }
