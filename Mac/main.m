@@ -29,9 +29,10 @@
 
 int main(int argc, const char* argv[]) {
   BOOL success = NO;
+  int mode = (argc == 2 ? MIN(MAX(atoi(argv[1]), 0), 2) : 0);
   @autoreleasepool {
     GCDWebServer* webServer = [[GCDWebServer alloc] init];
-    switch (0) {
+    switch (mode) {
       
       case 0: {
         [webServer addHandlerForBasePath:@"/" localPath:NSHomeDirectory() indexFilename:nil cacheAge:0 allowRangeRequests:YES];
