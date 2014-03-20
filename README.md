@@ -18,8 +18,8 @@ What's not supported (but not really required from an embedded HTTP server):
 * HTTPS
 
 Requirements:
-* OS X 10.7 or later
-* iOS 5.0 or later
+* OS X 10.7 or later (x86_64)
+* iOS 5.0 or later (armv7, armv7s or arm64)
 
 Hello World
 ===========
@@ -67,7 +67,7 @@ int main(int argc, const char* argv[]) {
   @autoreleasepool {
     
     GCDWebServer* webServer = [[GCDWebServer alloc] init];
-    [webServer addHandlerForBasePath:@"/" localPath:NSHomeDirectory() indexFilename:nil cacheAge:3600];
+    [webServer addHandlerForBasePath:@"/" localPath:NSHomeDirectory() indexFilename:nil cacheAge:3600 allowRangeRequests:YES];
     [webServer runWithPort:8080];
     [webServer release];
     
@@ -171,7 +171,7 @@ Assuming you have a website directory in your app containing HTML template files
 NSString* websitePath = [[NSBundle mainBundle] pathForResource:@"Website" ofType:nil];
 
 // Add a default handler to serve static files (i.e. anything other than HTML files)
-[self addHandlerForBasePath:@"/" localPath:websitePath indexFilename:nil cacheAge:3600];
+[self addHandlerForBasePath:@"/" localPath:websitePath indexFilename:nil cacheAge:3600 allowRangeRequests:YES];
 
 // Add an override handler for all requests to "*.html" URLs to do the special HTML templatization
 [self addHandlerForMethod:@"GET"

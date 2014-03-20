@@ -34,7 +34,7 @@ int main(int argc, const char* argv[]) {
     switch (0) {
       
       case 0: {
-        [webServer addHandlerForBasePath:@"/" localPath:NSHomeDirectory() indexFilename:nil cacheAge:0];
+        [webServer addHandlerForBasePath:@"/" localPath:NSHomeDirectory() indexFilename:nil cacheAge:0 allowRangeRequests:YES];
         break;
       }
       

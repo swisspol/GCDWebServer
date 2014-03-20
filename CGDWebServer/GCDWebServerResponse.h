@@ -70,6 +70,10 @@
 @interface GCDWebServerFileResponse : GCDWebServerResponse
 + (GCDWebServerFileResponse*)responseWithFile:(NSString*)path;
 + (GCDWebServerFileResponse*)responseWithFile:(NSString*)path isAttachment:(BOOL)attachment;
++ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path byteRange:(NSRange)range;
++ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment;
 - (id)initWithFile:(NSString*)path;
 - (id)initWithFile:(NSString*)path isAttachment:(BOOL)attachment;
+- (id)initWithFile:(NSString*)path byteRange:(NSRange)range;  // Pass [NSNotFound, 0] to disable byte range entirely, [offset, length] to enable byte range from beginning of file or [NSNotFound, -bytes] from end of file
+- (id)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment;
 @end

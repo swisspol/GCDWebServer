@@ -49,6 +49,8 @@
 @interface GCDWebServerFileResponse () {
 @private
   NSString* _path;
+  NSUInteger _offset;
+  NSUInteger _size;
   int _file;
 }
 @end
@@ -251,24 +253,63 @@
   return ARC_AUTORELEASE([[[self class] alloc] initWithFile:path isAttachment:attachment]);
 }
 
++ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path byteRange:(NSRange)range {
+  return ARC_AUTORELEASE([[[self class] alloc] initWithFile:path byteRange:range]);
+}
+
++ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment {
+  return ARC_AUTORELEASE([[[self class] alloc] initWithFile:path byteRange:range isAttachment:attachment]);
+}
+
 - (id)initWithFile:(NSString*)path {
-  return [self initWithFile:path isAttachment:NO];
+  return [self initWithFile:path byteRange:NSMakeRange(NSNotFound, 0) isAttachment:NO];
 }
 
 - (id)initWithFile:(NSString*)path isAttachment:(BOOL)attachment {
+  return [self initWithFile:path byteRange:NSMakeRange(NSNotFound, 0) isAttachment:attachment];
+}
+
+- (id)initWithFile:(NSString*)path byteRange:(NSRange)range {
+  return [self initWithFile:path byteRange:range isAttachment:NO];
+}
+
+- (id)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment {
   struct stat info;
   if (lstat([path fileSystemRepresentation], &info) || !(info.st_mode & S_IFREG)) {
     DNOT_REACHED();
     ARC_RELEASE(self);
     return nil;
   }
+  if ((range.location != NSNotFound) || (range.length > 0)) {
+    if (range.location != NSNotFound) {
+      range.location = MIN(range.location, info.st_size);
+      range.length = MIN(range.length, info.st_size - range.location);
+    } else {
+      range.length = MIN(range.length, info.st_size);
+      range.location = info.st_size - range.length;
+    }
+    if (range.length == 0) {
+      ARC_RELEASE(self);
+      return nil;  // TODO: Return 416 status code and "Content-Range: bytes */{file length}" header
+    }
+  }
   NSString* type = GCDWebServerGetMimeTypeForExtension([path pathExtension]);
   if (type == nil) {
     type = kGCDWebServerDefaultMimeType;
   }
   
-  if ((self = [super initWithContentType:type contentLength:(NSUInteger)info.st_size])) {
+  if ((self = [super initWithContentType:type contentLength:(range.location != NSNotFound ? range.length : info.st_size)])) {
     _path = [path copy];
+    if (range.location != NSNotFound) {
+      _offset = range.location;
+      _size = range.length;
+      [self setStatusCode:206];
+      [self setValue:[NSString stringWithFormat:@"bytes %i-%i/%i", (int)range.location, (int)(range.location + range.length - 1), (int)info.st_size] forAdditionalHeader:@"Content-Range"];
+      LOG_DEBUG(@"Using content bytes range [%i-%i] for file \"%@\"", (int)range.location, (int)(range.location + range.length - 1), path);
+    } else {
+      _offset = 0;
+      _size = info.st_size;
+    }
     if (attachment) {  // TODO: Use http://tools.ietf.org/html/rfc5987 to encode file names with special characters instead of using lossy conversion to ISO 8859-1
       NSData* data = [[path lastPathComponent] dataUsingEncoding:NSISOLatin1StringEncoding allowLossyConversion:YES];
       NSString* fileName = data ? [[NSString alloc] initWithData:data encoding:NSISOLatin1StringEncoding] : nil;
@@ -293,12 +334,24 @@
 - (BOOL)open {
   DCHECK(_file <= 0);
   _file = open([_path fileSystemRepresentation], O_NOFOLLOW | O_RDONLY);
-  return (_file > 0 ? YES : NO);
+  if (_file <= 0) {
+    return NO;
+  }
+  if (lseek(_file, _offset, SEEK_SET) != _offset) {
+    close(_file);
+    _file = 0;
+    return NO;
+  }
+  return YES;
 }
 
 - (NSInteger)read:(void*)buffer maxLength:(NSUInteger)length {
   DCHECK(_file > 0);
-  return read(_file, buffer, length);
+  ssize_t result = read(_file, buffer, MIN(length, _size));
+  if (result > 0) {
+    _size -= result;
+  }
+  return result;
 }
 
 - (BOOL)close {
