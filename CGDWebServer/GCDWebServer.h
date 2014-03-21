@@ -31,6 +31,18 @@
 typedef GCDWebServerRequest* (^GCDWebServerMatchBlock)(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery);
 typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* request);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension);
+NSString* GCDWebServerUnescapeURLString(NSString* string);
+NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form);
+
+#ifdef __cplusplus
+}
+#endif
+
 @interface GCDWebServer : NSObject
 @property(nonatomic, readonly, getter=isRunning) BOOL running;
 @property(nonatomic, readonly) NSUInteger port;

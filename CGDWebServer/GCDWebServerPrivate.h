@@ -106,18 +106,6 @@ static inline void __LogMessage(long level, NSString* format, ...) {
 #define kGCDWebServerDefaultMimeType @"application/octet-stream"
 #define kGCDWebServerGCDQueue dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension);
-NSString* GCDWebServerUnescapeURLString(NSString* string);
-NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form);
-
-#ifdef __cplusplus
-}
-#endif
-
 @interface GCDWebServerConnection ()
 - (id)initWithServer:(GCDWebServer*)server address:(NSData*)address socket:(CFSocketNativeHandle)socket;
 @end
