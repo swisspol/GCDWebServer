@@ -79,6 +79,8 @@
 		E22112981690B7AA0048D2B2 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.0.sdk/System/Library/Frameworks/CFNetwork.framework; sourceTree = DEVELOPER_DIR; };
 		E221129A1690B7B10048D2B2 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.0.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		E221129C1690B7BA0048D2B2 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.0.sdk/System/Library/Frameworks/MobileCoreServices.framework; sourceTree = DEVELOPER_DIR; };
+		E263213318DB688E00D9DC0C /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
+		E263213418DB7F7900D9DC0C /* filedrop-min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "filedrop-min.js"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -145,6 +147,8 @@
 		E221128D1690B6470048D2B2 /* Mac */ = {
 			isa = PBXGroup;
 			children = (
+				E263213418DB7F7900D9DC0C /* filedrop-min.js */,
+				E263213318DB688E00D9DC0C /* index.html */,
 				E221128E1690B6470048D2B2 /* main.m */,
 			);
 			path = Mac;
@@ -293,6 +297,16 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				OTHER_LDFLAGS = (
+					"-sectcreate",
+					__TEXT,
+					_index_html_,
+					"\"Mac/index.html\"",
+					"-sectcreate",
+					__TEXT,
+					_filedrop_js_,
+					"\"Mac/filedrop-min.js\"",
+				);
 				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = macosx;
 			};
@@ -303,6 +317,16 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				OTHER_LDFLAGS = (
+					"-sectcreate",
+					__TEXT,
+					_index_html_,
+					"\"Mac/index.html\"",
+					"-sectcreate",
+					__TEXT,
+					_filedrop_js_,
+					"\"Mac/filedrop-min.js\"",
+				);
 				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = macosx;
 			};
