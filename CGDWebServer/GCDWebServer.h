@@ -50,7 +50,7 @@ NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form);
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
 - (void)removeAllHandlers;
 
-- (BOOL)start;  // Default is 8080 port and computer name
+- (BOOL)start;  // Default is port 8080 (Mac & iOS Simulator) or 80 (iOS) and computer name
 - (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name;  // Pass nil name to disable Bonjour or empty string to use computer name
 - (void)stop;
 @end

@@ -34,6 +34,11 @@
 
 #import "GCDWebServerPrivate.h"
 
+#if TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
+#define kDefaultPort 80
+#else
+#define kDefaultPort 8080
+#endif
 #define kMaxPendingConnections 16
 
 @interface GCDWebServer () {
@@ -190,7 +195,7 @@ static void _SignalHandler(int signal) {
 }
 
 - (BOOL)start {
-  return [self startWithPort:8080 bonjourName:@""];
+  return [self startWithPort:kDefaultPort bonjourName:@""];
 }
 
 static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* error, void* info) {
