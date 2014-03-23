@@ -60,9 +60,13 @@ NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form);
 + (NSString*)serverName;  // Default is class name
 @end
 
+#if !TARGET_OS_IPHONE
+
 @interface GCDWebServer (Extensions)
 - (BOOL)runWithPort:(NSUInteger)port;  // Starts then automatically stops on SIGINT i.e. Ctrl-C (use on main thread only)
 @end
+
+#endif
 
 @interface GCDWebServer (Handlers)
 - (void)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block;

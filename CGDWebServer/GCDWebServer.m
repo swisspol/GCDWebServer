@@ -53,7 +53,9 @@
 }
 @end
 
+#if !TARGET_OS_IPHONE
 static BOOL _run;
+#endif
 
 NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
   static NSDictionary* _overrides = nil;
@@ -115,10 +117,14 @@ NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
   return parameters;
 }
 
+#if !TARGET_OS_IPHONE
+
 static void _SignalHandler(int signal) {
   _run = NO;
   printf("\n");
 }
+
+#endif
 
 @implementation GCDWebServerHandler
 
@@ -330,6 +336,8 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 
 @end
 
+#if !TARGET_OS_IPHONE
+
 @implementation GCDWebServer (Extensions)
 
 - (BOOL)runWithPort:(NSUInteger)port {
@@ -350,6 +358,8 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 }
 
 @end
+
+#endif
 
 @implementation GCDWebServer (Handlers)
 
