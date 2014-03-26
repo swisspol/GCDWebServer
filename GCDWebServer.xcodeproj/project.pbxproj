@@ -341,6 +341,7 @@
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Weverything",
+					"-Wshorten-64-to-32",
 					"-Wno-gnu-statement-expression",
 					"-Wno-direct-ivar-access",
 					"-Wno-implicit-retain-self",
