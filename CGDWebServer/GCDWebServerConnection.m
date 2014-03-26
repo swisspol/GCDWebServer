@@ -70,7 +70,7 @@ static dispatch_queue_t _formatterQueue = NULL;
       if (error == 0) {
         size_t size = dispatch_data_get_size(buffer);
         if (size > 0) {
-          LOG_DEBUG(@"Connection received %i bytes on socket %i", size, _socket);
+          LOG_DEBUG(@"Connection received %zu bytes on socket %i", size, _socket);
           _bytesRead += size;
           [self didUpdateBytesRead];
           block(buffer);
@@ -194,7 +194,7 @@ static dispatch_queue_t _formatterQueue = NULL;
     @autoreleasepool {
       if (error == 0) {
         DCHECK(data == NULL);
-        LOG_DEBUG(@"Connection sent %i bytes on socket %i", size, _socket);
+        LOG_DEBUG(@"Connection sent %zu bytes on socket %i", size, _socket);
         _bytesWritten += size;
         [self didUpdateBytesWritten];
         block(YES);
@@ -307,7 +307,7 @@ static dispatch_queue_t _formatterQueue = NULL;
   [self _writeHeadersWithCompletionBlock:^(BOOL success) {
     ;  // Nothing more to do
   }];
-  LOG_DEBUG(@"Connection aborted with status code %i on socket %i", statusCode, _socket);
+  LOG_DEBUG(@"Connection aborted with status code %i on socket %i", (int)statusCode, _socket);
 }
 
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
@@ -506,7 +506,7 @@ static dispatch_queue_t _formatterQueue = NULL;
 }
 
 - (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block {
-  LOG_DEBUG(@"Connection on socket %i processing %@ request for \"%@\" (%i bytes body)", _socket, _request.method, _request.path, _request.contentLength);
+  LOG_DEBUG(@"Connection on socket %i processing %@ request for \"%@\" (%lu bytes body)", _socket, _request.method, _request.path, (unsigned long)_request.contentLength);
   GCDWebServerResponse* response = nil;
   @try {
     response = block(request);
