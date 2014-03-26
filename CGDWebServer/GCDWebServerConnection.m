@@ -307,7 +307,7 @@ static dispatch_queue_t _formatterQueue = NULL;
   [self _writeHeadersWithCompletionBlock:^(BOOL success) {
     ;  // Nothing more to do
   }];
-  LOG_DEBUG(@"Connection aborted with status code %lu on socket %i", (unsigned long)statusCode, _socket);
+  LOG_DEBUG(@"Connection aborted with status code %i on socket %i", (int)statusCode, _socket);
 }
 
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
