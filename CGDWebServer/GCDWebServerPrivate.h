@@ -59,28 +59,13 @@
 
 #else
 
-static inline void __LogMessage(long level, NSString* format, ...) {
-  static const char* levelNames[] = {"DEBUG", "VERBOSE", "INFO", "WARNING", "ERROR", "EXCEPTION"};
-  static long minLevel = -1;
-  if (minLevel < 0) {
-    const char* logLevel = getenv("logLevel");
-    minLevel = logLevel ? atoi(logLevel) : 0;
-  }
-  if (level >= minLevel) {
-    va_list arguments;
-    va_start(arguments, format);
-    NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
-    va_end(arguments);
-    fprintf(stderr, "[%s] %s\n", levelNames[level], [message UTF8String]);
-    ARC_RELEASE(message);
-  }
-}
+extern void GCDLogMessage(long level, NSString* format, ...) NS_FORMAT_FUNCTION(2, 3);
 
-#define LOG_VERBOSE(...) __LogMessage(1, __VA_ARGS__)
-#define LOG_INFO(...) __LogMessage(2, __VA_ARGS__)
-#define LOG_WARNING(...) __LogMessage(3, __VA_ARGS__)
-#define LOG_ERROR(...) __LogMessage(4, __VA_ARGS__)
-#define LOG_EXCEPTION(__EXCEPTION__) __LogMessage(5, @"%@", __EXCEPTION__)
+#define LOG_VERBOSE(...) GCDLogMessage(1, __VA_ARGS__)
+#define LOG_INFO(...) GCDLogMessage(2, __VA_ARGS__)
+#define LOG_WARNING(...) GCDLogMessage(3, __VA_ARGS__)
+#define LOG_ERROR(...) GCDLogMessage(4, __VA_ARGS__)
+#define LOG_EXCEPTION(__EXCEPTION__) GCDLogMessage(5, @"%@", __EXCEPTION__)
 
 #ifdef NDEBUG
 
@@ -97,7 +82,7 @@ static inline void __LogMessage(long level, NSString* format, ...) {
     } \
   } while (0)
 #define DNOT_REACHED() abort()
-#define LOG_DEBUG(...) __LogMessage(0, __VA_ARGS__)
+#define LOG_DEBUG(...) GCDLogMessage(0, __VA_ARGS__)
 
 #endif
 

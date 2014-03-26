@@ -62,6 +62,27 @@
 static BOOL _run;
 #endif
 
+#ifndef __GCDWEBSERVER_LOGGING_HEADER__
+
+void GCDLogMessage(long level, NSString* format, ...) {
+  static const char* levelNames[] = {"DEBUG", "VERBOSE", "INFO", "WARNING", "ERROR", "EXCEPTION"};
+  static long minLevel = -1;
+  if (minLevel < 0) {
+    const char* logLevel = getenv("logLevel");
+    minLevel = logLevel ? atoi(logLevel) : 0;
+  }
+  if (level >= minLevel) {
+    va_list arguments;
+    va_start(arguments, format);
+    NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
+    va_end(arguments);
+    fprintf(stderr, "[%s] %s\n", levelNames[level], [message UTF8String]);
+    ARC_RELEASE(message);
+  }
+}
+
+#endif
+
 NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
   static NSDictionary* _overrides = nil;
   if (_overrides == nil) {
@@ -201,9 +222,9 @@ static void _SignalHandler(int signal) {
 static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* error, void* info) {
   @autoreleasepool {
     if (error->error) {
-      LOG_ERROR(@"Bonjour error %i (domain %i)", error->error, (int)error->domain);
+      LOG_ERROR(@"Bonjour error %i (domain %i)", (int)error->error, (int)error->domain);
     } else {
-      LOG_VERBOSE(@"Registered Bonjour service \"%@\" in domain \"%@\" with type '%@' on port %i", CFNetServiceGetName(service), CFNetServiceGetDomain(service), CFNetServiceGetType(service), CFNetServiceGetPortNumber(service));
+      LOG_VERBOSE(@"Registered Bonjour service \"%@\" in domain \"%@\" with type '%@' on port %i", CFNetServiceGetName(service), CFNetServiceGetDomain(service), CFNetServiceGetType(service), (int)CFNetServiceGetPortNumber(service));
     }
   }
 }
