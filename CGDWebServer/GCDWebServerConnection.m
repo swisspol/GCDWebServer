@@ -506,7 +506,7 @@ static dispatch_queue_t _formatterQueue = NULL;
 }
 
 - (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block {
-  LOG_DEBUG(@"Connection on socket %i processing %@ request for \"%@\" (%lu bytes body)", _socket, _request.method, _request.path, _request.contentLength);
+  LOG_DEBUG(@"Connection on socket %i processing %@ request for \"%@\" (%lu bytes body)", _socket, _request.method, _request.path, (unsigned long)_request.contentLength);
   GCDWebServerResponse* response = nil;
   @try {
     response = block(request);

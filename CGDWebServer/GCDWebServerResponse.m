@@ -283,10 +283,10 @@
   if ((range.location != NSNotFound) || (range.length > 0)) {
     if (range.location != NSNotFound) {
       range.location = MIN(range.location, (NSUInteger)info.st_size);
-      range.length = MIN(range.length, info.st_size - range.location);
+      range.length = MIN(range.length, (NSUInteger)info.st_size - range.location);
     } else {
       range.length = MIN(range.length, (NSUInteger)info.st_size);
-      range.location = info.st_size - range.length;
+      range.location = (NSUInteger)info.st_size - range.length;
     }
     if (range.length == 0) {
       ARC_RELEASE(self);
@@ -298,7 +298,7 @@
     type = kGCDWebServerDefaultMimeType;
   }
   
-  if ((self = [super initWithContentType:type contentLength:(range.location != NSNotFound ? range.length : info.st_size)])) {
+  if ((self = [super initWithContentType:type contentLength:(range.location != NSNotFound ? range.length : (NSUInteger)info.st_size)])) {
     _path = [path copy];
     if (range.location != NSNotFound) {
       _offset = range.location;
@@ -308,7 +308,7 @@
       LOG_DEBUG(@"Using content bytes range [%i-%i] for file \"%@\"", (int)range.location, (int)(range.location + range.length - 1), path);
     } else {
       _offset = 0;
-      _size = info.st_size;
+      _size = (NSUInteger)info.st_size;
     }
     if (attachment) {  // TODO: Use http://tools.ietf.org/html/rfc5987 to encode file names with special characters instead of using lossy conversion to ISO 8859-1
       NSData* data = [[path lastPathComponent] dataUsingEncoding:NSISOLatin1StringEncoding allowLossyConversion:YES];
