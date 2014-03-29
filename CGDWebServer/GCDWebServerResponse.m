@@ -211,6 +211,10 @@
   return ARC_AUTORELEASE([[self alloc] initWithHTMLTemplate:path variables:variables]);
 }
 
++ (GCDWebServerDataResponse*)responseWithJSONObject:(id)object {
+  return ARC_AUTORELEASE([[self alloc] initWithJSONObject:object]);
+}
+
 - (id)initWithText:(NSString*)text {
   NSData* data = [text dataUsingEncoding:NSUTF8StringEncoding];
   if (data == nil) {
@@ -239,6 +243,15 @@
   id response = [self initWithHTML:html];
   ARC_RELEASE(html);
   return response;
+}
+
+- (id)initWithJSONObject:(id)object {
+  NSData* data = [NSJSONSerialization dataWithJSONObject:object options:0 error:NULL];
+  if (data == nil) {
+    ARC_RELEASE(self);
+    return nil;
+  }
+  return [self initWithData:data contentType:@"application/json"];
 }
 
 @end
