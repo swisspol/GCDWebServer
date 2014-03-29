@@ -36,6 +36,7 @@ extern "C" {
 #endif
 
 NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension);
+NSString* GCDWebServerEscapeURLString(NSString* string);
 NSString* GCDWebServerUnescapeURLString(NSString* string);
 NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form);
 

@@ -105,9 +105,12 @@ NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
   return mimeType ? mimeType : kGCDWebServerDefaultMimeType;
 }
 
+NSString* GCDWebServerEscapeURLString(NSString* string) {
+  return ARC_BRIDGE_RELEASE(CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)string, NULL, CFSTR(":@/?&=+"), kCFStringEncodingUTF8));
+}
+
 NSString* GCDWebServerUnescapeURLString(NSString* string) {
-  return ARC_BRIDGE_RELEASE(CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault, (CFStringRef)string, CFSTR(""),
-                                                                                    kCFStringEncodingUTF8));
+  return ARC_BRIDGE_RELEASE(CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault, (CFStringRef)string, CFSTR(""), kCFStringEncodingUTF8));
 }
 
 NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
