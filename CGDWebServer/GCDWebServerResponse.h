@@ -63,10 +63,12 @@
 + (GCDWebServerDataResponse*)responseWithHTML:(NSString*)html;
 + (GCDWebServerDataResponse*)responseWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables;
 + (GCDWebServerDataResponse*)responseWithJSONObject:(id)object;
++ (GCDWebServerDataResponse*)responseWithJSONObject:(id)object contentType:(NSString*)type;
 - (id)initWithText:(NSString*)text;  // Encodes using UTF-8
 - (id)initWithHTML:(NSString*)html;  // Encodes using UTF-8
 - (id)initWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables;  // Simple template system that replaces all occurences of "%variable%" with corresponding value (encodes using UTF-8)
 - (id)initWithJSONObject:(id)object;
+- (id)initWithJSONObject:(id)object contentType:(NSString*)type;
 @end
 
 @interface GCDWebServerFileResponse : GCDWebServerResponse
