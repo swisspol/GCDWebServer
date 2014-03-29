@@ -306,12 +306,8 @@
       return nil;  // TODO: Return 416 status code and "Content-Range: bytes */{file length}" header
     }
   }
-  NSString* type = GCDWebServerGetMimeTypeForExtension([path pathExtension]);
-  if (type == nil) {
-    type = kGCDWebServerDefaultMimeType;
-  }
   
-  if ((self = [super initWithContentType:type contentLength:(range.location != NSNotFound ? range.length : (NSUInteger)info.st_size)])) {
+  if ((self = [super initWithContentType:GCDWebServerGetMimeTypeForExtension([path pathExtension]) contentLength:(range.location != NSNotFound ? range.length : (NSUInteger)info.st_size)])) {
     _path = [path copy];
     if (range.location != NSNotFound) {
       _offset = range.location;

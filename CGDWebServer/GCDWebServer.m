@@ -102,7 +102,7 @@ NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
       }
     }
   }
-  return mimeType;
+  return mimeType ? mimeType : kGCDWebServerDefaultMimeType;
 }
 
 NSString* GCDWebServerUnescapeURLString(NSString* string) {
