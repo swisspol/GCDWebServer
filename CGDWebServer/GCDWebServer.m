@@ -28,9 +28,14 @@
 #import <TargetConditionals.h>
 #if TARGET_OS_IPHONE
 #import <MobileCoreServices/MobileCoreServices.h>
+#else
+#import <SystemConfiguration/SystemConfiguration.h>
 #endif
 
 #import <netinet/in.h>
+#import <ifaddrs.h>
+#import <net/if.h>
+#import <netdb.h>
 
 #import "GCDWebServerPrivate.h"
 
@@ -146,6 +151,52 @@ NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
   return parameters;
 }
 
+NSString* GCDWebServerGetPrimaryIPv4Address() {
+  NSString* address = nil;
+#if TARGET_OS_IPHONE
+#if !TARGET_IPHONE_SIMULATOR
+  const char* primaryInterface = "en0";  // WiFi interface on iOS
+#endif
+#else
+  const char* primaryInterface = NULL;
+  SCDynamicStoreRef store = SCDynamicStoreCreate(kCFAllocatorDefault, CFSTR("GCDWebServer"), NULL, NULL);
+  if (store) {
+    CFPropertyListRef info = SCDynamicStoreCopyValue(store, CFSTR("State:/Network/Global/IPv4"));
+    if (info) {
+      primaryInterface = [[(ARC_BRIDGE NSDictionary*)info objectForKey:@"PrimaryInterface"] UTF8String];
+      CFRelease(info);
+    }
+    CFRelease(store);
+  }
+  if (primaryInterface == NULL) {
+    DNOT_REACHED();
+    return nil;
+  }
+#endif
+  struct ifaddrs* list;
+  if (getifaddrs(&list) >= 0) {
+    for (struct ifaddrs* ifap = list; ifap; ifap = ifap->ifa_next) {
+#if TARGET_IPHONE_SIMULATOR
+      if (strcmp(ifap->ifa_name, "en0") && strcmp(ifap->ifa_name, "en1"))  // Assume en0 is Ethernet and en1 is WiFi since there is no way to use SystemConfiguration framework in iOS Simulator
+#else
+      if (strcmp(ifap->ifa_name, primaryInterface))
+#endif
+      {
+        continue;
+      }
+      if ((ifap->ifa_flags & IFF_UP) && (ifap->ifa_addr->sa_family == AF_INET)) {
+        char buffer[NI_MAXHOST];
+        if (getnameinfo(ifap->ifa_addr, ifap->ifa_addr->sa_len, buffer, sizeof(buffer), NULL, 0, NI_NUMERICHOST | NI_NOFQDN) >= 0) {
+          address = [NSString stringWithUTF8String:buffer];
+        }
+        break;
+      }
+    }
+    freeifaddrs(list);
+  }
+  return address;
+}
+
 #if !TARGET_OS_IPHONE
 
 static void _SignalHandler(int signal) {
@@ -227,7 +278,8 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
     if (error->error) {
       LOG_ERROR(@"Bonjour error %i (domain %i)", (int)error->error, (int)error->domain);
     } else {
-      LOG_VERBOSE(@"Registered Bonjour service \"%@\" in domain \"%@\" with type '%@' on port %i", CFNetServiceGetName(service), CFNetServiceGetDomain(service), CFNetServiceGetType(service), (int)CFNetServiceGetPortNumber(service));
+      GCDWebServer* server = (ARC_BRIDGE GCDWebServer*)info;
+      LOG_VERBOSE(@"%@ now reachable at %@", [server class], server.bonjourServerURL);
     }
   }
 }
@@ -323,7 +375,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
         }
         
         dispatch_resume(_source);
-        LOG_VERBOSE(@"%@ started on port %i", [self class], (int)_port);
+        LOG_VERBOSE(@"%@ started on port %i and reachable at %@", [self class], (int)_port, self.serverURL);
       } else {
         LOG_ERROR(@"Failed listening on socket (%i): %s", errno, strerror(errno));
         close(listeningSocket);
@@ -375,9 +427,37 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 
 @end
 
-#if !TARGET_OS_IPHONE
-
 @implementation GCDWebServer (Extensions)
+
+- (NSURL*)serverURL {
+  if (_source) {
+    NSString* ipAddress = GCDWebServerGetPrimaryIPv4Address();
+    if (ipAddress) {
+      if (_port != 80) {
+        return [NSURL URLWithString:[NSString stringWithFormat:@"http://%@:%i/", ipAddress, (int)_port]];
+      } else {
+        return [NSURL URLWithString:[NSString stringWithFormat:@"http://%@/", ipAddress]];
+      }
+    }
+  }
+  return nil;
+}
+
+- (NSURL*)bonjourServerURL {
+  if (_source && _service) {
+    CFStringRef name = CFNetServiceGetName(_service);
+    if (name && CFStringGetLength(name)) {
+      if (_port != 80) {
+        return [NSURL URLWithString:[NSString stringWithFormat:@"http://%@.local:%i/", name, (int)_port]];
+      } else {
+        return [NSURL URLWithString:[NSString stringWithFormat:@"http://%@.local/", name]];
+      }
+    }
+  }
+  return nil;
+}
+
+#if !TARGET_OS_IPHONE
 
 - (BOOL)runWithPort:(NSUInteger)port {
   BOOL success = NO;
@@ -396,9 +476,9 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
   return success;
 }
 
-@end
-
 #endif
+
+@end
 
 @implementation GCDWebServer (Handlers)
 

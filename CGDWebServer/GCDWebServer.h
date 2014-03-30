@@ -41,6 +41,7 @@ NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension);
 NSString* GCDWebServerEscapeURLString(NSString* string);
 NSString* GCDWebServerUnescapeURLString(NSString* string);
 NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form);
+NSString* GCDWebServerGetPrimaryIPv4Address();  // Returns IPv4 address of primary connected service on OS X or of WiFi interface on iOS if connected
 
 #ifdef __cplusplus
 }
@@ -53,7 +54,7 @@ NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form);
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
 - (void)removeAllHandlers;
 
-- (BOOL)start;  // Default is port 8080 (Mac & iOS Simulator) or 80 (iOS) and computer name
+- (BOOL)start;  // Default is port 8080 (OS X & iOS Simulator) or 80 (iOS) and computer name
 - (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name;  // Pass nil name to disable Bonjour or empty string to use computer name
 - (void)stop;
 @end
@@ -63,13 +64,13 @@ NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form);
 + (NSString*)serverName;  // Default is class name
 @end
 
-#if !TARGET_OS_IPHONE
-
 @interface GCDWebServer (Extensions)
+@property(nonatomic, readonly) NSURL* serverURL;  // Only non-nil if server is running
+@property(nonatomic, readonly) NSURL* bonjourServerURL;  // Only non-nil if server is running and Bonjour registration is active
+#if !TARGET_OS_IPHONE
 - (BOOL)runWithPort:(NSUInteger)port;  // Starts then automatically stops on SIGINT i.e. Ctrl-C (use on main thread only)
-@end
-
 #endif
+@end
 
 @interface GCDWebServer (Handlers)
 - (void)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block;
