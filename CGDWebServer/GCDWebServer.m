@@ -86,9 +86,9 @@ void GCDLogMessage(long level, NSString* format, ...) {
 NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
   static NSDictionary* _overrides = nil;
   if (_overrides == nil) {
-    _overrides = [[NSDictionary alloc] initWithObjectsAndKeys:
-                  @"text/css", @"css",
-                  nil];
+    _overrides = @{
+                   @"css": @"text/css"
+                   };
   }
   NSString* mimeType = nil;
   extension = [extension lowercaseString];
