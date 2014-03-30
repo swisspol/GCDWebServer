@@ -1,0 +1,5 @@
+"TITLE" = "%@";
+"HEADER" = "Drag & drop files on this window or use the \"Upload Files…\" button to upload new files. This file uploader requires a modern browser and JavaScript to be enabled.";
+"FOOTER" = "%@ %@ &mdash; %@";
+
+"UNSUPPORTED_FILE_EXTENSION" = "Unsupported file type";

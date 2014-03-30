@@ -25,8 +25,61 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import <UIKit/UIKit.h>
+p {
+  margin: 0px;
+}
 
-@interface AppDelegate : UIResponder <UIApplicationDelegate>
-@property(retain, nonatomic) UIWindow* window;
-@end
+.container {
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.template-download, .template-upload {
+  height: 60px;
+}
+
+.table {
+  border: 2px solid #EEE;
+}
+
+.table > tbody > tr > td {
+  vertical-align: middle;
+}
+
+.file-status {
+  width: 150px;
+}
+
+.file-action {
+  width: 120px;
+  text-align: center;
+}
+
+.progress {
+  margin: 0px;
+  height: 18px;
+}
+
+.progress-extended {
+  color: #444;
+  font-size: 0.9em;
+  margin-top: 5px;
+}
+
+.title {
+  margin-bottom: 10px;
+  font-size: 2.2em;
+  font-weight: bold;
+}
+
+.header {
+  color: #222;
+  margin-bottom: 30px;
+}
+
+.footer {
+  margin-top: 40px;
+  color: #999;
+  text-align: center;
+  font-size: 0.9em;
+}

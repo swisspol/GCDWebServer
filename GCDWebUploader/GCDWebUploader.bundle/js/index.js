@@ -25,8 +25,34 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import <UIKit/UIKit.h>
-
-@interface AppDelegate : UIResponder <UIApplicationDelegate>
-@property(retain, nonatomic) UIWindow* window;
-@end
+$(function () {
+  
+  // Initialize jQuery File Upload widget
+  $('#fileupload').fileupload({
+    url: 'upload',
+    dropZone: $(document),
+    pasteZone: null,
+    autoUpload: true,
+    sequentialUploads: true
+    // limitConcurrentUploads: 2
+    // forceIframeTransport: true
+  });
+  
+  // Load existing files
+  $('#fileupload').addClass('fileupload-processing');
+  $.ajax({
+    url: 'list',
+    dataType: 'json',
+    context: $('#fileupload')[0]
+  }).always(function () {
+    $(this).removeClass('fileupload-processing');
+  }).done(function (result) {
+    $(this).fileupload('option', 'done').call(this, $.Event('done'), {result: result});
+  });
+  
+  // Disable the default browser action for file drops on the document
+  $(document).bind('drop dragover', function (e) {
+    e.preventDefault();
+  });
+  
+});

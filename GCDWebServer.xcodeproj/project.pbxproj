@@ -38,6 +38,11 @@
 		E22112991690B7AA0048D2B2 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E22112981690B7AA0048D2B2 /* CFNetwork.framework */; };
 		E221129B1690B7B10048D2B2 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E221129A1690B7B10048D2B2 /* UIKit.framework */; };
 		E221129D1690B7BA0048D2B2 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E221129C1690B7BA0048D2B2 /* MobileCoreServices.framework */; };
+		E2BE850A18E77ECA0061360B /* GCDWebUploader.bundle in Resources */ = {isa = PBXBuildFile; fileRef = E2BE850718E77ECA0061360B /* GCDWebUploader.bundle */; };
+		E2BE850B18E77ECA0061360B /* GCDWebUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = E2BE850918E77ECA0061360B /* GCDWebUploader.m */; };
+		E2BE850C18E785940061360B /* GCDWebUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = E2BE850918E77ECA0061360B /* GCDWebUploader.m */; };
+		E2BE850F18E788990061360B /* GCDWebUploader.bundle in CopyFiles */ = {isa = PBXBuildFile; fileRef = E2BE850718E77ECA0061360B /* GCDWebUploader.bundle */; };
+		E2BE851118E79DAF0061360B /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2BE851018E79DAF0061360B /* SystemConfiguration.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,6 +61,19 @@
 			remoteInfo = "GCDWebServer (iOS)";
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		E2BE850E18E788910061360B /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 16;
+			files = (
+				E2BE850F18E788990061360B /* GCDWebUploader.bundle in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		8DD76FB20486AB0100D96B5E /* GCDWebServer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GCDWebServer; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -79,8 +97,10 @@
 		E22112981690B7AA0048D2B2 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.0.sdk/System/Library/Frameworks/CFNetwork.framework; sourceTree = DEVELOPER_DIR; };
 		E221129A1690B7B10048D2B2 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.0.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		E221129C1690B7BA0048D2B2 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.0.sdk/System/Library/Frameworks/MobileCoreServices.framework; sourceTree = DEVELOPER_DIR; };
-		E263213318DB688E00D9DC0C /* index.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
-		E263213418DB7F7900D9DC0C /* filedrop-min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "filedrop-min.js"; sourceTree = "<group>"; };
+		E2BE850718E77ECA0061360B /* GCDWebUploader.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = GCDWebUploader.bundle; sourceTree = "<group>"; };
+		E2BE850818E77ECA0061360B /* GCDWebUploader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebUploader.h; sourceTree = "<group>"; };
+		E2BE850918E77ECA0061360B /* GCDWebUploader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebUploader.m; sourceTree = "<group>"; };
+		E2BE851018E79DAF0061360B /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,6 +108,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E2BE851118E79DAF0061360B /* SystemConfiguration.framework in Frameworks */,
 				E208D1B3167BB17E00500836 /* CoreServices.framework in Frameworks */,
 				E208D149167B76B700500836 /* CFNetwork.framework in Frameworks */,
 			);
@@ -110,6 +131,7 @@
 			isa = PBXGroup;
 			children = (
 				E221127B1690B63A0048D2B2 /* CGDWebServer */,
+				E2BE850618E77ECA0061360B /* GCDWebUploader */,
 				E221128D1690B6470048D2B2 /* Mac */,
 				E22112901690B64F0048D2B2 /* iOS */,
 				E282F1A7150FF0630004D7C0 /* Mac Frameworks and Libraries */,
@@ -147,8 +169,6 @@
 		E221128D1690B6470048D2B2 /* Mac */ = {
 			isa = PBXGroup;
 			children = (
-				E263213418DB7F7900D9DC0C /* filedrop-min.js */,
-				E263213318DB688E00D9DC0C /* index.html */,
 				E221128E1690B6470048D2B2 /* main.m */,
 			);
 			path = Mac;
@@ -178,10 +198,21 @@
 		E282F1A7150FF0630004D7C0 /* Mac Frameworks and Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				E2BE851018E79DAF0061360B /* SystemConfiguration.framework */,
 				E208D1B2167BB17E00500836 /* CoreServices.framework */,
 				E208D148167B76B700500836 /* CFNetwork.framework */,
 			);
 			name = "Mac Frameworks and Libraries";
+			sourceTree = "<group>";
+		};
+		E2BE850618E77ECA0061360B /* GCDWebUploader */ = {
+			isa = PBXGroup;
+			children = (
+				E2BE850718E77ECA0061360B /* GCDWebUploader.bundle */,
+				E2BE850818E77ECA0061360B /* GCDWebUploader.h */,
+				E2BE850918E77ECA0061360B /* GCDWebUploader.m */,
+			);
+			path = GCDWebUploader;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -191,6 +222,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1DEB928508733DD80010E9CD /* Build configuration list for PBXNativeTarget "GCDWebServer (Mac)" */;
 			buildPhases = (
+				E2BE850E18E788910061360B /* CopyFiles */,
 				8DD76FAB0486AB0100D96B5E /* Sources */,
 				8DD76FAD0486AB0100D96B5E /* Frameworks */,
 			);
@@ -208,6 +240,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = E22112751690B4DF0048D2B2 /* Build configuration list for PBXNativeTarget "GCDWebServer (iOS)" */;
 			buildPhases = (
+				E2BE850418E77B730061360B /* Resources */,
 				E22112561690B4DE0048D2B2 /* Sources */,
 				E22112571690B4DE0048D2B2 /* Frameworks */,
 			);
@@ -250,6 +283,17 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		E2BE850418E77B730061360B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E2BE850A18E77ECA0061360B /* GCDWebUploader.bundle in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		8DD76FAB0486AB0100D96B5E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -259,6 +303,7 @@
 				E22112871690B63A0048D2B2 /* GCDWebServerConnection.m in Sources */,
 				E22112891690B63A0048D2B2 /* GCDWebServerRequest.m in Sources */,
 				E221128B1690B63A0048D2B2 /* GCDWebServerResponse.m in Sources */,
+				E2BE850C18E785940061360B /* GCDWebUploader.m in Sources */,
 				E221128F1690B6470048D2B2 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -271,6 +316,7 @@
 				E22112881690B63A0048D2B2 /* GCDWebServerConnection.m in Sources */,
 				E221128A1690B63A0048D2B2 /* GCDWebServerRequest.m in Sources */,
 				E221128C1690B63A0048D2B2 /* GCDWebServerResponse.m in Sources */,
+				E2BE850B18E77ECA0061360B /* GCDWebUploader.m in Sources */,
 				E22112951690B64F0048D2B2 /* AppDelegate.m in Sources */,
 				E22112971690B64F0048D2B2 /* main.m in Sources */,
 			);
@@ -297,16 +343,6 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
-				OTHER_LDFLAGS = (
-					"-sectcreate",
-					__TEXT,
-					_index_html_,
-					"\"Mac/index.html\"",
-					"-sectcreate",
-					__TEXT,
-					_filedrop_js_,
-					"\"Mac/filedrop-min.js\"",
-				);
 				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = macosx;
 			};
@@ -317,16 +353,6 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
-				OTHER_LDFLAGS = (
-					"-sectcreate",
-					__TEXT,
-					_index_html_,
-					"\"Mac/index.html\"",
-					"-sectcreate",
-					__TEXT,
-					_filedrop_js_,
-					"\"Mac/filedrop-min.js\"",
-				);
 				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = macosx;
 			};

@@ -25,34 +25,25 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import <mach-o/getsect.h>
-
-#import "GCDWebServer.h"
-
-static NSData* _DataFromTEXTSection(const char* name) {
-  unsigned long size = 0;
-  char* ptr = getsectdata("__TEXT", name, &size);
-  if (!ptr || !size) {
-    abort();
-  }
-  return [NSData dataWithBytesNoCopy:ptr length:size freeWhenDone:NO];
-}
+#import "GCDWebUploader.h"
 
 int main(int argc, const char* argv[]) {
   BOOL success = NO;
   int mode = (argc == 2 ? MIN(MAX(atoi(argv[1]), 0), 3) : 0);
   @autoreleasepool {
-    GCDWebServer* webServer = [[GCDWebServer alloc] init];
+    GCDWebServer* webServer = nil;
     switch (mode) {
       
       // Simply serve contents of home directory
       case 0: {
+        webServer = [[GCDWebServer alloc] init];
         [webServer addGETHandlerForBasePath:@"/" directoryPath:NSHomeDirectory() indexFilename:nil cacheAge:0 allowRangeRequests:YES];
         break;
       }
       
       // Renders a HTML page
       case 1: {
+        webServer = [[GCDWebServer alloc] init];
         [webServer addDefaultHandlerForMethod:@"GET"
                                  requestClass:[GCDWebServerRequest class]
                                  processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
@@ -65,6 +56,7 @@ int main(int argc, const char* argv[]) {
       
       // Implements an HTML form
       case 2: {
+        webServer = [[GCDWebServer alloc] init];
         [webServer addHandlerForMethod:@"GET"
                                   path:@"/"
                           requestClass:[GCDWebServerRequest class]
@@ -94,30 +86,8 @@ int main(int argc, const char* argv[]) {
         break;
       }
       
-      // Implements drag & drop file upload using http://filedropjs.org (requires Chrome 13+, Firefox 3.6+, IE 10+ or Safari 6+)
       case 3: {
-        [webServer addGETHandlerForPath:@"/"
-                             staticData:_DataFromTEXTSection("_index_html_")
-                            contentType:@"text/html; charset=utf-8"
-                               cacheAge:0];
-        [webServer addGETHandlerForPath:@"/filedrop-min.js"
-                             staticData:_DataFromTEXTSection("_filedrop_js_")
-                            contentType:@"application/javascript; charset=utf-8"
-                               cacheAge:0];
-        [webServer addHandlerForMethod:@"POST" path:@"/ajax-upload" requestClass:[GCDWebServerFileRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-          
-          NSString* fileName = GCDWebServerUnescapeURLString([request.headers objectForKey:@"X-File-Name"]);
-          NSString* inPath = [(GCDWebServerFileRequest*)request filePath];
-          NSString* outPath = [@"/tmp" stringByAppendingPathComponent:fileName];
-          [[NSFileManager defaultManager] removeItemAtPath:outPath error:NULL];
-          if ([[NSFileManager defaultManager] moveItemAtPath:inPath toPath:outPath error:NULL]) {
-            NSString* message = [NSString stringWithFormat:@"File uploaded to \"%@\"", outPath];
-            return [GCDWebServerDataResponse responseWithText:message];
-          } else {
-            return [GCDWebServerResponse responseWithStatusCode:500];
-          }
-          
-        }];
+        webServer = [[GCDWebUploader alloc] initWithUploadDirectory:@"/tmp"];
         break;
       }
       

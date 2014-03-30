@@ -26,11 +26,12 @@
  */
 
 #import "AppDelegate.h"
+#import "GCDWebUploader.h"
 
-@interface AppDelegate () {
+@interface AppDelegate () <GCDWebUploaderDelegate> {
 @private
   UIWindow* _window;
-  GCDWebServer* _webServer;
+  GCDWebUploader* _webServer;
 }
 @end
 
@@ -53,17 +54,21 @@
   _window.backgroundColor = [UIColor whiteColor];
   [_window makeKeyAndVisible];
   
-  _webServer = [[GCDWebServer alloc] init];
-  [_webServer addDefaultHandlerForMethod:@"GET"
-                            requestClass:[GCDWebServerRequest class]
-                            processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-    
-    return [GCDWebServerDataResponse responseWithHTML:@"<html><body><p>Hello World</p></body></html>"];
-    
-  }];
+  NSString* documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+  _webServer = [[GCDWebUploader alloc] initWithUploadDirectory:documentsPath];
+  _webServer.delegate = self;
+  _webServer.showHiddenFiles = YES;
   [_webServer start];
   
   return YES;
+}
+
+- (void)webUploader:(GCDWebUploader*)uploader didUploadFile:(NSString*)fileName {
+  NSLog(@"[UPLOAD] %@", fileName);
+}
+
+- (void)webUploader:(GCDWebUploader*)uploader didDeleteFile:(NSString*)fileName {
+  NSLog(@"[DELETE] %@", fileName);
 }
 
 @end

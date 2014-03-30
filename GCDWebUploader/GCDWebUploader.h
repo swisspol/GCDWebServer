@@ -25,8 +25,22 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import <UIKit/UIKit.h>
+#import "GCDWebServer.h"
 
-@interface AppDelegate : UIResponder <UIApplicationDelegate>
-@property(retain, nonatomic) UIWindow* window;
+@class GCDWebUploader;
+
+@protocol GCDWebUploaderDelegate <NSObject>
+- (void)webUploader:(GCDWebUploader*)uploader didUploadFile:(NSString*)fileName;
+- (void)webUploader:(GCDWebUploader*)uploader didDeleteFile:(NSString*)fileName;
+@end
+
+@interface GCDWebUploader : GCDWebServer
+@property(nonatomic, readonly) NSString* uploadDirectory;
+@property(nonatomic, assign) id<GCDWebUploaderDelegate> delegate;
+@property(nonatomic, copy) NSArray* allowedFileExtensions;  // Default is nil i.e. all file extensions are allowed
+@property(nonatomic) BOOL showHiddenFiles;  // Default is NO
+@property(nonatomic, copy) NSString* title;  // Default is application name (text must be HTML escaped)
+@property(nonatomic, copy) NSString* header;  // Default is help blurb (text must be HTML escaped)
+@property(nonatomic, copy) NSString* footer;  // Default is application name and version (text must be HTML escaped)
+- (id)initWithUploadDirectory:(NSString*)path;
 @end
