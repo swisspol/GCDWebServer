@@ -31,7 +31,10 @@
 
 @interface GCDWebServerConnection : NSObject
 @property(nonatomic, readonly) GCDWebServer* server;
-@property(nonatomic, readonly) NSData* address;  // struct sockaddr
+@property(nonatomic, readonly) NSData* localAddressData;  // struct sockaddr
+@property(nonatomic, readonly) NSString* localAddressString;
+@property(nonatomic, readonly) NSData* remoteAddressData;  // struct sockaddr
+@property(nonatomic, readonly) NSString* remoteAddressString;
 @property(nonatomic, readonly) NSUInteger totalBytesRead;
 @property(nonatomic, readonly) NSUInteger totalBytesWritten;
 @end

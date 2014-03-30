@@ -264,16 +264,26 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
         dispatch_source_set_event_handler(_source, ^{
           
           @autoreleasepool {
-            struct sockaddr addr;
-            socklen_t addrlen = sizeof(addr);
-            int socket = accept(listeningSocket, &addr, &addrlen);
+            struct sockaddr remoteSockAddr;
+            socklen_t remoteAddrLen = sizeof(remoteSockAddr);
+            int socket = accept(listeningSocket, &remoteSockAddr, &remoteAddrLen);
             if (socket > 0) {
+              NSData* remoteAddress = [NSData dataWithBytes:&remoteSockAddr length:remoteAddrLen];
+              
+              struct sockaddr localSockAddr;
+              socklen_t localAddrLen = sizeof(localSockAddr);
+              NSData* localAddress = nil;
+              if (getsockname(socket, &localSockAddr, &localAddrLen) == 0) {
+                localAddress = [NSData dataWithBytes:&localSockAddr length:localAddrLen];
+              } else {
+                DNOT_REACHED();
+              }
+              
               int yes = 1;
               setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(yes));  // Make sure this socket cannot generate SIG_PIPE
               
-              NSData* data = [NSData dataWithBytes:&addr length:addrlen];
               Class connectionClass = [[self class] connectionClass];
-              GCDWebServerConnection* connection = [[connectionClass alloc] initWithServer:self address:data socket:socket];  // Connection will automatically retain itself while opened
+              GCDWebServerConnection* connection = [[connectionClass alloc] initWithServer:self localAddress:localAddress remoteAddress:remoteAddress socket:socket];  // Connection will automatically retain itself while opened
 #if __has_feature(objc_arc)
               [connection self];  // Prevent compiler from complaining about unused variable / useless statement
 #else

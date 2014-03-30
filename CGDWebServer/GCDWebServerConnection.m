@@ -25,6 +25,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#import <netdb.h>
+
 #import "GCDWebServerPrivate.h"
 
 #define kHeadersReadBuffer 1024
@@ -48,7 +50,8 @@ static dispatch_queue_t _formatterQueue = NULL;
 @interface GCDWebServerConnection () {
 @private
   GCDWebServer* _server;
-  NSData* _address;
+  NSData* _localAddress;
+  NSData* _remoteAddress;
   CFSocketNativeHandle _socket;
   NSUInteger _bytesRead;
   NSUInteger _bytesWritten;
@@ -259,7 +262,7 @@ static dispatch_queue_t _formatterQueue = NULL;
 
 @implementation GCDWebServerConnection
 
-@synthesize server=_server, address=_address, totalBytesRead=_bytesRead, totalBytesWritten=_bytesWritten;
+@synthesize server=_server, localAddressData=_localAddress, remoteAddressData=_remoteAddress, totalBytesRead=_bytesRead, totalBytesWritten=_bytesWritten;
 
 + (void)initialize {
   if (_separatorData == nil) {
@@ -458,10 +461,11 @@ static dispatch_queue_t _formatterQueue = NULL;
   }];
 }
 
-- (id)initWithServer:(GCDWebServer*)server address:(NSData*)address socket:(CFSocketNativeHandle)socket {
+- (id)initWithServer:(GCDWebServer*)server localAddress:(NSData*)localAddress remoteAddress:(NSData*)remoteAddress socket:(CFSocketNativeHandle)socket {
   if ((self = [super init])) {
     _server = ARC_RETAIN(server);
-    _address = ARC_RETAIN(address);
+    _localAddress = ARC_RETAIN(localAddress);
+    _remoteAddress = ARC_RETAIN(remoteAddress);
     _socket = socket;
     
     [self open];
@@ -469,11 +473,33 @@ static dispatch_queue_t _formatterQueue = NULL;
   return self;
 }
 
+static NSString* _StringFromAddressData(NSData* data) {
+  NSString* string = nil;
+  const struct sockaddr* addr = data.bytes;
+  char hostBuffer[NI_MAXHOST];
+  char serviceBuffer[NI_MAXSERV];
+  if (getnameinfo(addr, addr->sa_len, hostBuffer, sizeof(hostBuffer), serviceBuffer, sizeof(serviceBuffer), NI_NUMERICHOST | NI_NUMERICSERV | NI_NOFQDN) >= 0) {
+    string = [NSString stringWithFormat:@"%s:%s", hostBuffer, serviceBuffer];
+  } else {
+    DNOT_REACHED();
+  }
+  return string;
+}
+
+- (NSString*)localAddressString {
+  return _StringFromAddressData(_localAddress);
+}
+
+- (NSString*)remoteAddressString {
+  return _StringFromAddressData(_remoteAddress);
+}
+
 - (void)dealloc {
   [self close];
   
   ARC_RELEASE(_server);
-  ARC_RELEASE(_address);
+  ARC_RELEASE(_localAddress);
+  ARC_RELEASE(_remoteAddress);
   
   if (_requestMessage) {
     CFRelease(_requestMessage);
@@ -510,6 +536,7 @@ static dispatch_queue_t _formatterQueue = NULL;
   GCDWebServerResponse* response = nil;
   @try {
     response = block(request);
+    LOG_VERBOSE(@"%@ | %@ \"%@ %@\" %i %lu", self.localAddressString, self.remoteAddressString, _request.method, _request.path, (int)response.statusCode, (unsigned long)response.contentLength);
   }
   @catch (NSException* exception) {
     LOG_EXCEPTION(exception);
