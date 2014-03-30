@@ -24,7 +24,7 @@ Requirements:
 Hello World
 ===========
 
-This code snippet shows how to implement a custom HTTP server that runs on port 8080 and returns a "Hello World" HTML page to any request &mdash; Because GCDWebServer uses GCD blocks to handle requests, no subclassing or delegates are needed:
+This code snippet shows how to implement a custom HTTP server that runs on port 8080 and returns a "Hello World" HTML page to any request &mdash; since GCDWebServer uses GCD blocks to handle requests, no subclassing or delegates are needed:
 
 ```objectivec
 #import "GCDWebServer.h"
@@ -52,6 +52,24 @@ int main(int argc, const char* argv[]) {
     
   }
   return 0;
+}
+```
+
+Adding File Upload & Download to iOS Apps
+=========================================
+
+GCDWebUploader is a subclass of GCDWebServer that provides an HTML 5 file uploader & downloader. This lets users upload, download and delete files from a directory inside your iOS app's sandbox using their web browser.
+
+Simply instantiate and run a GCDWebUploader instance then visit http://{YOUR-IOS-DEVICE-IP-ADDRESS}/ from your web browser:
+
+```objectivec
+#import "GCDWebUploader.h"
+
+- (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
+  NSString* documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+  GCDWebUploader* webUploader = [[GCDWebUploader alloc] initWithUploadDirectory:documentsPath];
+  [webUploader start];
+  return YES;
 }
 ```
 
