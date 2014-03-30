@@ -169,8 +169,7 @@ NSString* GCDWebServerGetPrimaryIPv4Address() {
     CFRelease(store);
   }
   if (primaryInterface == NULL) {
-    DNOT_REACHED();
-    return nil;
+    primaryInterface = "lo0";
   }
 #endif
   struct ifaddrs* list;
