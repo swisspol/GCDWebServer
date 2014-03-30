@@ -55,10 +55,10 @@ int main(int argc, const char* argv[]) {
 }
 ```
 
-Adding File Upload & Download to iOS Apps
-=========================================
+Adding File Upload to iOS Apps
+==============================
 
-GCDWebUploader is a subclass of GCDWebServer that provides an HTML 5 file uploader & downloader. This lets users upload, download and delete files from a directory inside your iOS app's sandbox using their web browser.
+GCDWebUploader is a subclass of GCDWebServer that provides a ready-to-use HTML 5 file uploader & downloader. This lets users upload, download and delete files from a directory inside your iOS app's sandbox using a clean user interface in their web browser.
 
 Simply instantiate and run a GCDWebUploader instance then visit http://{YOUR-IOS-DEVICE-IP-ADDRESS}/ from your web browser:
 
