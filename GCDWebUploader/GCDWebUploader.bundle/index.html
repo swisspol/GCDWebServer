@@ -32,9 +32,9 @@
     <title>%title%</title>
     
     <link rel="stylesheet" href="css/bootstrap.css">
-    <link rel="stylesheet" href="css/index.css">
     <link rel="stylesheet" href="css/jquery.fileupload.css">
     <link rel="stylesheet" href="css/jquery.fileupload-ui.css">
+    <link rel="stylesheet" href="css/index.css">
     
     <script type="text/javascript" src="js/jquery.min.js"></script>
     <script type="text/javascript" src="js/jquery.ui.widget.js"></script>
@@ -62,7 +62,11 @@
               <i class="glyphicon glyphicon-ban-circle"></i>
               <span>Cancel Uploads</span>
             </button>
-            <span class="fileupload-process"></span>
+            <button class="btn btn-default create">
+              <i class="glyphicon glyphicon-folder-close"></i>
+              <span>Create Folder&hellip;</span>
+            </button>
+            <img src="img/loading.gif" class="fileupload-process"></img>
           </div>
           <div class="col-sm-4 fileupload-progress fade">
             <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100">

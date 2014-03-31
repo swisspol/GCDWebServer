@@ -55,6 +55,20 @@ p {
   text-align: center;
 }
 
+.fileupload-process {
+  float: none;
+}
+
+.fileupload-processing .fileupload-process {
+  display: inline;
+  width: 24px;
+  height: 24px;
+  margin-left: 10px;
+  margin-top: 5px;
+  vertical-align: top;
+  background: none;
+}
+
 .progress {
   margin: 0px;
   height: 18px;
