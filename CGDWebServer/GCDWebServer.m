@@ -588,7 +588,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 #if __has_feature(objc_arc)
     __unsafe_unretained GCDWebServer* server = self;
 #else
-    GCDWebServer* server = self;
+    __block GCDWebServer* server = self;
 #endif
     [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
       
