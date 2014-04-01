@@ -64,32 +64,25 @@
   font-size: 0.9em;
 }
 
+#reload {
+  float: right;
+}
+
 /* Bootstrap overrides */
 
 .btn:focus {
   outline: none;  /* FIXME: Work around for Chrome only but still draws focus ring while button pressed */
 }
 
-.row > div > p {
-  text-align: right;
-  margin-top: 8px;
-  margin-bottom: 0px;
-}
-
-.progress {
-  margin-top: 8px;
-  margin-bottom: 0px;
+.btn-toolbar {
+  margin-top: 30px;
+  margin-bottom: 20px;
 }
 
 .table .progress {
   margin-top: 0px;
   margin-bottom: 0px;
   height: 16px;
-}
-
-.row {
-  margin-top: 30px;
-  margin-bottom: 20px;
 }
 
 .panel-default > .panel-heading {
