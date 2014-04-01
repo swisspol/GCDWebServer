@@ -77,8 +77,7 @@
 
 - (id)initWithUploadDirectory:(NSString*)path {
   if ((self = [super init])) {
-#warning
-    NSBundle* siteBundle = [NSBundle bundleWithPath:@"/Users/pol/Source/GitHub-GCDWebServer/GCDWebUploader/GCDWebUploader.bundle"];  // [[NSBundle mainBundle] pathForResource:@"GCDWebUploader" ofType:@"bundle"]
+    NSBundle* siteBundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"GCDWebUploader" ofType:@"bundle"]];
     if (siteBundle == nil) {
 #if !__has_feature(objc_arc)
       [self release];
