@@ -46,23 +46,6 @@
 }
 @end
 
-static NSDictionary* _GetInfoForFile(NSString* path) {
-  NSDictionary* attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:NULL];
-  if ([[attributes objectForKey:NSFileType] isEqualToString:NSFileTypeRegular]) {
-    NSString* name = [path lastPathComponent];
-    NSString* file = GCDWebServerEscapeURLString(name);
-    return @{
-             @"url": [@"/download?file=" stringByAppendingString:file],
-             @"name": name,
-             @"size": [attributes objectForKey:NSFileSize],
-             @"type": GCDWebServerGetMimeTypeForExtension([name pathExtension]),
-             @"deleteType": @"DELETE",
-             @"deleteUrl": [@"/delete?file=" stringByAppendingString:file]
-             };
-  }
-  return nil;
-}
-
 @implementation GCDWebUploader
 
 @synthesize uploadDirectory=_uploadDirectory, delegate=_delegate, allowedFileExtensions=_allowedExtensions, showHiddenFiles=_showHidden, title=_title, header=_header, footer=_footer;
@@ -74,9 +57,28 @@ static NSDictionary* _GetInfoForFile(NSString* path) {
   return YES;
 }
 
+- (NSString*) _uniquePathForPath:(NSString*)path {
+  if ([[NSFileManager defaultManager] fileExistsAtPath:path]) {
+    NSString* directory = [path stringByDeletingLastPathComponent];
+    NSString* file = [path lastPathComponent];
+    NSString* base = [file stringByDeletingPathExtension];
+    NSString* extension = [file pathExtension];
+    int retries = 0;
+    do {
+      if (extension.length) {
+        path = [directory stringByAppendingPathComponent:[[base stringByAppendingFormat:@" (%i)", ++retries] stringByAppendingPathExtension:extension]];
+      } else {
+        path = [directory stringByAppendingPathComponent:[base stringByAppendingFormat:@" (%i)", ++retries]];
+      }
+    } while ([[NSFileManager defaultManager] fileExistsAtPath:path]);
+  }
+  return path;
+}
+
 - (id)initWithUploadDirectory:(NSString*)path {
   if ((self = [super init])) {
-    NSBundle* siteBundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"GCDWebUploader" ofType:@"bundle"]];
+#warning
+    NSBundle* siteBundle = [NSBundle bundleWithPath:@"/Users/pol/Source/GitHub-GCDWebServer/GCDWebUploader/GCDWebUploader.bundle"];  // [[NSBundle mainBundle] pathForResource:@"GCDWebUploader" ofType:@"bundle"]
     if (siteBundle == nil) {
 #if !__has_feature(objc_arc)
       [self release];
@@ -101,22 +103,26 @@ static NSDictionary* _GetInfoForFile(NSString* path) {
       if (header == nil) {
         header = [siteBundle localizedStringForKey:@"HEADER" value:@"" table:nil];
       }
+#if TARGET_OS_IPHONE
+      NSString* device = [[UIDevice currentDevice] name];
+#else
+#if __has_feature(objc_arc)
+      NSString* device = CFBridgingRelease(SCDynamicStoreCopyComputerName(NULL, NULL));
+#else
+      NSString* device = [(id)SCDynamicStoreCopyComputerName(NULL, NULL) autorelease];
+#endif
+#endif
       NSString* footer = uploader.footer;
       if (footer == nil) {
-#if TARGET_OS_IPHONE
-        NSString* name = [[UIDevice currentDevice] name];
-#else
-        CFStringRef name = SCDynamicStoreCopyComputerName(NULL, NULL);
-#endif
         footer = [NSString stringWithFormat:[siteBundle localizedStringForKey:@"FOOTER" value:@"" table:nil],
                   [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"],
-                  [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"],
-                  name];
+                  [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"]];
       }
       return [GCDWebServerDataResponse responseWithHTMLTemplate:[siteBundle pathForResource:@"index" ofType:@"html"]
                                                       variables:@{
                                                                   @"title": title,
                                                                   @"header": header,
+                                                                  @"device": device,
                                                                   @"footer": footer
                                                                   }];
       
@@ -125,24 +131,42 @@ static NSDictionary* _GetInfoForFile(NSString* path) {
     // File listing
     [self addHandlerForMethod:@"GET" path:@"/list" requestClass:[GCDWebServerRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
       
-      NSString* basePath = uploader.uploadDirectory;
-      BOOL showHidden = uploader.showHiddenFiles;
-      NSArray* contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:basePath error:NULL];
-      if (contents) {
-        NSMutableArray* files = [NSMutableArray array];
-        for (NSString* path in [contents sortedArrayUsingSelector:@selector(localizedStandardCompare:)]) {
-          if (showHidden || ![path hasPrefix:@"."]) {
-            if ([uploader _checkFileExtension:path]) {
-              NSDictionary* info = _GetInfoForFile([basePath stringByAppendingPathComponent:path]);
-              if (info) {
-                [files addObject:info];
+      NSString* relativePath = [[request query] objectForKey:@"path"];
+      NSString* absolutePath = [uploader.uploadDirectory stringByAppendingPathComponent:relativePath];
+      BOOL isDirectory;
+      if ([[NSFileManager defaultManager] fileExistsAtPath:absolutePath isDirectory:&isDirectory]) {
+        if (isDirectory) {
+          BOOL showHidden = uploader.showHiddenFiles;
+          NSArray* contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:absolutePath error:NULL];
+          if (contents) {
+            NSMutableArray* array = [NSMutableArray array];
+            for (NSString* item in [contents sortedArrayUsingSelector:@selector(localizedStandardCompare:)]) {
+              if (showHidden || ![item hasPrefix:@"."]) {
+                NSDictionary* attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[absolutePath stringByAppendingPathComponent:item] error:NULL];
+                NSString* type = [attributes objectForKey:NSFileType];
+                if ([type isEqualToString:NSFileTypeRegular] && [uploader _checkFileExtension:item]) {
+                  [array addObject:@{
+                                     @"path": [relativePath stringByAppendingPathComponent:item],
+                                     @"name": item,
+                                     @"size": [attributes objectForKey:NSFileSize]
+                                     }];
+                } else if ([type isEqualToString:NSFileTypeDirectory]) {
+                  [array addObject:@{
+                                     @"path": [[relativePath stringByAppendingPathComponent:item] stringByAppendingString:@"/"],
+                                     @"name": item
+                                     }];
+                }
               }
             }
+            return [GCDWebServerDataResponse responseWithJSONObject:array];
+          } else {
+            return [GCDWebServerResponse responseWithStatusCode:500];
           }
+        } else {
+          return [GCDWebServerResponse responseWithStatusCode:400];
         }
-        return [GCDWebServerDataResponse responseWithJSONObject:@{@"files": files}];
       } else {
-        return [GCDWebServerResponse responseWithStatusCode:500];
+        return [GCDWebServerResponse responseWithStatusCode:404];
       }
       
     }];
@@ -150,11 +174,15 @@ static NSDictionary* _GetInfoForFile(NSString* path) {
     // File download
     [self addHandlerForMethod:@"GET" path:@"/download" requestClass:[GCDWebServerRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
       
-      NSString* file = [[request query] objectForKey:@"file"];
-      NSString* path = [uploader.uploadDirectory stringByAppendingPathComponent:file];
+      NSString* relativePath = [[request query] objectForKey:@"path"];
+      NSString* absolutePath = [uploader.uploadDirectory stringByAppendingPathComponent:relativePath];
       BOOL isDirectory;
-      if ([[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:&isDirectory] && !isDirectory) {
-        return [GCDWebServerFileResponse responseWithFile:path isAttachment:YES];
+      if ([[NSFileManager defaultManager] fileExistsAtPath:absolutePath isDirectory:&isDirectory]) {
+        if (isDirectory) {
+          return [GCDWebServerResponse responseWithStatusCode:400];
+        } else {
+          return [GCDWebServerFileResponse responseWithFile:absolutePath isAttachment:YES];
+        }
       } else {
         return [GCDWebServerResponse responseWithStatusCode:404];
       }
@@ -170,66 +198,96 @@ static NSDictionary* _GetInfoForFile(NSString* path) {
       
       GCDWebServerMultiPartFile* file = [[(GCDWebServerMultiPartFormRequest*)request files] objectForKey:@"files[]"];
       NSString* fileName = file.fileName;
-      if ([uploader _checkFileExtension:fileName]) {
-        NSString* path = nil;
-        int retries = 0;
-        while (1) {
-          if (retries > 0) {
-            path = [uploader.uploadDirectory stringByAppendingPathComponent:[[[fileName stringByDeletingPathExtension] stringByAppendingFormat:@" (%i)", retries] stringByAppendingPathExtension:[fileName pathExtension]]];
-          } else {
-            path = [uploader.uploadDirectory stringByAppendingPathComponent:fileName];
-          }
-          if (![[NSFileManager defaultManager] fileExistsAtPath:path]) {
-            break;
-          }
-          ++retries;
-        }
+      if ((![fileName hasPrefix:@"."] || uploader.showHiddenFiles) && [uploader _checkFileExtension:fileName]) {
+        NSString* relativePath = [(GCDWebServerMultiPartArgument*)[[(GCDWebServerURLEncodedFormRequest*)request arguments] objectForKey:@"path"] string];
+        NSString* absolutePath = [uploader _uniquePathForPath:[[uploader.uploadDirectory stringByAppendingPathComponent:relativePath] stringByAppendingPathComponent:fileName]];
         NSError* error = nil;
-        if ([[NSFileManager defaultManager] moveItemAtPath:file.temporaryPath toPath:path error:&error]) {
+        if ([[NSFileManager defaultManager] moveItemAtPath:file.temporaryPath toPath:absolutePath error:&error]) {
           dispatch_async(dispatch_get_main_queue(), ^{
-            [uploader.delegate webUploader:uploader didUploadFile:[path lastPathComponent]];
+            [uploader.delegate webUploader:uploader didUploadFileAtPath:absolutePath];
           });
-          NSDictionary* info = _GetInfoForFile(path);
-          return [GCDWebServerDataResponse responseWithJSONObject:@{@"files": @[info]} contentType:contentType];
+          return [GCDWebServerDataResponse responseWithJSONObject:@{} contentType:contentType];
         } else {
-          return [GCDWebServerDataResponse responseWithJSONObject:@{
-                                                                    @"files": @[@{
-                                                                                  @"name": fileName,
-                                                                                  @"size": @0,
-                                                                                  @"error": [error localizedDescription]
-                                                                                  }]
-                                                                    } contentType:contentType];
+          return [GCDWebServerResponse responseWithStatusCode:500];
         }
       } else {
-        return [GCDWebServerDataResponse responseWithJSONObject:@{
-                                                                  @"files": @[@{
-                                                                                @"name": fileName,
-                                                                                @"size": @0,
-                                                                                @"error": [siteBundle localizedStringForKey:@"UNSUPPORTED_FILE_EXTENSION" value:@"" table:nil]
-                                                                                }]
-                                                                  } contentType:contentType];
+        return [GCDWebServerResponse responseWithStatusCode:400];
+      }
+      
+    }];
+    
+    // File and folder moving
+    [self addHandlerForMethod:@"POST" path:@"/move" requestClass:[GCDWebServerURLEncodedFormRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+      
+      NSString* oldRelativePath = [[(GCDWebServerURLEncodedFormRequest*)request arguments] objectForKey:@"oldPath"];
+      NSString* oldAbsolutePath = [uploader.uploadDirectory stringByAppendingPathComponent:oldRelativePath];
+      BOOL isDirectory;
+      if ([[NSFileManager defaultManager] fileExistsAtPath:oldAbsolutePath isDirectory:&isDirectory]) {
+        NSString* newRelativePath = [[(GCDWebServerURLEncodedFormRequest*)request arguments] objectForKey:@"newPath"];
+        if (!uploader.showHiddenFiles) {
+          for (NSString* component in [newRelativePath pathComponents]) {
+            if ([component hasPrefix:@"."]) {
+              return [GCDWebServerResponse responseWithStatusCode:400];
+            }
+          }
+        }
+        if (!isDirectory && ![uploader _checkFileExtension:newRelativePath]) {
+          return [GCDWebServerResponse responseWithStatusCode:400];
+        }
+        NSString* newAbsolutePath = [uploader _uniquePathForPath:[uploader.uploadDirectory stringByAppendingPathComponent:newRelativePath]];
+        if ([[NSFileManager defaultManager] moveItemAtPath:oldAbsolutePath toPath:newAbsolutePath error:NULL]) {
+          dispatch_async(dispatch_get_main_queue(), ^{
+            [uploader.delegate webUploader:uploader didMoveItemFromPath:oldAbsolutePath toPath:newAbsolutePath];
+          });
+          return [GCDWebServerDataResponse responseWithJSONObject:@{}];
+        } else {
+          return [GCDWebServerResponse responseWithStatusCode:500];
+        }
+      } else {
+        return [GCDWebServerResponse responseWithStatusCode:404];
       }
       
     }];
     
     // File deletion
-    [self addHandlerForMethod:@"DELETE" path:@"/delete" requestClass:[GCDWebServerRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+    [self addHandlerForMethod:@"POST" path:@"/delete" requestClass:[GCDWebServerURLEncodedFormRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
       
-      NSString* file = [[request query] objectForKey:@"file"];
-      NSString* path = [uploader.uploadDirectory stringByAppendingPathComponent:file];
-      BOOL isDirectory;
-      if ([[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:&isDirectory] && !isDirectory) {
-        BOOL success = [[NSFileManager defaultManager] removeItemAtPath:path error:NULL];
-        if (success) {
+      NSString* relativePath = [[(GCDWebServerURLEncodedFormRequest*)request arguments] objectForKey:@"path"];
+      NSString* absolutePath = [uploader.uploadDirectory stringByAppendingPathComponent:relativePath];
+      if ([[NSFileManager defaultManager] fileExistsAtPath:absolutePath]) {
+        if ([[NSFileManager defaultManager] removeItemAtPath:absolutePath error:NULL]) {
           dispatch_async(dispatch_get_main_queue(), ^{
-            [uploader.delegate webUploader:uploader didDeleteFile:file];
+            [uploader.delegate webUploader:uploader didDeleteItemAtPath:absolutePath];
           });
+          return [GCDWebServerDataResponse responseWithJSONObject:@{}];
+        } else {
+          return [GCDWebServerResponse responseWithStatusCode:500];
         }
-        return [GCDWebServerResponse responseWithStatusCode:(success ? 204 : 500)];
-        // TODO: Contrary to the documentation at https://github.com/blueimp/jQuery-File-Upload/wiki/Setup, jquery.fileupload-ui.js ignores the returned JSON
-        // return [GCDWebServerDataResponse responseWithJSONObject:@{@"files": @[@{file: [NSNumber numberWithBool:success]}]}];
       } else {
         return [GCDWebServerResponse responseWithStatusCode:404];
+      }
+      
+    }];
+    
+    // Directory creation
+    [self addHandlerForMethod:@"POST" path:@"/create" requestClass:[GCDWebServerURLEncodedFormRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+      
+      NSString* relativePath = [[(GCDWebServerURLEncodedFormRequest*)request arguments] objectForKey:@"path"];
+      if (!uploader.showHiddenFiles) {
+        for (NSString* component in [relativePath pathComponents]) {
+          if ([component hasPrefix:@"."]) {
+            return [GCDWebServerResponse responseWithStatusCode:400];
+          }
+        }
+      }
+      NSString* absolutePath = [uploader _uniquePathForPath:[uploader.uploadDirectory stringByAppendingPathComponent:relativePath]];
+      if ([[NSFileManager defaultManager] createDirectoryAtPath:absolutePath withIntermediateDirectories:YES attributes:nil error:NULL]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+          [uploader.delegate webUploader:uploader didCreateDirectoryAtPath:absolutePath];
+        });
+        return [GCDWebServerDataResponse responseWithJSONObject:@{}];
+      } else {
+        return [GCDWebServerResponse responseWithStatusCode:500];
       }
       
     }];

@@ -30,8 +30,10 @@
 @class GCDWebUploader;
 
 @protocol GCDWebUploaderDelegate <NSObject>
-- (void)webUploader:(GCDWebUploader*)uploader didUploadFile:(NSString*)fileName;
-- (void)webUploader:(GCDWebUploader*)uploader didDeleteFile:(NSString*)fileName;
+- (void)webUploader:(GCDWebUploader*)uploader didUploadFileAtPath:(NSString*)path;
+- (void)webUploader:(GCDWebUploader*)uploader didMoveItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath;
+- (void)webUploader:(GCDWebUploader*)uploader didDeleteItemAtPath:(NSString*)path;
+- (void)webUploader:(GCDWebUploader*)uploader didCreateDirectoryAtPath:(NSString*)path;
 @end
 
 @interface GCDWebUploader : GCDWebServer

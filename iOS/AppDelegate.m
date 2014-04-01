@@ -63,12 +63,20 @@
   return YES;
 }
 
-- (void)webUploader:(GCDWebUploader*)uploader didUploadFile:(NSString*)fileName {
-  NSLog(@"[UPLOAD] %@", fileName);
+- (void)webUploader:(GCDWebUploader*)uploader didUploadFileAtPath:(NSString*)path {
+  NSLog(@"[UPLOAD] %@", path);
 }
 
-- (void)webUploader:(GCDWebUploader*)uploader didDeleteFile:(NSString*)fileName {
-  NSLog(@"[DELETE] %@", fileName);
+- (void)webUploader:(GCDWebUploader*)uploader didMoveItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath {
+  NSLog(@"[MOVE] %@ -> %@", fromPath, toPath);
+}
+
+- (void)webUploader:(GCDWebUploader*)uploader didDeleteItemAtPath:(NSString*)path {
+  NSLog(@"[DELETE] %@", path);
+}
+
+- (void)webUploader:(GCDWebUploader*)uploader didCreateDirectoryAtPath:(NSString*)path {
+  NSLog(@"[CREATE] %@", path);
 }
 
 @end

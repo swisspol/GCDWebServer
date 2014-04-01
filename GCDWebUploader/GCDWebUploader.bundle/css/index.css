@@ -25,75 +25,102 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-p {
-  margin: 0px;
+.header {
+  color: #222;
 }
 
-.container {
-  margin-top: 20px;
-  margin-bottom: 10px;
+.row-file {
+  height: 40px;
 }
 
-.template-download, .template-upload {
-  height: 60px;
+.column-icon {
+  width: 40px;
+  text-align: center;
 }
 
-.table {
-  border: 2px solid #EEE;
+.column-name {
+}
+
+.column-size {
+  width: 100px;
+  text-align: right;
+}
+
+.column-delete {
+  width: 40px;
+  text-align: center;
+}
+
+.column-path {  
+}
+
+.column-progress {
+  width: 200px;
+}
+
+.footer {
+  color: #999;
+  text-align: center;
+  font-size: 0.9em;
+}
+
+/* Bootstrap overrides */
+
+.btn:focus {
+  outline: none;  /* FIXME: Work around for Chrome only but still draws focus ring while button pressed */
+}
+
+.row > div > p {
+  text-align: right;
+  margin-top: 8px;
+  margin-bottom: 0px;
+}
+
+.progress {
+  margin-top: 8px;
+  margin-bottom: 0px;
+}
+
+.table .progress {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  height: 16px;
+}
+
+.row {
+  margin-top: 30px;
+  margin-bottom: 20px;
+}
+
+.panel-default > .panel-heading {
+  color: #555;
+}
+
+.breadcrumb {
+  background-color: transparent;
+  border-radius: 0px;
+  margin-bottom: 0px;
+  padding: 0px;
+}
+
+.breadcrumb > .active {
+  color: #555;
+}
+
+.breadcrumb > li + li:before {
+  color: #999;
 }
 
 .table > tbody > tr > td {
   vertical-align: middle;
 }
 
-.file-status {
-  width: 150px;
-}
-
-.file-action {
-  width: 120px;
-  text-align: center;
-}
-
-.fileupload-process {
-  float: none;
-}
-
-.fileupload-processing .fileupload-process {
-  display: inline;
-  width: 24px;
-  height: 24px;
-  margin-left: 10px;
-  margin-top: 5px;
-  vertical-align: top;
-  background: none;
-}
-
-.progress {
+.table > tbody > tr > td > p {
   margin: 0px;
-  height: 18px;
 }
 
-.progress-extended {
-  color: #444;
-  font-size: 0.9em;
-  margin-top: 5px;
-}
+/* Initial state */
 
-.title {
-  margin-bottom: 10px;
-  font-size: 2.2em;
-  font-weight: bold;
-}
-
-.header {
-  color: #222;
-  margin-bottom: 30px;
-}
-
-.footer {
-  margin-top: 40px;
-  color: #999;
-  text-align: center;
-  font-size: 0.9em;
+.uploading {
+  display: none;
 }
