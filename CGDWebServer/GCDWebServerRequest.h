@@ -66,7 +66,7 @@
 
 @interface GCDWebServerMultiPartArgument : GCDWebServerMultiPart
 @property(nonatomic, readonly) NSData* data;
-@property(nonatomic, readonly) NSString* string;  // May be nil (only valid for text mime types
+@property(nonatomic, readonly) NSString* string;  // May be nil (only valid for text mime types)
 @end
 
 @interface GCDWebServerMultiPartFile : GCDWebServerMultiPart
