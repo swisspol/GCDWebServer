@@ -26,6 +26,8 @@
  */
 
 var _path = null;
+var _reloading = false;
+var _pendingReloads = [];
 
 function formatFileSize(bytes) {
   if (bytes >= 1000000000) {
@@ -46,6 +48,14 @@ function _showError(message, textStatus, errorThrown) {
 }
 
 function _reload(path) {
+  if (_reloading) {
+    if ($.inArray(path, _pendingReloads) < 0) {
+      _pendingReloads.push(path);
+    }
+    return;
+  }
+  
+  _reloading = true;
   $.ajax({
     url: 'list',
     type: 'GET',
@@ -53,8 +63,7 @@ function _reload(path) {
     dataType: 'json'
   }).fail(function(jqXHR, textStatus, errorThrown) {
     _showError("Failed retrieving contents of \"" + path + "\"", textStatus, errorThrown);
-  })
-  .done(function(result) {
+  }).done(function(data, textStatus, jqXHR) {
     
     if (path != _path) {
       $("#path").empty();
@@ -77,7 +86,7 @@ function _reload(path) {
     }
     
     $("#listing").empty();
-    for (var i = 0, file; file = result[i]; ++i) {
+    for (var i = 0, file; file = data[i]; ++i) {
       $("#listing").append(tmpl("template-listing", file));
     }
     
@@ -123,11 +132,16 @@ function _reload(path) {
         dataType: 'json'
       }).fail(function(jqXHR, textStatus, errorThrown) {
         _showError("Failed deleting \"" + path + "\"", textStatus, errorThrown);
-      }).always(function(result) {
+      }).always(function() {
         _reload(_path);
       });
     });
     
+  }).always(function() {
+    _reloading = false;
+    if (_pendingReloads.length > 0) {
+      _reload(_pendingReloads.shift());
+    }
   });
 }
 
@@ -199,7 +213,7 @@ $(document).ready(function() {
         dataType: 'json'
       }).fail(function(jqXHR, textStatus, errorThrown) {
         _showError("Failed creating folder \"" + name + "\" in \"" + _path + "\"", textStatus, errorThrown);
-      }).always(function(result) {
+      }).always(function() {
         _reload(_path);
       });
     }
