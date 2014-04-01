@@ -107,7 +107,6 @@ function _reload(path) {
       }
       return value;
     }, {
-      width: 200,
       tooltip: 'Click to rename...'
     });
     
