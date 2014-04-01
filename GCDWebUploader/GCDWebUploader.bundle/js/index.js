@@ -160,9 +160,6 @@ $(document).ready(function() {
     },
     
     add: function(e, data) {
-      
-      $(".uploading").show();
-      
       var file = data.files[0];
       data.formData = {
         path: _path
