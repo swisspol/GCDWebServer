@@ -180,6 +180,11 @@
         if (isDirectory) {
           return [GCDWebServerResponse responseWithStatusCode:400];
         } else {
+          if ([uploader.delegate respondsToSelector:@selector(webUploader:didDownloadFileAtPath:  )]) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+              [uploader.delegate webUploader:uploader didDownloadFileAtPath:absolutePath];
+            });
+          }
           return [GCDWebServerFileResponse responseWithFile:absolutePath isAttachment:YES];
         }
       } else {
@@ -196,18 +201,23 @@
       NSString* contentType = (range.location != NSNotFound ? @"application/json" : @"text/plain; charset=utf-8");
       
       GCDWebServerMultiPartFile* file = [[(GCDWebServerMultiPartFormRequest*)request files] objectForKey:@"files[]"];
-      NSString* fileName = file.fileName;
-      if ((![fileName hasPrefix:@"."] || uploader.showHiddenFiles) && [uploader _checkFileExtension:fileName]) {
+      if ((![file.fileName hasPrefix:@"."] || uploader.showHiddenFiles) && [uploader _checkFileExtension:file.fileName]) {
         NSString* relativePath = [(GCDWebServerMultiPartArgument*)[[(GCDWebServerURLEncodedFormRequest*)request arguments] objectForKey:@"path"] string];
-        NSString* absolutePath = [uploader _uniquePathForPath:[[uploader.uploadDirectory stringByAppendingPathComponent:relativePath] stringByAppendingPathComponent:fileName]];
-        NSError* error = nil;
-        if ([[NSFileManager defaultManager] moveItemAtPath:file.temporaryPath toPath:absolutePath error:&error]) {
-          dispatch_async(dispatch_get_main_queue(), ^{
-            [uploader.delegate webUploader:uploader didUploadFileAtPath:absolutePath];
-          });
-          return [GCDWebServerDataResponse responseWithJSONObject:@{} contentType:contentType];
+        NSString* absolutePath = [uploader _uniquePathForPath:[[uploader.uploadDirectory stringByAppendingPathComponent:relativePath] stringByAppendingPathComponent:file.fileName]];
+        if ([uploader shouldUploadFileAtPath:absolutePath withTemporaryFile:file.temporaryPath]) {
+          NSError* error = nil;
+          if ([[NSFileManager defaultManager] moveItemAtPath:file.temporaryPath toPath:absolutePath error:&error]) {
+            if ([uploader.delegate respondsToSelector:@selector(webUploader:didUploadFileAtPath:)]) {
+              dispatch_async(dispatch_get_main_queue(), ^{
+                [uploader.delegate webUploader:uploader didUploadFileAtPath:absolutePath];
+              });
+            }
+            return [GCDWebServerDataResponse responseWithJSONObject:@{} contentType:contentType];
+          } else {
+            return [GCDWebServerResponse responseWithStatusCode:500];
+          }
         } else {
-          return [GCDWebServerResponse responseWithStatusCode:500];
+          return [GCDWebServerResponse responseWithStatusCode:403];
         }
       } else {
         return [GCDWebServerResponse responseWithStatusCode:400];
@@ -234,13 +244,19 @@
           return [GCDWebServerResponse responseWithStatusCode:400];
         }
         NSString* newAbsolutePath = [uploader _uniquePathForPath:[uploader.uploadDirectory stringByAppendingPathComponent:newRelativePath]];
-        if ([[NSFileManager defaultManager] moveItemAtPath:oldAbsolutePath toPath:newAbsolutePath error:NULL]) {
-          dispatch_async(dispatch_get_main_queue(), ^{
-            [uploader.delegate webUploader:uploader didMoveItemFromPath:oldAbsolutePath toPath:newAbsolutePath];
-          });
-          return [GCDWebServerDataResponse responseWithJSONObject:@{}];
+        if ([uploader shouldMoveItemFromPath:oldAbsolutePath toPath:newAbsolutePath]) {
+          if ([[NSFileManager defaultManager] moveItemAtPath:oldAbsolutePath toPath:newAbsolutePath error:NULL]) {
+            if ([uploader.delegate respondsToSelector:@selector(webUploader:didMoveItemFromPath:toPath:)]) {
+              dispatch_async(dispatch_get_main_queue(), ^{
+                [uploader.delegate webUploader:uploader didMoveItemFromPath:oldAbsolutePath toPath:newAbsolutePath];
+              });
+            }
+            return [GCDWebServerDataResponse responseWithJSONObject:@{}];
+          } else {
+            return [GCDWebServerResponse responseWithStatusCode:500];
+          }
         } else {
-          return [GCDWebServerResponse responseWithStatusCode:500];
+          return [GCDWebServerResponse responseWithStatusCode:403];
         }
       } else {
         return [GCDWebServerResponse responseWithStatusCode:404];
@@ -255,9 +271,11 @@
       NSString* absolutePath = [uploader.uploadDirectory stringByAppendingPathComponent:relativePath];
       if ([[NSFileManager defaultManager] fileExistsAtPath:absolutePath]) {
         if ([[NSFileManager defaultManager] removeItemAtPath:absolutePath error:NULL]) {
-          dispatch_async(dispatch_get_main_queue(), ^{
-            [uploader.delegate webUploader:uploader didDeleteItemAtPath:absolutePath];
-          });
+          if ([uploader.delegate respondsToSelector:@selector(webUploader:didDeleteItemAtPath:)]) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+              [uploader.delegate webUploader:uploader didDeleteItemAtPath:absolutePath];
+            });
+          }
           return [GCDWebServerDataResponse responseWithJSONObject:@{}];
         } else {
           return [GCDWebServerResponse responseWithStatusCode:500];
@@ -281,9 +299,11 @@
       }
       NSString* absolutePath = [uploader _uniquePathForPath:[uploader.uploadDirectory stringByAppendingPathComponent:relativePath]];
       if ([[NSFileManager defaultManager] createDirectoryAtPath:absolutePath withIntermediateDirectories:YES attributes:nil error:NULL]) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-          [uploader.delegate webUploader:uploader didCreateDirectoryAtPath:absolutePath];
-        });
+        if ([uploader.delegate respondsToSelector:@selector(webUploader:didCreateDirectoryAtPath:)]) {
+          dispatch_async(dispatch_get_main_queue(), ^{
+            [uploader.delegate webUploader:uploader didCreateDirectoryAtPath:absolutePath];
+          });
+        }
         return [GCDWebServerDataResponse responseWithJSONObject:@{}];
       } else {
         return [GCDWebServerResponse responseWithStatusCode:500];
@@ -308,5 +328,17 @@
 }
 
 #endif
+
+@end
+
+@implementation GCDWebUploader (Subclassing)
+
+- (BOOL)shouldUploadFileAtPath:(NSString*)path withTemporaryFile:(NSString*)tempPath {
+  return YES;
+}
+
+- (BOOL)shouldMoveItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath {
+  return YES;
+}
 
 @end

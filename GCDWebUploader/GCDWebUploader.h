@@ -30,6 +30,8 @@
 @class GCDWebUploader;
 
 @protocol GCDWebUploaderDelegate <NSObject>
+@optional
+- (void)webUploader:(GCDWebUploader*)uploader didDownloadFileAtPath:(NSString*)path;
 - (void)webUploader:(GCDWebUploader*)uploader didUploadFileAtPath:(NSString*)path;
 - (void)webUploader:(GCDWebUploader*)uploader didMoveItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath;
 - (void)webUploader:(GCDWebUploader*)uploader didDeleteItemAtPath:(NSString*)path;
@@ -45,4 +47,9 @@
 @property(nonatomic, copy) NSString* header;  // Default is help blurb (text must be HTML escaped)
 @property(nonatomic, copy) NSString* footer;  // Default is application name and version (text must be HTML escaped)
 - (id)initWithUploadDirectory:(NSString*)path;
+@end
+
+@interface GCDWebUploader (Subclassing)
+- (BOOL)shouldUploadFileAtPath:(NSString*)path withTemporaryFile:(NSString*)tempPath;  // Default implementation returns YES
+- (BOOL)shouldMoveItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath;  // Default implementation returns YES
 @end
