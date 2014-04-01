@@ -43,9 +43,11 @@
 @property(nonatomic, assign) id<GCDWebUploaderDelegate> delegate;
 @property(nonatomic, copy) NSArray* allowedFileExtensions;  // Default is nil i.e. all file extensions are allowed
 @property(nonatomic) BOOL showHiddenFiles;  // Default is NO
-@property(nonatomic, copy) NSString* title;  // Default is application name (text must be HTML escaped)
-@property(nonatomic, copy) NSString* header;  // Default is help blurb (text must be HTML escaped)
-@property(nonatomic, copy) NSString* footer;  // Default is application name and version (text must be HTML escaped)
+@property(nonatomic, copy) NSString* title;  // Default is application name (must be HTML escaped)
+@property(nonatomic, copy) NSString* header;  // Default is same as title (must be HTML escaped)
+@property(nonatomic, copy) NSString* prologue;  // Default is mini help (must be raw HTML)
+@property(nonatomic, copy) NSString* epilogue;  // Default is mini help (must be raw HTML)
+@property(nonatomic, copy) NSString* footer;  // Default is application name and version (must be HTML escaped)
 - (id)initWithUploadDirectory:(NSString*)path;
 @end
 

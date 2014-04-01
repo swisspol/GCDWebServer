@@ -42,13 +42,16 @@
   BOOL _showHidden;
   NSString* _title;
   NSString* _header;
+  NSString* _prologue;
+  NSString* _epilogue;
   NSString* _footer;
 }
 @end
 
 @implementation GCDWebUploader
 
-@synthesize uploadDirectory=_uploadDirectory, delegate=_delegate, allowedFileExtensions=_allowedExtensions, showHiddenFiles=_showHidden, title=_title, header=_header, footer=_footer;
+@synthesize uploadDirectory=_uploadDirectory, delegate=_delegate, allowedFileExtensions=_allowedExtensions, showHiddenFiles=_showHidden,
+            title=_title, header=_header, prologue=_prologue, epilogue=_epilogue, footer=_footer;
 
 - (BOOL)_checkFileExtension:(NSString*)fileName {
   if (_allowedExtensions && ![_allowedExtensions containsObject:[[fileName pathExtension] lowercaseString]]) {
@@ -93,15 +96,6 @@
     // Web page
     [self addHandlerForMethod:@"GET" path:@"/" requestClass:[GCDWebServerRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
       
-      NSString* title = uploader.title;
-      if (title == nil) {
-        title = [NSString stringWithFormat:[siteBundle localizedStringForKey:@"TITLE" value:@"" table:nil],
-                 [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"]];
-      }
-      NSString* header = uploader.header;
-      if (header == nil) {
-        header = [siteBundle localizedStringForKey:@"HEADER" value:@"" table:nil];
-      }
 #if TARGET_OS_IPHONE
       NSString* device = [[UIDevice currentDevice] name];
 #else
@@ -111,17 +105,35 @@
       NSString* device = [(id)SCDynamicStoreCopyComputerName(NULL, NULL) autorelease];
 #endif
 #endif
+      NSString* title = uploader.title;
+      if (title == nil) {
+        title = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+      }
+      NSString* header = uploader.header;
+      if (header == nil) {
+        header = title;
+      }
+      NSString* prologue = uploader.prologue;
+      if (prologue == nil) {
+        prologue = [siteBundle localizedStringForKey:@"PROLOGUE" value:@"" table:nil];
+      }
+      NSString* epilogue = uploader.epilogue;
+      if (epilogue == nil) {
+        epilogue = [siteBundle localizedStringForKey:@"EPILOGUE" value:@"" table:nil];
+      }
       NSString* footer = uploader.footer;
       if (footer == nil) {
-        footer = [NSString stringWithFormat:[siteBundle localizedStringForKey:@"FOOTER" value:@"" table:nil],
+        footer = [NSString stringWithFormat:[siteBundle localizedStringForKey:@"FOOTER_FORMAT" value:@"" table:nil],
                   [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"],
                   [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"]];
       }
       return [GCDWebServerDataResponse responseWithHTMLTemplate:[siteBundle pathForResource:@"index" ofType:@"html"]
                                                       variables:@{
+                                                                  @"device": device,
                                                                   @"title": title,
                                                                   @"header": header,
-                                                                  @"device": device,
+                                                                  @"prologue": prologue,
+                                                                  @"epilogue": epilogue,
                                                                   @"footer": footer
                                                                   }];
       
@@ -322,6 +334,8 @@
   [_allowedExtensions release];
   [_title release];
   [_header release];
+  [_prologue release];
+  [_epilogue release];
   [_footer release];
   
   [super dealloc];
