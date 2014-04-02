@@ -46,7 +46,7 @@
 @property(nonatomic, copy) NSString* title;  // Default is application name (must be HTML escaped)
 @property(nonatomic, copy) NSString* header;  // Default is same as title (must be HTML escaped)
 @property(nonatomic, copy) NSString* prologue;  // Default is mini help (must be raw HTML)
-@property(nonatomic, copy) NSString* epilogue;  // Default is mini help (must be raw HTML)
+@property(nonatomic, copy) NSString* epilogue;  // Default is nothing (must be raw HTML)
 @property(nonatomic, copy) NSString* footer;  // Default is application name and version (must be HTML escaped)
 - (id)initWithUploadDirectory:(NSString*)path;
 @end
