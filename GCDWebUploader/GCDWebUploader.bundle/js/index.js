@@ -122,6 +122,16 @@ function _reload(path) {
       _reload(path);
     });
     
+    $(".button-move").click(function(event) {
+      var path = $(this).parent().parent().attr("data-path");
+      if (path[path.length - 1] == "/") {
+        path = path.slice(0, path.length - 1);
+      }
+      $("#move-input").attr("data-path", path);
+      $("#move-input").val(path);
+      $("#move-modal").modal("show");
+    });
+    
     $(".button-delete").click(function(event) {
       var path = $(this).parent().parent().attr("data-path");
       $.ajax({
@@ -223,6 +233,29 @@ $(document).ready(function() {
         dataType: 'json'
       }).fail(function(jqXHR, textStatus, errorThrown) {
         _showError("Failed creating folder \"" + name + "\" in \"" + _path + "\"", textStatus, errorThrown);
+      }).always(function() {
+        _reload(_path);
+      });
+    }
+  });
+  
+  $("#move-modal").on("shown.bs.modal", function(event) {
+    $("#move-input").focus();
+    $("#move-input").select();
+  })
+  
+  $("#move-confirm").click(function(event) {
+    $("#move-modal").modal("hide");
+    var oldPath = $("#move-input").attr("data-path");
+    var newPath = $("#move-input").val();
+    if ((newPath != "") && (newPath[0] == "/") && (newPath != oldPath)) {
+      $.ajax({
+        url: 'move',
+        type: 'POST',
+        data: {oldPath: oldPath, newPath: newPath},
+        dataType: 'json'
+      }).fail(function(jqXHR, textStatus, errorThrown) {
+        _showError("Failed moving \"" + oldPath + "\" to \"" + newPath + "\"", textStatus, errorThrown);
       }).always(function() {
         _reload(_path);
       });

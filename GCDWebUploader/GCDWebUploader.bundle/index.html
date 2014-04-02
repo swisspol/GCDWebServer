@@ -106,11 +106,32 @@
             <p>Please enter the name of the folder to be created:</p>
             <form onsubmit="return false">
               <input type="text" autocomplete="off" id="create-input">
-            </form>            
+            </form>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" id="create-confirm">Create</button>
+            <button type="button" class="btn btn-primary" id="create-confirm">Create Folder</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal fade" id="move-modal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Move Item</h4>
+          </div>
+          <div class="modal-body">
+            <p>Please enter the new location for this item:</p>
+            <form onsubmit="return false">
+              <input type="text" autocomplete="off" id="move-input">
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="move-confirm">Move Item</button>
           </div>
         </div>
       </div>
@@ -134,6 +155,11 @@
           {% if (o.size != null) { %}
             <p>{%=formatFileSize(o.size)%}</p>
           {% } %}
+        </td>
+        <td class="column-move">
+          <button type="button" class="btn btn-default btn-xs button-move">
+            <span class="glyphicon glyphicon glyphicon-share-alt"></span>
+          </button>
         </td>
         <td class="column-delete">
           <button type="button" class="btn btn-danger btn-xs button-delete">

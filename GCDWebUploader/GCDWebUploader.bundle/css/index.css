@@ -42,6 +42,11 @@
   text-align: right;
 }
 
+.column-move {
+  width: 40px;
+  text-align: center;
+}
+
 .column-delete {
   width: 40px;
   text-align: center;
@@ -65,7 +70,12 @@
 }
 
 #create-input {
-  width: 250px;
+  width: 50%;
+  height: 20px;
+}
+
+#move-input {
+  width: 80%;
   height: 20px;
 }
 
