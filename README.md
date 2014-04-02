@@ -11,7 +11,7 @@ GCDWebServer is a lightweight GCD based HTTP 1.1 server designed to be embedded 
 * Available under a friendly [New BSD License](LICENSE)
 
 Included extensions:
-* [GCDWebUploader](CGDWebUploader/GCDWebUploader.h): subclass of GCDWebServer that implements an interface for uploading and downloading files from an iOS app's sandbox using a web browser
+* [GCDWebUploader](GCDWebUploader/GCDWebUploader.h): subclass of GCDWebServer that implements an interface for uploading and downloading files from an iOS app's sandbox using a web browser
 
 What's not available out of the box but can be implemented on top of the API:
 * Authentication like [Basic Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication)
