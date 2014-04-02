@@ -10,6 +10,9 @@ GCDWebServer is a lightweight GCD based HTTP 1.1 server designed to be embedded 
 * No dependencies on third-party source code
 * Available under a friendly [New BSD License](LICENSE)
 
+Included extensions:
+* GCDWebUploader: subclass of GCDWebServer that implements an interface for uploading and downloading files from an iOS app's sandbox using a web browser
+
 What's not available out of the box but can be implemented on top of the API:
 * Authentication like [Basic Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication)
 * Web forms submitted using "multipart/mixed"
@@ -70,6 +73,7 @@ Simply instantiate and run a GCDWebUploader instance then visit http://{YOUR-IOS
   NSString* documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
   GCDWebUploader* webUploader = [[GCDWebUploader alloc] initWithUploadDirectory:documentsPath];
   [webUploader start];
+  NSLog(@"Visit %@ in your web browser", webUploader.serverURL);
   return YES;
 }
 ```
