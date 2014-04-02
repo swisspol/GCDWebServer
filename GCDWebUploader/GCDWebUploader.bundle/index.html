@@ -95,6 +95,27 @@
       
     </div>
     
+    <div class="modal fade" id="create-modal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Create Folder</h4>
+          </div>
+          <div class="modal-body">
+            <p>Please enter the name of the folder to be created:</p>
+            <form onsubmit="return false">
+              <input type="text" autocomplete="off" id="create-input">
+            </form>            
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="create-confirm">Create</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <script type="text/x-tmpl" id="template-listing">
       <tr class="row-file" data-path="{%=o.path%}" data-name="{%=o.name%}">
         <td class="column-icon">

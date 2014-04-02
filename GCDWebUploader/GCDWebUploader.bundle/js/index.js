@@ -203,8 +203,18 @@ $(document).ready(function() {
   });
   
   $("#create-folder").click(function(event) {
-    var name = prompt("Please enter folder name:", "Untitled folder");
-    if ((name != null) && (name != "")) {
+    $("#create-input").val("Untitled folder");
+    $("#create-modal").modal("show");
+    $("#create-modal").on("shown.bs.modal", function(event) {
+      $("#create-input").focus();
+      $("#create-input").select();
+    })
+  });
+  
+  $("#create-confirm").click(function(event) {
+    $("#create-modal").modal("hide");
+    var name = $("#create-input").val();
+    if (name != "") {
       $.ajax({
         url: 'create',
         type: 'POST',
