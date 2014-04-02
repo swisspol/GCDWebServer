@@ -132,7 +132,7 @@
         <td class="column-path"><p>{%=o.path%}</p></td>
         <td class="column-progress">
           <div class="progress">
-            <div class="progress-bar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" id="progress-bar"></div>
+            <div class="progress-bar" id="progress-bar"></div>
           </div>
         </ts>
       </tr>
@@ -140,7 +140,7 @@
     
     <script type="text/x-tmpl" id="template-alert">
       <div class="alert alert-{%=o.level%} alert-dismissable">
-        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
         <strong>{%=o.title%}</strong>{%=o.description%}
       </div>
     </script>
