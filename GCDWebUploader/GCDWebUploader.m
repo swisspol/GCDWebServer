@@ -91,7 +91,7 @@
 #if __has_feature(objc_arc)
     __unsafe_unretained GCDWebUploader* uploader = self;
 #else
-    __block GCDWebUploader* server = self;
+    __block GCDWebUploader* uploader = self;
 #endif
     
     // Resource files
