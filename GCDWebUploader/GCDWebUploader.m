@@ -88,7 +88,11 @@
       return nil;
     }
     _uploadDirectory = [[path stringByStandardizingPath] copy];
-    GCDWebUploader* __unsafe_unretained uploader = self;  // Avoid retain-cycles with self
+#if __has_feature(objc_arc)
+    __unsafe_unretained GCDWebUploader* uploader = self;
+#else
+    __block GCDWebUploader* server = self;
+#endif
     
     // Resource files
     [self addGETHandlerForBasePath:@"/" directoryPath:[siteBundle resourcePath] indexFilename:nil cacheAge:3600 allowRangeRequests:NO];
