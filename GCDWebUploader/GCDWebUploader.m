@@ -112,6 +112,11 @@
       NSString* title = uploader.title;
       if (title == nil) {
         title = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+#if !TARGET_OS_IPHONE
+        if (title == nil) {
+          title = [[NSProcessInfo processInfo] processName];
+        }
+#endif
       }
       NSString* header = uploader.header;
       if (header == nil) {
@@ -127,9 +132,15 @@
       }
       NSString* footer = uploader.footer;
       if (footer == nil) {
-        footer = [NSString stringWithFormat:[siteBundle localizedStringForKey:@"FOOTER_FORMAT" value:@"" table:nil],
-                  [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"],
-                  [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"]];
+        NSString* name = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+        NSString* version = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
+#if !TARGET_OS_IPHONE
+        if (!name && !version) {
+          name = @"OS X";
+          version = [[NSProcessInfo processInfo] operatingSystemVersionString];
+        }
+#endif
+        footer = [NSString stringWithFormat:[siteBundle localizedStringForKey:@"FOOTER_FORMAT" value:@"" table:nil], name, version];
       }
       return [GCDWebServerDataResponse responseWithHTMLTemplate:[siteBundle pathForResource:@"index" ofType:@"html"]
                                                       variables:@{
