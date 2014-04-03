@@ -537,7 +537,7 @@ static NSString* _StringFromAddressData(NSData* data) {
   GCDWebServerResponse* response = nil;
   @try {
     response = block(request);
-    LOG_VERBOSE(@"%@ | %@ \"%@ %@\" %i %lu", self.localAddressString, self.remoteAddressString, _request.method, _request.path, (int)response.statusCode, (unsigned long)response.contentLength);
+    LOG_VERBOSE(@"%@ | %@ \"%@ %@\" %i %lu", self.localAddressString, self.remoteAddressString, _request.method, _request.path, (int)response.statusCode, (unsigned long)(response.contentLength != NSNotFound ? response.contentLength : 0));
   }
   @catch (NSException* exception) {
     LOG_EXCEPTION(exception);
