@@ -324,19 +324,20 @@ static dispatch_queue_t _formatterQueue = NULL;
   
   if (_response) {
     [self _initializeResponseHeadersWithStatusCode:_response.statusCode];
-    NSUInteger maxAge = _response.cacheControlMaxAge;
-    if (maxAge > 0) {
-      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Cache-Control"), (ARC_BRIDGE CFStringRef)[NSString stringWithFormat:@"max-age=%i, public", (int)maxAge]);
+    if (_response.cacheControlMaxAge > 0) {
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Cache-Control"), (ARC_BRIDGE CFStringRef)[NSString stringWithFormat:@"max-age=%i, public", (int)_response.cacheControlMaxAge]);
     } else {
       CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Cache-Control"), CFSTR("no-cache"));
+    }
+    if (_response.contentType != nil) {
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Type"), (ARC_BRIDGE CFStringRef)_response.contentType);
+    }
+    if (_response.contentLength != NSNotFound) {
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Length"), (ARC_BRIDGE CFStringRef)[NSString stringWithFormat:@"%lu", (unsigned long)_response.contentLength]);
     }
     [_response.additionalHeaders enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL* stop) {
       CFHTTPMessageSetHeaderFieldValue(_responseMessage, (ARC_BRIDGE CFStringRef)key, (ARC_BRIDGE CFStringRef)obj);
     }];
-    if ([_response hasBody]) {
-      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Type"), (ARC_BRIDGE CFStringRef)_response.contentType);
-      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Length"), (ARC_BRIDGE CFStringRef)[NSString stringWithFormat:@"%i", (int)_response.contentLength]);
-    }
     [self _writeHeadersWithCompletionBlock:^(BOOL success) {
       
       if (success) {

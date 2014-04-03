@@ -64,20 +64,12 @@
 }
 
 - (id)init {
-  return [self initWithContentType:nil contentLength:0];
-}
-
-- (id)initWithContentType:(NSString*)type contentLength:(NSUInteger)length {
   if ((self = [super init])) {
-    _type = [type copy];
-    _length = length;
+    _type = nil;
+    _length = NSNotFound;
     _status = 200;
     _maxAge = 0;
     _headers = [[NSMutableDictionary alloc] init];
-    
-    if ((_length > 0) && (_type == nil)) {
-      _type = [kGCDWebServerDefaultMimeType copy];
-    }
   }
   return self;
 }
@@ -129,14 +121,14 @@
 }
 
 - (id)initWithStatusCode:(NSInteger)statusCode {
-  if ((self = [self initWithContentType:nil contentLength:0])) {
+  if ((self = [self init])) {
     self.statusCode = statusCode;
   }
   return self;
 }
 
 - (id)initWithRedirect:(NSURL*)location permanent:(BOOL)permanent {
-  if ((self = [self initWithContentType:nil contentLength:0])) {
+  if ((self = [self init])) {
     self.statusCode = permanent ? 301 : 307;
     [self setValue:[location absoluteString] forAdditionalHeader:@"Location"];
   }
@@ -158,9 +150,12 @@
     return nil;
   }
   
-  if ((self = [super initWithContentType:type contentLength:data.length])) {
+  if ((self = [super init])) {
     _data = ARC_RETAIN(data);
     _offset = -1;
+    
+    self.contentType = type;
+    self.contentLength = data.length;
   }
   return self;
 }
@@ -315,7 +310,7 @@
     }
   }
   
-  if ((self = [super initWithContentType:GCDWebServerGetMimeTypeForExtension([path pathExtension]) contentLength:(range.location != NSNotFound ? range.length : (NSUInteger)info.st_size)])) {
+  if ((self = [super init])) {
     _path = [path copy];
     if (range.location != NSNotFound) {
       _offset = range.location;
@@ -327,6 +322,7 @@
       _offset = 0;
       _size = (NSUInteger)info.st_size;
     }
+    
     if (attachment) {  // TODO: Use http://tools.ietf.org/html/rfc5987 to encode file names with special characters instead of using lossy conversion to ISO 8859-1
       NSData* data = [[path lastPathComponent] dataUsingEncoding:NSISOLatin1StringEncoding allowLossyConversion:YES];
       NSString* fileName = data ? [[NSString alloc] initWithData:data encoding:NSISOLatin1StringEncoding] : nil;
@@ -337,6 +333,9 @@
         DNOT_REACHED();
       }
     }
+    
+    self.contentType = GCDWebServerGetMimeTypeForExtension([path pathExtension]);
+    self.contentLength = (range.location != NSNotFound ? range.length : (NSUInteger)info.st_size);
   }
   return self;
 }
