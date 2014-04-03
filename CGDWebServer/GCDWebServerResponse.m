@@ -55,6 +55,15 @@
 }
 @end
 
+@interface GCDWebServerChunkedResponse () {
+@private
+  GCDWebServerChunkBlock _block;
+  NSData* _chunk;
+  NSUInteger _offset;
+  BOOL _terminated;
+}
+@end
+
 @implementation GCDWebServerResponse
 
 @synthesize contentType=_type, contentLength=_length, statusCode=_status, cacheControlMaxAge=_maxAge, additionalHeaders=_headers;
@@ -375,6 +384,77 @@
   int result = close(_file);
   _file = 0;
   return (result == 0 ? YES : NO);
+}
+
+@end
+
+@implementation GCDWebServerChunkedResponse
+
++ (GCDWebServerChunkedResponse*)responseWithContentType:(NSString*)type chunkBlock:(GCDWebServerChunkBlock)block {
+  return ARC_AUTORELEASE([[[self class] alloc] initWithContentType:type chunkBlock:block]);
+}
+
+- (id)initWithContentType:(NSString*)type chunkBlock:(GCDWebServerChunkBlock)block {
+  if ((self = [super init])) {
+    _block = [block copy];
+    
+    self.contentType = type;
+    [self setValue:@"chunked" forAdditionalHeader:@"Transfer-Encoding"];
+  }
+  return self;
+}
+
+- (BOOL)open {
+  DCHECK(_chunk == nil);
+  return YES;
+}
+
+- (NSInteger)read:(void*)buffer maxLength:(NSUInteger)length {
+  if (_offset >= _chunk.length) {
+    ARC_RELEASE(_chunk);
+    _chunk = nil;
+  }
+  if (_chunk == nil) {
+    if (_terminated) {
+      return 0;
+    }
+    NSData* data = _block();
+    if (data.length > 0) {
+      const char* hexString = [[NSString stringWithFormat:@"%lx", (unsigned long)data.length] UTF8String];
+      size_t hexLength = strlen(hexString);
+      _chunk = [[NSMutableData alloc] initWithLength:(hexLength + 2 + data.length + 2)];
+      char* ptr = (char*)_chunk.bytes;
+      bcopy(hexString, ptr, hexLength);
+      ptr += hexLength;
+      *ptr++ = '\r';
+      *ptr++ = '\n';
+      bcopy(data.bytes, ptr, data.length);
+      ptr += data.length;
+      *ptr++ = '\r';
+      *ptr = '\n';
+    } else {
+      _chunk = [[NSData alloc] initWithBytes:"0\r\n\r\n" length:5];
+      _terminated = YES;
+    }
+    _offset = 0;
+  }
+  NSInteger size = MIN(_chunk.length - _offset, length);
+  bcopy((char*)_chunk.bytes + _offset, buffer, size);
+  _offset += size;
+  return size;
+}
+
+- (BOOL)close {
+  ARC_RELEASE(_chunk);
+  _chunk = nil;
+  return YES;
+}
+
+- (void)dealloc {
+  DCHECK(_chunk == nil);
+  ARC_RELEASE(_chunk);
+  
+  ARC_DEALLOC(super);
 }
 
 @end

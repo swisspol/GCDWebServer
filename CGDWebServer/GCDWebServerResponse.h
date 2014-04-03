@@ -27,6 +27,8 @@
 
 #import <Foundation/Foundation.h>
 
+typedef NSData* (^GCDWebServerChunkBlock)();
+
 @interface GCDWebServerResponse : NSObject
 @property(nonatomic, copy) NSString* contentType;  // Default is nil i.e. no body
 @property(nonatomic) NSUInteger contentLength;  // Default is NSNotFound i.e. undefined
@@ -79,4 +81,9 @@
 - (id)initWithFile:(NSString*)path isAttachment:(BOOL)attachment;
 - (id)initWithFile:(NSString*)path byteRange:(NSRange)range;  // Pass [NSNotFound, 0] to disable byte range entirely, [offset, length] to enable byte range from beginning of file or [NSNotFound, -bytes] from end of file
 - (id)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment;
+@end
+
+@interface GCDWebServerChunkedResponse : GCDWebServerResponse  // Use chunked transfer encoding
++ (GCDWebServerChunkedResponse*)responseWithContentType:(NSString*)type chunkBlock:(GCDWebServerChunkBlock)block;
+- (id)initWithContentType:(NSString*)type chunkBlock:(GCDWebServerChunkBlock)block;  // Return nil when done
 @end
