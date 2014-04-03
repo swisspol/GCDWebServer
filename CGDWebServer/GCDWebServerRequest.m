@@ -157,6 +157,9 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
       ARC_RELEASE(self);
       return nil;
     }
+    if ([[_headers objectForKey:@"Transfer-Encoding"] isEqualToString:@"Chunked"]) {
+      length = NSIntegerMax;
+    }
     _length = length;
     if ((_length > 0) && (_type == nil)) {
       _type = [kGCDWebServerDefaultMimeType copy];
