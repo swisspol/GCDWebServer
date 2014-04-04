@@ -151,15 +151,19 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
     _query = ARC_RETAIN(query);
     
     _type = ARC_RETAIN([_headers objectForKey:@"Content-Type"]);
-    NSInteger length = [[_headers objectForKey:@"Content-Length"] integerValue];
-    if (length < 0) {
+    NSString* lengthHeader = [_headers objectForKey:@"Content-Length"];
+    if (_type) {
+      NSInteger length = [lengthHeader integerValue];
+      if ((lengthHeader == nil) || (length < 0)) {
+        DNOT_REACHED();
+        ARC_RELEASE(self);
+        return nil;
+      }
+      _length = length;
+    } else if (lengthHeader) {
       DNOT_REACHED();
       ARC_RELEASE(self);
       return nil;
-    }
-    _length = length;
-    if ((_length > 0) && (_type == nil)) {
-      _type = [kGCDWebServerDefaultMimeType copy];
     }
     
     _range = NSMakeRange(NSNotFound, 0);
