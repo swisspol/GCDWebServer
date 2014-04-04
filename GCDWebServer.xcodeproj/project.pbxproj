@@ -366,6 +366,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				WARNING_CFLAGS = (
 					"-Wall",
+					"-Wshadow",
 					"-Weverything",
 					"-Wshorten-64-to-32",
 					"-Wno-gnu-statement-expression",
