@@ -99,8 +99,8 @@ static dispatch_queue_t _formatterQueue = NULL;
     
     if (buffer) {
       NSMutableData* data = [[NSMutableData alloc] initWithCapacity:dispatch_data_get_size(buffer)];
-      dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t offset, const void* buffer, size_t size) {
-        [data appendBytes:buffer length:size];
+      dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t offset, const void* bufferChunk, size_t size) {
+        [data appendBytes:bufferChunk length:size];
         return true;
       });
       block(data);
@@ -118,8 +118,8 @@ static dispatch_queue_t _formatterQueue = NULL;
     
     if (buffer) {
       NSMutableData* data = [NSMutableData dataWithCapacity:kHeadersReadBuffer];
-      dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t offset, const void* buffer, size_t size) {
-        [data appendBytes:buffer length:size];
+      dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t offset, const void* bufferChunk, size_t size) {
+        [data appendBytes:bufferChunk length:size];
         return true;
       });
       NSRange range = [data rangeOfData:_separatorData options:0 range:NSMakeRange(0, data.length)];
@@ -158,8 +158,8 @@ static dispatch_queue_t _formatterQueue = NULL;
     if (buffer) {
       NSInteger remainingLength = length - dispatch_data_get_size(buffer);
       if (remainingLength >= 0) {
-        bool success = dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t offset, const void* buffer, size_t size) {
-          NSInteger result = [_request write:buffer maxLength:size];
+        bool success = dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t offset, const void* bufferChunk, size_t size) {
+          NSInteger result = [_request write:bufferChunk maxLength:size];
           if (result != (NSInteger)size) {
             LOG_ERROR(@"Failed writing request body on socket %i (error %i)", _socket, (int)result);
             return false;
@@ -342,7 +342,7 @@ static dispatch_queue_t _formatterQueue = NULL;
       
       if (success) {
         if ([_response hasBody]) {
-          [self _writeBodyWithCompletionBlock:^(BOOL success) {
+          [self _writeBodyWithCompletionBlock:^(BOOL successInner) {
             
             [_response close];  // Can't do anything with result anyway
             

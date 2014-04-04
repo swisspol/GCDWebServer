@@ -330,8 +330,8 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
                 DNOT_REACHED();
               }
               
-              int yes = 1;
-              setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &yes, sizeof(yes));  // Make sure this socket cannot generate SIG_PIPE
+              int noSigPipe = 1;
+              setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &noSigPipe, sizeof(noSigPipe));  // Make sure this socket cannot generate SIG_PIPE
               
               Class connectionClass = [[self class] connectionClass];
               GCDWebServerConnection* connection = [[connectionClass alloc] initWithServer:self localAddress:localAddress remoteAddress:remoteAddress socket:socket];  // Connection will automatically retain itself while opened
