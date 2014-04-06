@@ -26,6 +26,9 @@
  */
 
 #import "GCDWebUploader.h"
+#import "GCDWebServerDataRequest.h"
+#import "GCDWebServerURLEncodedFormRequest.h"
+#import "GCDWebServerDataResponse.h"
 
 int main(int argc, const char* argv[]) {
   BOOL success = NO;

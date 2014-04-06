@@ -25,23 +25,38 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import <Foundation/Foundation.h>
+#import "GCDWebServerPrivate.h"
 
-@interface GCDWebServerRequest : NSObject
-@property(nonatomic, readonly) NSString* method;
-@property(nonatomic, readonly) NSURL* URL;
-@property(nonatomic, readonly) NSDictionary* headers;
-@property(nonatomic, readonly) NSString* path;
-@property(nonatomic, readonly) NSDictionary* query;  // May be nil
-@property(nonatomic, readonly) NSString* contentType;  // Automatically parsed from headers (nil if request has no body)
-@property(nonatomic, readonly) NSUInteger contentLength;  // Automatically parsed from headers
-@property(nonatomic, readonly) NSRange byteRange;  // Automatically parsed from headers ([NSNotFound, 0] if request has no "Range" header, [offset, length] for byte range from beginning or [NSNotFound, -bytes] from end)
-- (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query;
-- (BOOL)hasBody;  // Convenience method
+@interface GCDWebServerStreamResponse () {
+@private
+  GCDWebServerStreamBlock _block;
+}
 @end
 
-@interface GCDWebServerRequest (Subclassing)
-- (BOOL)open;  // Implementation required
-- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length;  // Implementation required
-- (BOOL)close;  // Implementation required
+@implementation GCDWebServerStreamResponse
+
++ (GCDWebServerStreamResponse*)responseWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block {
+  return ARC_AUTORELEASE([[[self class] alloc] initWithContentType:type streamBlock:block]);
+}
+
+- (id)initWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block {
+  if ((self = [super init])) {
+    _block = [block copy];
+    
+    self.contentType = type;
+    self.chunkedTransferEncoding = YES;
+  }
+  return self;
+}
+
+- (void)dealloc {
+  ARC_RELEASE(_block);
+  
+  ARC_DEALLOC(super);
+}
+
+- (NSData*)readData:(NSError**)error {
+  return _block(error);
+}
+
 @end

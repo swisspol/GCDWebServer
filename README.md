@@ -2,7 +2,7 @@ Overview
 ========
 
 GCDWebServer is a lightweight GCD based HTTP 1.1 server designed to be embedded in Mac & iOS apps. It was written from scratch with the following goals in mind:
-* Easy to use and understand: only 4 main classes and less than 10 source code files
+* Easy to use and understand: only 4 core classes to deal with
 * Well designed API for easy integration and customization
 * Entirely built with an event-driven design using [Grand Central Dispatch](http://en.wikipedia.org/wiki/Grand_Central_Dispatch) for maximum performance and concurrency
 * Support for streaming large HTTP bodies for requests and responses to minimize memory usage

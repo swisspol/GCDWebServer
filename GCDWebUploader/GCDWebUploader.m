@@ -33,6 +33,11 @@
 #endif
 
 #import "GCDWebUploader.h"
+#import "GCDWebServerDataRequest.h"
+#import "GCDWebServerMultiPartFormRequest.h"
+#import "GCDWebServerURLEncodedFormRequest.h"
+#import "GCDWebServerDataResponse.h"
+#import "GCDWebServerFileResponse.h"
 
 @interface GCDWebUploader () {
 @private

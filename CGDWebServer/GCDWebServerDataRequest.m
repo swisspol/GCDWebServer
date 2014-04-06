@@ -25,23 +25,40 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import <Foundation/Foundation.h>
+#import "GCDWebServerPrivate.h"
 
-@interface GCDWebServerRequest : NSObject
-@property(nonatomic, readonly) NSString* method;
-@property(nonatomic, readonly) NSURL* URL;
-@property(nonatomic, readonly) NSDictionary* headers;
-@property(nonatomic, readonly) NSString* path;
-@property(nonatomic, readonly) NSDictionary* query;  // May be nil
-@property(nonatomic, readonly) NSString* contentType;  // Automatically parsed from headers (nil if request has no body)
-@property(nonatomic, readonly) NSUInteger contentLength;  // Automatically parsed from headers
-@property(nonatomic, readonly) NSRange byteRange;  // Automatically parsed from headers ([NSNotFound, 0] if request has no "Range" header, [offset, length] for byte range from beginning or [NSNotFound, -bytes] from end)
-- (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query;
-- (BOOL)hasBody;  // Convenience method
+@interface GCDWebServerDataRequest () {
+@private
+  NSMutableData* _data;
+}
 @end
 
-@interface GCDWebServerRequest (Subclassing)
-- (BOOL)open;  // Implementation required
-- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length;  // Implementation required
-- (BOOL)close;  // Implementation required
+@implementation GCDWebServerDataRequest
+
+@synthesize data=_data;
+
+- (void)dealloc {
+  DCHECK(_data != nil);
+  ARC_RELEASE(_data);
+  
+  ARC_DEALLOC(super);
+}
+
+- (BOOL)open {
+  DCHECK(_data == nil);
+  _data = [[NSMutableData alloc] initWithCapacity:self.contentLength];
+  return _data ? YES : NO;
+}
+
+- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length {
+  DCHECK(_data != nil);
+  [_data appendBytes:buffer length:length];
+  return length;
+}
+
+- (BOOL)close {
+  DCHECK(_data != nil);
+  return YES;
+}
+
 @end

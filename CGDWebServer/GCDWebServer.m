@@ -88,6 +88,33 @@ void GCDLogMessage(long level, NSString* format, ...) {
 
 #endif
 
+NSString* GCDWebServerExtractHeaderParameter(NSString* header, NSString* attribute) {
+  NSString* value = nil;
+  if (header) {
+    NSScanner* scanner = [[NSScanner alloc] initWithString:header];
+    NSString* string = [NSString stringWithFormat:@"%@=", attribute];
+    if ([scanner scanUpToString:string intoString:NULL]) {
+      [scanner scanString:string intoString:NULL];
+      if ([scanner scanString:@"\"" intoString:NULL]) {
+        [scanner scanUpToString:@"\"" intoString:&value];
+      } else {
+        [scanner scanUpToCharactersFromSet:[NSCharacterSet whitespaceCharacterSet] intoString:&value];
+      }
+    }
+    ARC_RELEASE(scanner);
+  }
+  return value;
+}
+
+// http://www.w3schools.com/tags/ref_charactersets.asp
+NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset) {
+  NSStringEncoding encoding = kCFStringEncodingInvalidId;
+  if (charset) {
+    encoding = CFStringConvertEncodingToNSStringEncoding(CFStringConvertIANACharSetNameToEncoding((CFStringRef)charset));
+  }
+  return (encoding != kCFStringEncodingInvalidId ? encoding : NSUTF8StringEncoding);
+}
+
 NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
   static NSDictionary* _overrides = nil;
   if (_overrides == nil) {

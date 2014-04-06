@@ -25,23 +25,25 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import <Foundation/Foundation.h>
+#import "GCDWebServerRequest.h"
 
-@interface GCDWebServerRequest : NSObject
-@property(nonatomic, readonly) NSString* method;
-@property(nonatomic, readonly) NSURL* URL;
-@property(nonatomic, readonly) NSDictionary* headers;
-@property(nonatomic, readonly) NSString* path;
-@property(nonatomic, readonly) NSDictionary* query;  // May be nil
-@property(nonatomic, readonly) NSString* contentType;  // Automatically parsed from headers (nil if request has no body)
-@property(nonatomic, readonly) NSUInteger contentLength;  // Automatically parsed from headers
-@property(nonatomic, readonly) NSRange byteRange;  // Automatically parsed from headers ([NSNotFound, 0] if request has no "Range" header, [offset, length] for byte range from beginning or [NSNotFound, -bytes] from end)
-- (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query;
-- (BOOL)hasBody;  // Convenience method
+@interface GCDWebServerMultiPart : NSObject
+@property(nonatomic, readonly) NSString* contentType;  // May be nil
+@property(nonatomic, readonly) NSString* mimeType;  // Defaults to "text/plain" per specifications if undefined
 @end
 
-@interface GCDWebServerRequest (Subclassing)
-- (BOOL)open;  // Implementation required
-- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length;  // Implementation required
-- (BOOL)close;  // Implementation required
+@interface GCDWebServerMultiPartArgument : GCDWebServerMultiPart
+@property(nonatomic, readonly) NSData* data;
+@property(nonatomic, readonly) NSString* string;  // May be nil (only valid for text mime types)
+@end
+
+@interface GCDWebServerMultiPartFile : GCDWebServerMultiPart
+@property(nonatomic, readonly) NSString* fileName;  // May be nil
+@property(nonatomic, readonly) NSString* temporaryPath;
+@end
+
+@interface GCDWebServerMultiPartFormRequest : GCDWebServerRequest
+@property(nonatomic, readonly) NSDictionary* arguments;  // Only valid after open / write / close sequence
+@property(nonatomic, readonly) NSDictionary* files;  // Only valid after open / write / close sequence
++ (NSString*)mimeType;
 @end

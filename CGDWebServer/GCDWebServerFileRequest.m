@@ -25,23 +25,50 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import <Foundation/Foundation.h>
+#import "GCDWebServerPrivate.h"
 
-@interface GCDWebServerRequest : NSObject
-@property(nonatomic, readonly) NSString* method;
-@property(nonatomic, readonly) NSURL* URL;
-@property(nonatomic, readonly) NSDictionary* headers;
-@property(nonatomic, readonly) NSString* path;
-@property(nonatomic, readonly) NSDictionary* query;  // May be nil
-@property(nonatomic, readonly) NSString* contentType;  // Automatically parsed from headers (nil if request has no body)
-@property(nonatomic, readonly) NSUInteger contentLength;  // Automatically parsed from headers
-@property(nonatomic, readonly) NSRange byteRange;  // Automatically parsed from headers ([NSNotFound, 0] if request has no "Range" header, [offset, length] for byte range from beginning or [NSNotFound, -bytes] from end)
-- (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query;
-- (BOOL)hasBody;  // Convenience method
+@interface GCDWebServerFileRequest () {
+@private
+  NSString* _filePath;
+  int _file;
+}
 @end
 
-@interface GCDWebServerRequest (Subclassing)
-- (BOOL)open;  // Implementation required
-- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length;  // Implementation required
-- (BOOL)close;  // Implementation required
+@implementation GCDWebServerFileRequest
+
+@synthesize filePath=_filePath;
+
+- (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
+  if ((self = [super initWithMethod:method url:url headers:headers path:path query:query])) {
+    _filePath = ARC_RETAIN([NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]]);
+  }
+  return self;
+}
+
+- (void)dealloc {
+  DCHECK(_file < 0);
+  unlink([_filePath fileSystemRepresentation]);
+  ARC_RELEASE(_filePath);
+  
+  ARC_DEALLOC(super);
+}
+
+- (BOOL)open {
+  DCHECK(_file == 0);
+  _file = open([_filePath fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+  return (_file > 0 ? YES : NO);
+}
+
+- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length {
+  DCHECK(_file > 0);
+  return write(_file, buffer, length);
+}
+
+- (BOOL)close {
+  DCHECK(_file > 0);
+  int result = close(_file);
+  _file = -1;
+  return (result == 0 ? YES : NO);
+}
+
 @end

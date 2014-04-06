@@ -52,6 +52,15 @@
 
 #import "GCDWebServerConnection.h"
 
+#import "GCDWebServerDataRequest.h"
+#import "GCDWebServerFileRequest.h"
+#import "GCDWebServerMultiPartFormRequest.h"
+#import "GCDWebServerURLEncodedFormRequest.h"
+
+#import "GCDWebServerDataResponse.h"
+#import "GCDWebServerFileResponse.h"
+#import "GCDWebServerStreamResponse.h"
+
 #ifdef __GCDWEBSERVER_LOGGING_HEADER__
 
 // Define __GCDWEBSERVER_LOGGING_HEADER__ as a preprocessor constant to redirect GCDWebServer logging to your own system
@@ -90,6 +99,9 @@ extern void GCDLogMessage(long level, NSString* format, ...) NS_FORMAT_FUNCTION(
 
 #define kGCDWebServerDefaultMimeType @"application/octet-stream"
 #define kGCDWebServerGCDQueue dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+
+extern NSString* GCDWebServerExtractHeaderParameter(NSString* header, NSString* attribute);
+extern NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset);
 
 @interface GCDWebServerConnection ()
 - (id)initWithServer:(GCDWebServer*)server localAddress:(NSData*)localAddress remoteAddress:(NSData*)remoteAddress socket:(CFSocketNativeHandle)socket;

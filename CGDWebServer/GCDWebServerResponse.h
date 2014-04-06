@@ -27,8 +27,6 @@
 
 #import <Foundation/Foundation.h>
 
-typedef NSData* (^GCDWebServerStreamBlock)(NSError** error);
-
 @protocol GCDWebServerBodyReader <NSObject>
 - (BOOL)open:(NSError**)error;
 - (NSData*)readData:(NSError**)error;  // Return nil on error or empty NSData if at end
@@ -53,38 +51,4 @@ typedef NSData* (^GCDWebServerStreamBlock)(NSError** error);
 + (GCDWebServerResponse*)responseWithRedirect:(NSURL*)location permanent:(BOOL)permanent;
 - (id)initWithStatusCode:(NSInteger)statusCode;
 - (id)initWithRedirect:(NSURL*)location permanent:(BOOL)permanent;
-@end
-
-@interface GCDWebServerDataResponse : GCDWebServerResponse
-+ (GCDWebServerDataResponse*)responseWithData:(NSData*)data contentType:(NSString*)type;
-- (id)initWithData:(NSData*)data contentType:(NSString*)type;
-@end
-
-@interface GCDWebServerDataResponse (Extensions)
-+ (GCDWebServerDataResponse*)responseWithText:(NSString*)text;
-+ (GCDWebServerDataResponse*)responseWithHTML:(NSString*)html;
-+ (GCDWebServerDataResponse*)responseWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables;
-+ (GCDWebServerDataResponse*)responseWithJSONObject:(id)object;
-+ (GCDWebServerDataResponse*)responseWithJSONObject:(id)object contentType:(NSString*)type;
-- (id)initWithText:(NSString*)text;  // Encodes using UTF-8
-- (id)initWithHTML:(NSString*)html;  // Encodes using UTF-8
-- (id)initWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables;  // Simple template system that replaces all occurences of "%variable%" with corresponding value (encodes using UTF-8)
-- (id)initWithJSONObject:(id)object;
-- (id)initWithJSONObject:(id)object contentType:(NSString*)type;
-@end
-
-@interface GCDWebServerFileResponse : GCDWebServerResponse
-+ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path;
-+ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path isAttachment:(BOOL)attachment;
-+ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path byteRange:(NSRange)range;
-+ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment;
-- (id)initWithFile:(NSString*)path;
-- (id)initWithFile:(NSString*)path isAttachment:(BOOL)attachment;
-- (id)initWithFile:(NSString*)path byteRange:(NSRange)range;  // Pass [NSNotFound, 0] to disable byte range entirely, [offset, length] to enable byte range from beginning of file or [NSNotFound, -bytes] from end of file
-- (id)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment;
-@end
-
-@interface GCDWebServerStreamResponse : GCDWebServerResponse  // Forces chunked transfer encoding
-+ (GCDWebServerStreamResponse*)responseWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block;
-- (id)initWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block;  // Block must return empty NSData when done or nil on error
 @end
