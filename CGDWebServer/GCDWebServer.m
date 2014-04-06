@@ -585,11 +585,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 
 - (void)addGETHandlerForBasePath:(NSString*)basePath directoryPath:(NSString*)directoryPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests {
   if ([basePath hasPrefix:@"/"] && [basePath hasSuffix:@"/"]) {
-#if __has_feature(objc_arc)
-    __unsafe_unretained GCDWebServer* server = self;
-#else
-    __block GCDWebServer* server = self;
-#endif
+    GCDWebServer* __unsafe_unretained server = self;
     [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
       
       if (![requestMethod isEqualToString:@"GET"]) {
