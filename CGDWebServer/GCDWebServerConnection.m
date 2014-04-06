@@ -30,7 +30,6 @@
 #import "GCDWebServerPrivate.h"
 
 #define kHeadersReadBuffer 1024
-#define kBodyWriteBufferSize (32 * 1024)
 
 typedef void (^ReadBufferCompletionBlock)(dispatch_data_t buffer);
 typedef void (^ReadDataCompletionBlock)(NSData* data);
@@ -234,27 +233,25 @@ static dispatch_queue_t _formatterQueue = NULL;
 
 - (void)_writeBodyWithCompletionBlock:(WriteBodyCompletionBlock)block {
   DCHECK([_response hasBody]);
-  void* buffer = malloc(kBodyWriteBufferSize);
-  NSInteger result = [_response read:buffer maxLength:kBodyWriteBufferSize];
-  if (result > 0) {
-    dispatch_data_t wrapper = dispatch_data_create(buffer, result, NULL, DISPATCH_DATA_DESTRUCTOR_FREE);
-    [self _writeBuffer:wrapper withCompletionBlock:^(BOOL success) {
-      
-      if (success) {
-        [self _writeBodyWithCompletionBlock:block];
-      } else {
-        block(NO);
-      }
-      
-    }];
-    ARC_DISPATCH_RELEASE(wrapper);
-  } else if (result < 0) {
-    LOG_ERROR(@"Failed reading response body on socket %i (error %i)", _socket, (int)result);
-    block(NO);
-    free(buffer);
+  NSError* error = nil;
+  NSData* data = [_response performReadData:&error];
+  if (data) {
+    if (data.length) {
+      [self _writeData:data withCompletionBlock:^(BOOL success) {
+        
+        if (success) {
+          [self _writeBodyWithCompletionBlock:block];
+        } else {
+          block(NO);
+        }
+        
+      }];
+    } else {
+      block(YES);
+    }
   } else {
-    block(YES);
-    free(buffer);
+    LOG_ERROR(@"Failed reading response body for socket %i: %@", _socket, error);
+    block(NO);
   }
 }
 
@@ -318,8 +315,13 @@ static dispatch_queue_t _formatterQueue = NULL;
   DCHECK(_responseMessage == NULL);
   
   GCDWebServerResponse* response = [self processRequest:_request withBlock:_handler.processBlock];
-  if (![response hasBody] || [response open]) {
-    _response = ARC_RETAIN(response);
+  if (response) {
+    NSError* error = nil;
+    if ([response hasBody] && ![response performOpen:&error]) {
+      LOG_WARNING(@"Failed opening response body for socket %i: %@", _socket, error);
+    } else {
+      _response = ARC_RETAIN(response);
+    }
   }
   
   if (_response) {
@@ -344,12 +346,13 @@ static dispatch_queue_t _formatterQueue = NULL;
         if ([_response hasBody]) {
           [self _writeBodyWithCompletionBlock:^(BOOL successInner) {
             
-            [_response close];  // Can't do anything with result anyway
+            [_response performClose];
+            LOG_VERBOSE(@"%@ | %@ \"%@ %@\" %i %lu", self.localAddressString, self.remoteAddressString, _request.method, _request.path, (int)_response.statusCode, (unsigned long)_bytesWritten);
             
           }];
         }
       } else if ([_response hasBody]) {
-        [_response close];  // Can't do anything with result anyway
+        [_response performClose];
       }
       
     }];
@@ -537,7 +540,6 @@ static NSString* _StringFromAddressData(NSData* data) {
   GCDWebServerResponse* response = nil;
   @try {
     response = block(request);
-    LOG_VERBOSE(@"%@ | %@ \"%@ %@\" %i %lu", self.localAddressString, self.remoteAddressString, _request.method, _request.path, (int)response.statusCode, (unsigned long)(response.contentLength != NSNotFound ? response.contentLength : 0));
   }
   @catch (NSException* exception) {
     LOG_EXCEPTION(exception);

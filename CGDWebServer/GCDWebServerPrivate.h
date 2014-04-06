@@ -104,3 +104,10 @@ extern void GCDLogMessage(long level, NSString* format, ...) NS_FORMAT_FUNCTION(
 @property(nonatomic, readonly) GCDWebServerProcessBlock processBlock;
 - (id)initWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
 @end
+
+@interface GCDWebServerResponse ()
+@property(nonatomic, readonly) NSDictionary* additionalHeaders;
+- (BOOL)performOpen:(NSError**)error;
+- (NSData*)performReadData:(NSError**)error;
+- (void)performClose;
+@end

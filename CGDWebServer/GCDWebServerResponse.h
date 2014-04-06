@@ -27,24 +27,25 @@
 
 #import <Foundation/Foundation.h>
 
-typedef NSData* (^GCDWebServerChunkBlock)();
+typedef NSData* (^GCDWebServerStreamBlock)(NSError** error);
 
-@interface GCDWebServerResponse : NSObject
+@protocol GCDWebServerBodyReader <NSObject>
+- (BOOL)open:(NSError**)error;
+- (NSData*)readData:(NSError**)error;  // Return nil on error or empty NSData if at end
+- (void)close;
+@end
+
+@interface GCDWebServerResponse : NSObject <GCDWebServerBodyReader>
 @property(nonatomic, copy) NSString* contentType;  // Default is nil i.e. no body
 @property(nonatomic) NSUInteger contentLength;  // Default is NSNotFound i.e. undefined
 @property(nonatomic) NSInteger statusCode;  // Default is 200
 @property(nonatomic) NSUInteger cacheControlMaxAge;  // Default is 0 seconds i.e. "no-cache"
-@property(nonatomic, readonly) NSDictionary* additionalHeaders;
+@property(nonatomic) BOOL gzipContentEncoding;
+@property(nonatomic) BOOL chunkedTransferEncoding;
 + (GCDWebServerResponse*) response;
 - (id)init;
 - (void)setValue:(NSString*)value forAdditionalHeader:(NSString*)header;
 - (BOOL)hasBody;  // Convenience method
-@end
-
-@interface GCDWebServerResponse (Subclassing)
-- (BOOL)open;  // Implementation required
-- (NSInteger)read:(void*)buffer maxLength:(NSUInteger)length;  // Implementation required
-- (BOOL)close;  // Implementation required
 @end
 
 @interface GCDWebServerResponse (Extensions)
@@ -83,7 +84,7 @@ typedef NSData* (^GCDWebServerChunkBlock)();
 - (id)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment;
 @end
 
-@interface GCDWebServerChunkedResponse : GCDWebServerResponse  // Use chunked transfer encoding
-+ (GCDWebServerChunkedResponse*)responseWithContentType:(NSString*)type chunkBlock:(GCDWebServerChunkBlock)block;
-- (id)initWithContentType:(NSString*)type chunkBlock:(GCDWebServerChunkBlock)block;  // Return nil when done
+@interface GCDWebServerStreamResponse : GCDWebServerResponse  // Forces chunked transfer encoding
++ (GCDWebServerStreamResponse*)responseWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block;
+- (id)initWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block;  // Block must return empty NSData when done or nil on error
 @end
