@@ -37,6 +37,10 @@
   NSString* _type;
   NSUInteger _length;
   NSRange _range;
+  
+  BOOL _opened;
+  NSMutableArray* _decoders;
+  id<GCDWebServerBodyWriter> __unsafe_unretained _writer;
 }
 @end
 
@@ -97,6 +101,8 @@
         LOG_WARNING(@"Failed to parse 'Range' header \"%@\" for url: %@", rangeHeader, url);
       }
     }
+    
+    _decoders = [[NSMutableArray alloc] init];
   }
   return self;
 }
@@ -108,6 +114,7 @@
   ARC_RELEASE(_path);
   ARC_RELEASE(_query);
   ARC_RELEASE(_type);
+  ARC_RELEASE(_decoders);
   
   ARC_DEALLOC(super);
 }
@@ -116,23 +123,37 @@
   return _type ? YES : NO;
 }
 
-@end
+- (BOOL)open:(NSError**)error {
+  return YES;
+}
 
-@implementation GCDWebServerRequest (Subclassing)
-
-- (BOOL)open {
+- (BOOL)writeData:(NSData*)data error:(NSError**)error {
   [self doesNotRecognizeSelector:_cmd];
   return NO;
 }
 
-- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length {
-  [self doesNotRecognizeSelector:_cmd];
-  return -1;
+- (BOOL)close:(NSError**)error {
+  return YES;
 }
 
-- (BOOL)close {
-  [self doesNotRecognizeSelector:_cmd];
-  return NO;
+- (BOOL)performOpen:(NSError**)error {
+  if (_opened) {
+    DNOT_REACHED();
+    return NO;
+  }
+  _opened = YES;
+  
+  _writer = self;
+  // TODO: Inject decoders
+  return [_writer open:error];
+}
+
+- (BOOL)performWriteData:(NSData*)data error:(NSError**)error {
+  return [_writer writeData:data error:error];
+}
+
+- (BOOL)performClose:(NSError**)error {
+  return [_writer close:error];
 }
 
 @end

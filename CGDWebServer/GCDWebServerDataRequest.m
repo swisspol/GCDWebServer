@@ -44,19 +44,23 @@
   ARC_DEALLOC(super);
 }
 
-- (BOOL)open {
+- (BOOL)open:(NSError**)error {
   DCHECK(_data == nil);
   _data = [[NSMutableData alloc] initWithCapacity:self.contentLength];
-  return _data ? YES : NO;
+  if (_data == nil) {
+    *error = [NSError errorWithDomain:kGCDWebServerErrorDomain code:-1 userInfo:@{NSLocalizedDescriptionKey: @"Failed allocating memory"}];
+    return NO;
+  }
+  return YES;
 }
 
-- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length {
+- (BOOL)writeData:(NSData*)data error:(NSError**)error {
   DCHECK(_data != nil);
-  [_data appendBytes:buffer length:length];
-  return length;
+  [_data appendData:data];
+  return YES;
 }
 
-- (BOOL)close {
+- (BOOL)close:(NSError**)error {
   DCHECK(_data != nil);
   return YES;
 }

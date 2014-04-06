@@ -27,7 +27,13 @@
 
 #import <Foundation/Foundation.h>
 
-@interface GCDWebServerRequest : NSObject
+@protocol GCDWebServerBodyWriter <NSObject>
+- (BOOL)open:(NSError**)error;  // Return NO on error ("error" is guaranteed to be non-NULL)
+- (BOOL)writeData:(NSData*)data error:(NSError**)error;  // Return NO on error ("error" is guaranteed to be non-NULL)
+- (BOOL)close:(NSError**)error;  // Return NO on error ("error" is guaranteed to be non-NULL)
+@end
+
+@interface GCDWebServerRequest : NSObject <GCDWebServerBodyWriter>
 @property(nonatomic, readonly) NSString* method;
 @property(nonatomic, readonly) NSURL* URL;
 @property(nonatomic, readonly) NSDictionary* headers;
@@ -38,10 +44,4 @@
 @property(nonatomic, readonly) NSRange byteRange;  // Automatically parsed from headers ([NSNotFound, 0] if request has no "Range" header, [offset, length] for byte range from beginning or [NSNotFound, -bytes] from end)
 - (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query;
 - (BOOL)hasBody;  // Convenience method
-@end
-
-@interface GCDWebServerRequest (Subclassing)
-- (BOOL)open;  // Implementation required
-- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length;  // Implementation required
-- (BOOL)close;  // Implementation required
 @end

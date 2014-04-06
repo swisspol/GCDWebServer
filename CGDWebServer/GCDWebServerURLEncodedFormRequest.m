@@ -47,17 +47,18 @@
   ARC_DEALLOC(super);
 }
 
-- (BOOL)close {
-  if (![super close]) {
+- (BOOL)close:(NSError**)error {
+  if (![super close:error]) {
     return NO;
   }
   
   NSString* charset = GCDWebServerExtractHeaderParameter(self.contentType, @"charset");
   NSString* string = [[NSString alloc] initWithData:self.data encoding:GCDWebServerStringEncodingFromCharset(charset)];
   _arguments = ARC_RETAIN(GCDWebServerParseURLEncodedForm(string));
+  DCHECK(_arguments);
   ARC_RELEASE(string);
   
-  return (_arguments ? YES : NO);
+  return YES;
 }
 
 @end

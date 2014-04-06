@@ -34,6 +34,10 @@
 }
 @end
 
+static inline NSError* _MakePosixError(int code) {
+  return [NSError errorWithDomain:NSPOSIXErrorDomain code:code userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"%s", strerror(code)]}];
+}
+
 @implementation GCDWebServerFileRequest
 
 @synthesize filePath=_filePath;
@@ -53,22 +57,34 @@
   ARC_DEALLOC(super);
 }
 
-- (BOOL)open {
+- (BOOL)open:(NSError**)error {
   DCHECK(_file == 0);
   _file = open([_filePath fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-  return (_file > 0 ? YES : NO);
+  if (_file <= 0) {
+    *error = _MakePosixError(errno);
+    return NO;
+  }
+  return YES;
 }
 
-- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length {
+- (BOOL)writeData:(NSData*)data error:(NSError**)error {
   DCHECK(_file > 0);
-  return write(_file, buffer, length);
+  if (write(_file, data.bytes, data.length) != (ssize_t)data.length) {
+    *error = _MakePosixError(errno);
+    return NO;
+  }
+  return YES;
 }
 
-- (BOOL)close {
+- (BOOL)close:(NSError**)error {
   DCHECK(_file > 0);
   int result = close(_file);
   _file = -1;
-  return (result == 0 ? YES : NO);
+  if (result < 0) {
+    *error = _MakePosixError(errno);
+    return NO;
+  }
+  return YES;
 }
 
 @end

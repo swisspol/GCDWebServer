@@ -99,6 +99,7 @@ extern void GCDLogMessage(long level, NSString* format, ...) NS_FORMAT_FUNCTION(
 
 #define kGCDWebServerDefaultMimeType @"application/octet-stream"
 #define kGCDWebServerGCDQueue dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+#define kGCDWebServerErrorDomain @"GCDWebServerErrorDomain"
 
 extern NSString* GCDWebServerExtractHeaderParameter(NSString* header, NSString* attribute);
 extern NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset);
@@ -115,6 +116,12 @@ extern NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset)
 @property(nonatomic, readonly) GCDWebServerMatchBlock matchBlock;
 @property(nonatomic, readonly) GCDWebServerProcessBlock processBlock;
 - (id)initWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
+@end
+
+@interface GCDWebServerRequest ()
+- (BOOL)performOpen:(NSError**)error;
+- (BOOL)performWriteData:(NSData*)data error:(NSError**)error;
+- (BOOL)performClose:(NSError**)error;
 @end
 
 @interface GCDWebServerResponse ()

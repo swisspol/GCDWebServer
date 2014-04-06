@@ -204,7 +204,7 @@ static NSData* _dashNewlineData = nil;
   return self;
 }
 
-- (BOOL)open {
+- (BOOL)open:(NSError**)error {
   DCHECK(_parserData == nil);
   _parserData = [[NSMutableData alloc] initWithCapacity:kMultiPartBufferSize];
   _parserState = kParserState_Start;
@@ -329,13 +329,17 @@ static NSData* _dashNewlineData = nil;
   return success;
 }
 
-- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length {
+- (BOOL)writeData:(NSData*)data error:(NSError**)error {
   DCHECK(_parserData != nil);
-  [_parserData appendBytes:buffer length:length];
-  return ([self _parseData] ? length : -1);
+  [_parserData appendBytes:data.bytes length:data.length];
+  if (![self _parseData]) {
+    *error = [NSError errorWithDomain:kGCDWebServerErrorDomain code:-1 userInfo:@{NSLocalizedDescriptionKey: @"Failed parsing multipart form data"}];
+    return NO;
+  }
+  return YES;
 }
 
-- (BOOL)close {
+- (BOOL)close:(NSError**)error {
   DCHECK(_parserData != nil);
   ARC_RELEASE(_parserData);
   _parserData = nil;
@@ -352,7 +356,11 @@ static NSData* _dashNewlineData = nil;
   }
   ARC_RELEASE(_tmpPath);
   _tmpPath = nil;
-  return (_parserState == kParserState_End ? YES : NO);
+  if (_parserState != kParserState_End) {
+    *error = [NSError errorWithDomain:kGCDWebServerErrorDomain code:-1 userInfo:@{NSLocalizedDescriptionKey: @"Failed parsing multipart form data"}];
+    return NO;
+  }
+  return YES;
 }
 
 - (void)dealloc {

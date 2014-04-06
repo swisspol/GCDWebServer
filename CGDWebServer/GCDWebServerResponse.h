@@ -28,8 +28,8 @@
 #import <Foundation/Foundation.h>
 
 @protocol GCDWebServerBodyReader <NSObject>
-- (BOOL)open:(NSError**)error;
-- (NSData*)readData:(NSError**)error;  // Return nil on error or empty NSData if at end
+- (BOOL)open:(NSError**)error;  // Return NO on error ("error" is guaranteed to be non-NULL)
+- (NSData*)readData:(NSError**)error;  // Must return nil on error or empty NSData if at end ("error" is guaranteed to be non-NULL)
 - (void)close;
 @end
 
@@ -38,8 +38,8 @@
 @property(nonatomic) NSUInteger contentLength;  // Default is NSNotFound i.e. undefined
 @property(nonatomic) NSInteger statusCode;  // Default is 200
 @property(nonatomic) NSUInteger cacheControlMaxAge;  // Default is 0 seconds i.e. "no-cache"
-@property(nonatomic) BOOL gzipContentEncoding;
-@property(nonatomic) BOOL chunkedTransferEncoding;
+@property(nonatomic, getter=isGZipContentEncodingEnabled) BOOL gzipContentEncodingEnabled;
+@property(nonatomic, getter=isChunkedTransferEncodingEnabled) BOOL chunkedTransferEncodingEnabled;
 + (GCDWebServerResponse*) response;
 - (id)init;
 - (void)setValue:(NSString*)value forAdditionalHeader:(NSString*)header;

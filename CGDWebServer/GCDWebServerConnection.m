@@ -157,10 +157,11 @@ static dispatch_queue_t _formatterQueue = NULL;
     if (buffer) {
       NSInteger remainingLength = length - dispatch_data_get_size(buffer);
       if (remainingLength >= 0) {
-        bool success = dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t offset, const void* bufferChunk, size_t size) {
-          NSInteger result = [_request write:bufferChunk maxLength:size];
-          if (result != (NSInteger)size) {
-            LOG_ERROR(@"Failed writing request body on socket %i (error %i)", _socket, (int)result);
+        bool success = dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t offset, const void* chunkBytes, size_t chunkSize) {
+          NSData* data = [NSData dataWithBytes:chunkBytes length:chunkSize];
+          NSError* error = nil;
+          if (![_request performWriteData:data error:&error]) {
+            LOG_ERROR(@"Failed writing request body on socket %i: %@", _socket, error);
             return false;
           }
           return true;
@@ -318,7 +319,7 @@ static dispatch_queue_t _formatterQueue = NULL;
   if (response) {
     NSError* error = nil;
     if ([response hasBody] && ![response performOpen:&error]) {
-      LOG_WARNING(@"Failed opening response body for socket %i: %@", _socket, error);
+      LOG_ERROR(@"Failed opening response body for socket %i: %@", _socket, error);
     } else {
       _response = ARC_RETAIN(response);
     }
@@ -363,42 +364,45 @@ static dispatch_queue_t _formatterQueue = NULL;
 }
 
 - (void)_readRequestBody:(NSData*)initialData {
-  if ([_request open]) {
+  NSError* error = nil;
+  if ([_request performOpen:&error]) {
     NSInteger length = _request.contentLength;
     if (initialData.length) {
-      NSInteger result = [_request write:initialData.bytes maxLength:initialData.length];
-      if (result == (NSInteger)initialData.length) {
+      if ([_request performWriteData:initialData error:&error]) {
         length -= initialData.length;
         DCHECK(length >= 0);
       } else {
-        LOG_ERROR(@"Failed writing request body on socket %i (error %i)", _socket, (int)result);
+        LOG_ERROR(@"Failed writing request body on socket %i: %@", _socket, error);
         length = -1;
       }
     }
     if (length > 0) {
       [self _readBodyWithRemainingLength:length completionBlock:^(BOOL success) {
         
-        if (![_request close]) {
-          success = NO;
-        }
-        if (success) {
+        NSError* localError = nil;
+        if ([_request performClose:&localError]) {
           [self _processRequest];
         } else {
+          LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
           [self _abortWithStatusCode:500];
         }
         
       }];
     } else if (length == 0) {
-      if ([_request close]) {
+      if ([_request performClose:&error]) {
         [self _processRequest];
       } else {
+        LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
         [self _abortWithStatusCode:500];
       }
     } else {
-      [_request close];  // Can't do anything with result anyway
+      if (![_request performClose:&error]) {
+        LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
+      }
       [self _abortWithStatusCode:500];
     }
   } else {
+    LOG_ERROR(@"Failed opening request body for socket %i: %@", _socket, error);
     [self _abortWithStatusCode:500];
   }
 }

@@ -157,12 +157,12 @@
 }
 
 - (NSData*)readData:(NSError**)error {
-  NSMutableData* gzipData;
+  NSMutableData* encodedData;
   if (_finished) {
-    gzipData = [[NSMutableData alloc] init];
+    encodedData = [[NSMutableData alloc] init];
   } else {
-    gzipData = [[NSMutableData alloc] initWithLength:kGZipInitialBufferSize];
-    if (gzipData == nil) {
+    encodedData = [[NSMutableData alloc] initWithLength:kGZipInitialBufferSize];
+    if (encodedData == nil) {
       DNOT_REACHED();
       return nil;
     }
@@ -175,14 +175,14 @@
       _stream.next_in = (Bytef*)data.bytes;
       _stream.avail_in = (uInt)data.length;
       while (1) {
-        NSUInteger maxLength = gzipData.length - length;
-        _stream.next_out = (Bytef*)((char*)gzipData.mutableBytes + length);
+        NSUInteger maxLength = encodedData.length - length;
+        _stream.next_out = (Bytef*)((char*)encodedData.mutableBytes + length);
         _stream.avail_out = (uInt)maxLength;
         int result = deflate(&_stream, data.length ? Z_NO_FLUSH : Z_FINISH);
         if (result == Z_STREAM_END) {
           _finished = YES;
         } else if (result != Z_OK) {
-          ARC_RELEASE(gzipData);
+          ARC_RELEASE(encodedData);
           *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
           return nil;
         }
@@ -190,13 +190,13 @@
         if (_stream.avail_out > 0) {
           break;
         }
-        gzipData.length = 2 * gzipData.length;  // zlib has used all the output buffer so resize it and try again in case more data is available
+        encodedData.length = 2 * encodedData.length;  // zlib has used all the output buffer so resize it and try again in case more data is available
       }
       DCHECK(_stream.avail_in == 0);
     } while (length == 0);  // Make sure we don't return an empty NSData if not in finished state
-    gzipData.length = length;
+    encodedData.length = length;
   }
-  return ARC_AUTORELEASE(gzipData);
+  return ARC_AUTORELEASE(encodedData);
 }
 
 - (void)close {
@@ -225,7 +225,7 @@
 @implementation GCDWebServerResponse
 
 @synthesize contentType=_type, contentLength=_length, statusCode=_status, cacheControlMaxAge=_maxAge,
-            gzipContentEncoding=_gzipped, chunkedTransferEncoding=_chunked, additionalHeaders=_headers;
+            gzipContentEncodingEnabled=_gzipped, chunkedTransferEncodingEnabled=_chunked, additionalHeaders=_headers;
 
 + (GCDWebServerResponse*)response {
   return ARC_AUTORELEASE([[[self class] alloc] init]);
@@ -264,6 +264,7 @@
 }
 
 - (NSData*)readData:(NSError**)error {
+  [self doesNotRecognizeSelector:_cmd];
   return nil;
 }
 
