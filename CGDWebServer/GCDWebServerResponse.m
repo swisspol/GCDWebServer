@@ -36,9 +36,6 @@
 - (id)initWithResponse:(GCDWebServerResponse*)response reader:(id<GCDWebServerBodyReader>)reader;
 @end
 
-@interface GCDWebServerChunkEncoder : GCDWebServerBodyEncoder
-@end
-
 @interface GCDWebServerGZipEncoder : GCDWebServerBodyEncoder
 @end
 
@@ -73,59 +70,6 @@
 
 @end
 
-@interface GCDWebServerChunkEncoder () {
-@private
-  BOOL _finished;
-}
-@end
-
-@implementation GCDWebServerChunkEncoder
-
-- (id)initWithResponse:(GCDWebServerResponse*)response reader:(id<GCDWebServerBodyReader>)reader {
-  if ((self = [super initWithResponse:response reader:reader])) {
-    response.contentLength = NSNotFound;  // Make sure "Content-Length" header is not set since body length is determined by chunked transfer encoding
-    [response setValue:@"chunked" forAdditionalHeader:@"Transfer-Encoding"];
-  }
-  return self;
-}
-
-- (NSData*)readData:(NSError**)error {
-  NSData* chunk;
-  if (_finished) {
-    chunk = [[NSData alloc] init];
-  } else {
-    NSData* data = [super readData:error];
-    if (data == nil) {
-      return nil;
-    }
-    if (data.length) {
-      const char* hexString = [[NSString stringWithFormat:@"%lx", (unsigned long)data.length] UTF8String];
-      size_t hexLength = strlen(hexString);
-      chunk = [[NSMutableData alloc] initWithLength:(hexLength + 2 + data.length + 2)];
-      if (chunk == nil) {
-        DNOT_REACHED();
-        return nil;
-      }
-      char* ptr = (char*)[(NSMutableData*)chunk mutableBytes];
-      bcopy(hexString, ptr, hexLength);
-      ptr += hexLength;
-      *ptr++ = '\r';
-      *ptr++ = '\n';
-      bcopy(data.bytes, ptr, data.length);
-      ptr += data.length;
-      *ptr++ = '\r';
-      *ptr = '\n';
-    } else {
-      chunk = [[NSData alloc] initWithBytes:"0\r\n\r\n" length:5];
-      DCHECK(chunk);
-      _finished = YES;
-    }
-  }
-  return ARC_AUTORELEASE(chunk);
-}
-
-@end
-
 @interface GCDWebServerGZipEncoder () {
 @private
   z_stream _stream;
@@ -137,7 +81,7 @@
 
 - (id)initWithResponse:(GCDWebServerResponse*)response reader:(id<GCDWebServerBodyReader>)reader {
   if ((self = [super initWithResponse:response reader:reader])) {
-    response.contentLength = NSNotFound;  // Make sure "Content-Length" header is not set since body length is determined by closing the connection
+    response.contentLength = NSNotFound;  // Make sure "Content-Length" header is not set since we don't know it (client will determine body length when connection is closed)
     [response setValue:@"gzip" forAdditionalHeader:@"Content-Encoding"];
   }
   return self;
@@ -213,8 +157,8 @@
   NSInteger _status;
   NSUInteger _maxAge;
   NSMutableDictionary* _headers;
-  BOOL _gzipped;
   BOOL _chunked;
+  BOOL _gzipped;
   
   BOOL _opened;
   NSMutableArray* _encoders;
@@ -225,7 +169,7 @@
 @implementation GCDWebServerResponse
 
 @synthesize contentType=_type, contentLength=_length, statusCode=_status, cacheControlMaxAge=_maxAge,
-            gzipContentEncodingEnabled=_gzipped, chunkedTransferEncodingEnabled=_chunked, additionalHeaders=_headers;
+            gzipContentEncodingEnabled=_gzipped, additionalHeaders=_headers;
 
 + (GCDWebServerResponse*)response {
   return ARC_AUTORELEASE([[[self class] alloc] init]);
@@ -259,6 +203,10 @@
   return _type ? YES : NO;
 }
 
+- (BOOL)usesChunkedTransferEncoding {
+  return (_type != nil) && (_length == NSNotFound);
+}
+
 - (BOOL)open:(NSError**)error {
   return YES;
 }
@@ -282,12 +230,6 @@
   _reader = self;
   if (_gzipped) {
     GCDWebServerGZipEncoder* encoder = [[GCDWebServerGZipEncoder alloc] initWithResponse:self reader:_reader];
-    [_encoders addObject:encoder];
-    ARC_RELEASE(encoder);
-    _reader = encoder;
-  }
-  if (_chunked) {
-    GCDWebServerChunkEncoder* encoder = [[GCDWebServerChunkEncoder alloc] initWithResponse:self reader:_reader];
     [_encoders addObject:encoder];
     ARC_RELEASE(encoder);
     _reader = encoder;

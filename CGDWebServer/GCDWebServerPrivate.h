@@ -127,6 +127,7 @@ extern NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset)
 
 @interface GCDWebServerResponse ()
 @property(nonatomic, readonly) NSDictionary* additionalHeaders;
+@property(nonatomic, readonly) BOOL usesChunkedTransferEncoding;
 - (BOOL)performOpen:(NSError**)error;
 - (NSData*)performReadData:(NSError**)error;
 - (void)performClose;

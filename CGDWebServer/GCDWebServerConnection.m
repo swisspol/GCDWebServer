@@ -44,6 +44,7 @@ typedef void (^WriteBodyCompletionBlock)(BOOL success);
 static NSData* _CRLFData = nil;
 static NSData* _CRLFCRLFData = nil;
 static NSData* _continueData = nil;
+static NSData* _lastChunkData = nil;
 static NSDateFormatter* _dateFormatter = nil;
 static dispatch_queue_t _formatterQueue = NULL;
 
@@ -308,6 +309,26 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   NSData* data = [_response performReadData:&error];
   if (data) {
     if (data.length) {
+      if (_response.usesChunkedTransferEncoding) {
+        const char* hexString = [[NSString stringWithFormat:@"%lx", (unsigned long)data.length] UTF8String];
+        size_t hexLength = strlen(hexString);
+        NSData* chunk = [NSMutableData dataWithLength:(hexLength + 2 + data.length + 2)];
+        if (chunk == nil) {
+          LOG_ERROR(@"Failed allocating memory for response body chunk for socket %i: %@", _socket, error);
+          block(NO);
+          return;
+        }
+        char* ptr = (char*)[(NSMutableData*)chunk mutableBytes];
+        bcopy(hexString, ptr, hexLength);
+        ptr += hexLength;
+        *ptr++ = '\r';
+        *ptr++ = '\n';
+        bcopy(data.bytes, ptr, data.length);
+        ptr += data.length;
+        *ptr++ = '\r';
+        *ptr = '\n';
+        data = chunk;
+      }
       [self _writeData:data withCompletionBlock:^(BOOL success) {
         
         if (success) {
@@ -318,7 +339,15 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
         
       }];
     } else {
-      block(YES);
+      if (_response.usesChunkedTransferEncoding) {
+        [self _writeData:_lastChunkData withCompletionBlock:^(BOOL success) {
+          
+          block(success);
+          
+        }];
+      } else {
+        block(YES);
+      }
     }
   } else {
     LOG_ERROR(@"Failed reading response body for socket %i: %@", _socket, error);
@@ -350,6 +379,9 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 #endif
     CFRelease(message);
     DCHECK(_continueData);
+  }
+  if (_lastChunkData == nil) {
+    _lastChunkData = [[NSData alloc] initWithBytes:"0\r\n\r\n" length:5];
   }
   if (_dateFormatter == nil) {
     DCHECK([NSThread isMainThread]);  // NSDateFormatter should be initialized on main thread
@@ -411,6 +443,9 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     }
     if (_response.contentLength != NSNotFound) {
       CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Length"), (ARC_BRIDGE CFStringRef)[NSString stringWithFormat:@"%lu", (unsigned long)_response.contentLength]);
+    }
+    if (_response.usesChunkedTransferEncoding) {
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Transfer-Encoding"), CFSTR("chunked"));
     }
     [_response.additionalHeaders enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL* stop) {
       CFHTTPMessageSetHeaderFieldValue(_responseMessage, (ARC_BRIDGE CFStringRef)key, (ARC_BRIDGE CFStringRef)obj);

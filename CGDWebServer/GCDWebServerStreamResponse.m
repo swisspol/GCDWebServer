@@ -44,7 +44,6 @@
     _block = [block copy];
     
     self.contentType = type;
-    self.chunkedTransferEncodingEnabled = YES;
   }
   return self;
 }
