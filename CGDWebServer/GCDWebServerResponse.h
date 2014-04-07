@@ -38,8 +38,8 @@
 @property(nonatomic) NSUInteger contentLength;  // Default is NSNotFound i.e. undefined
 @property(nonatomic) NSInteger statusCode;  // Default is 200
 @property(nonatomic) NSUInteger cacheControlMaxAge;  // Default is 0 seconds i.e. "no-cache"
-@property(nonatomic, getter=isGZipContentEncodingEnabled) BOOL gzipContentEncodingEnabled;
-@property(nonatomic, getter=isChunkedTransferEncodingEnabled) BOOL chunkedTransferEncodingEnabled;
+@property(nonatomic, getter=isGZipContentEncodingEnabled) BOOL gzipContentEncodingEnabled;  // Default is disabled
+@property(nonatomic, getter=isChunkedTransferEncodingEnabled) BOOL chunkedTransferEncodingEnabled;  // Default is disabled
 + (GCDWebServerResponse*) response;
 - (id)init;
 - (void)setValue:(NSString*)value forAdditionalHeader:(NSString*)header;

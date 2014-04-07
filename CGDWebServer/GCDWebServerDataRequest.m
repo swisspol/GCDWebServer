@@ -46,7 +46,11 @@
 
 - (BOOL)open:(NSError**)error {
   DCHECK(_data == nil);
-  _data = [[NSMutableData alloc] initWithCapacity:self.contentLength];
+  if (self.contentLength != NSNotFound) {
+    _data = [[NSMutableData alloc] initWithCapacity:self.contentLength];
+  } else {
+    _data = [[NSMutableData alloc] init];
+  }
   if (_data == nil) {
     *error = [NSError errorWithDomain:kGCDWebServerErrorDomain code:-1 userInfo:@{NSLocalizedDescriptionKey: @"Failed allocating memory"}];
     return NO;

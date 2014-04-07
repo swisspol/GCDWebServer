@@ -83,7 +83,7 @@
 
 - (id)initWithResponse:(GCDWebServerResponse*)response reader:(id<GCDWebServerBodyReader>)reader {
   if ((self = [super initWithResponse:response reader:reader])) {
-    response.contentLength = NSNotFound;  // Make sure "Content-Length" header is not set
+    response.contentLength = NSNotFound;  // Make sure "Content-Length" header is not set since body length is determined by chunked transfer encoding
     [response setValue:@"chunked" forAdditionalHeader:@"Transfer-Encoding"];
   }
   return self;
@@ -137,7 +137,7 @@
 
 - (id)initWithResponse:(GCDWebServerResponse*)response reader:(id<GCDWebServerBodyReader>)reader {
   if ((self = [super initWithResponse:response reader:reader])) {
-    response.contentLength = NSNotFound;  // Make sure "Content-Length" header is not set
+    response.contentLength = NSNotFound;  // Make sure "Content-Length" header is not set since body length is determined by closing the connection
     [response setValue:@"gzip" forAdditionalHeader:@"Content-Encoding"];
   }
   return self;

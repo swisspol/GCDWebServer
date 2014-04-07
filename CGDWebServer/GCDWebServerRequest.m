@@ -96,7 +96,7 @@
   DCHECK(!_finished);
   _stream.next_in = (Bytef*)data.bytes;
   _stream.avail_in = (uInt)data.length;
-  NSMutableData* decodedData = [[NSMutableData alloc] initWithLength:1024]; // kGZipInitialBufferSize
+  NSMutableData* decodedData = [[NSMutableData alloc] initWithLength:kGZipInitialBufferSize];
   if (decodedData == nil) {
     DNOT_REACHED();
     return NO;
@@ -143,6 +143,7 @@
   NSString* _path;
   NSDictionary* _query;
   NSString* _type;
+  BOOL _chunked;
   NSUInteger _length;
   NSRange _range;
   
@@ -154,7 +155,8 @@
 
 @implementation GCDWebServerRequest : NSObject
 
-@synthesize method=_method, URL=_url, headers=_headers, path=_path, query=_query, contentType=_type, contentLength=_length, byteRange=_range;
+@synthesize method=_method, URL=_url, headers=_headers, path=_path, query=_query, contentType=_type, contentLength=_length, byteRange=_range,
+            usesChunkedTransferEncoding=_chunked;
 
 - (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
   if ((self = [super init])) {
@@ -165,19 +167,23 @@
     _query = ARC_RETAIN(query);
     
     _type = ARC_RETAIN([_headers objectForKey:@"Content-Type"]);
+    _chunked = [[[_headers objectForKey:@"Transfer-Encoding"] lowercaseString] isEqualToString:@"chunked"];
     NSString* lengthHeader = [_headers objectForKey:@"Content-Length"];
-    if (_type) {
+    if (lengthHeader) {
       NSInteger length = [lengthHeader integerValue];
-      if ((lengthHeader == nil) || (length < 0)) {
+      if (_chunked || !_type || (length < 0)) {
         DNOT_REACHED();
         ARC_RELEASE(self);
         return nil;
       }
       _length = length;
-    } else if (lengthHeader) {
-      DNOT_REACHED();
-      ARC_RELEASE(self);
-      return nil;
+    } else {
+      if (_type && !_chunked) {
+        DNOT_REACHED();
+        ARC_RELEASE(self);
+        return nil;
+      }
+      _length = NSNotFound;
     }
     
     _range = NSMakeRange(NSNotFound, 0);
