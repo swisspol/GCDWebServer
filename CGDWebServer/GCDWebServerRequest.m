@@ -25,7 +25,115 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#import <zlib.h>
+
 #import "GCDWebServerPrivate.h"
+
+#define kZlibErrorDomain @"ZlibErrorDomain"
+#define kGZipInitialBufferSize (256 * 1024)
+
+@interface GCDWebServerBodyDecoder : NSObject <GCDWebServerBodyWriter>
+- (id)initWithRequest:(GCDWebServerRequest*)request writer:(id<GCDWebServerBodyWriter>)writer;
+@end
+
+@interface GCDWebServerGZipDecoder : GCDWebServerBodyDecoder
+@end
+
+@interface GCDWebServerBodyDecoder () {
+@private
+  GCDWebServerRequest* __unsafe_unretained _request;
+  id<GCDWebServerBodyWriter> __unsafe_unretained _writer;
+}
+@end
+
+@implementation GCDWebServerBodyDecoder
+
+- (id)initWithRequest:(GCDWebServerRequest*)request writer:(id<GCDWebServerBodyWriter>)writer {
+  if ((self = [super init])) {
+    _request = request;
+    _writer = writer;
+  }
+  return self;
+}
+
+- (BOOL)open:(NSError**)error {
+  return [_writer open:error];
+}
+
+- (BOOL)writeData:(NSData*)data error:(NSError**)error {
+  return [_writer writeData:data error:error];
+}
+
+- (BOOL)close:(NSError**)error {
+  return [_writer close:error];
+}
+
+@end
+
+@interface GCDWebServerGZipDecoder () {
+@private
+  z_stream _stream;
+  BOOL _finished;
+}
+@end
+
+@implementation GCDWebServerGZipDecoder
+
+- (BOOL)open:(NSError**)error {
+  int result = inflateInit2(&_stream, 15 + 16);
+  if (result != Z_OK) {
+    *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
+    return NO;
+  }
+  if (![super open:error]) {
+    deflateEnd(&_stream);
+    return NO;
+  }
+  return YES;
+}
+
+- (BOOL)writeData:(NSData*)data error:(NSError**)error {
+  DCHECK(!_finished);
+  _stream.next_in = (Bytef*)data.bytes;
+  _stream.avail_in = (uInt)data.length;
+  NSMutableData* decodedData = [[NSMutableData alloc] initWithLength:1024]; // kGZipInitialBufferSize
+  if (decodedData == nil) {
+    DNOT_REACHED();
+    return NO;
+  }
+  NSUInteger length = 0;
+  while (1) {
+    NSUInteger maxLength = decodedData.length - length;
+    _stream.next_out = (Bytef*)((char*)decodedData.mutableBytes + length);
+    _stream.avail_out = (uInt)maxLength;
+    int result = inflate(&_stream, Z_NO_FLUSH);
+    if ((result != Z_OK) && (result != Z_STREAM_END)) {
+      ARC_RELEASE(decodedData);
+      *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
+      return nil;
+    }
+    length += maxLength - _stream.avail_out;
+    if (_stream.avail_out > 0) {
+      if (result == Z_STREAM_END) {
+        _finished = YES;
+      }
+      break;
+    }
+    decodedData.length = 2 * decodedData.length;  // zlib has used all the output buffer so resize it and try again in case more data is available
+  }
+  decodedData.length = length;
+  BOOL success = length ? [super writeData:decodedData error:error] : YES;  // No need to call writer if we have no data yet
+  ARC_RELEASE(decodedData);
+  return success;
+}
+
+- (BOOL)close:(NSError**)error {
+  DCHECK(_finished);
+  inflateEnd(&_stream);
+  return [super close:error];
+}
+
+@end
 
 @interface GCDWebServerRequest () {
 @private
@@ -144,7 +252,12 @@
   _opened = YES;
   
   _writer = self;
-  // TODO: Inject decoders
+  if ([[[self.headers objectForKey:@"Content-Encoding"] lowercaseString] isEqualToString:@"gzip"]) {
+    GCDWebServerGZipDecoder* decoder = [[GCDWebServerGZipDecoder alloc] initWithRequest:self writer:_writer];
+    [_decoders addObject:decoder];
+    ARC_RELEASE(decoder);
+    _writer = decoder;
+  }
   return [_writer open:error];
 }
 
