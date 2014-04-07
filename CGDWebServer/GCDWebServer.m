@@ -511,6 +511,9 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 - (void)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block {
   [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
     
+    if (![requestMethod isEqualToString:method]) {
+      return nil;
+    }
     return ARC_AUTORELEASE([[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
     
   } processBlock:block];
