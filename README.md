@@ -2,13 +2,17 @@ Overview
 ========
 
 GCDWebServer is a lightweight GCD based HTTP 1.1 server designed to be embedded in Mac & iOS apps. It was written from scratch with the following goals in mind:
-* Easy to use and understand: only 4 core classes to deal with
+* Easy to use and understand architecture with only 4 core classes: server, connection, request and response
 * Well designed API for easy integration and customization
 * Entirely built with an event-driven design using [Grand Central Dispatch](http://en.wikipedia.org/wiki/Grand_Central_Dispatch) for maximum performance and concurrency
 * Support for streaming large HTTP bodies for requests and responses to minimize memory usage
 * Built-in parser for web forms submitted using "application/x-www-form-urlencoded" or "multipart/form-data" encodings (including file uploads)
 * No dependencies on third-party source code
 * Available under a friendly [New BSD License](LICENSE)
+
+Extra built-in features:
+* [Chunked transfer encoding](https://en.wikipedia.org/wiki/Chunked_transfer_encoding) for both requests and responses
+* [HTTP compression](https://en.wikipedia.org/wiki/HTTP_compression) with gzip for both requests and responses
 
 Included extensions:
 * [GCDWebUploader](GCDWebUploader/GCDWebUploader.h): subclass of GCDWebServer that implements an interface for uploading and downloading files from an iOS app's sandbox using a web browser
