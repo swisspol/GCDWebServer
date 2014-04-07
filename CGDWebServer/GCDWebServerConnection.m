@@ -62,6 +62,7 @@ static dispatch_queue_t _formatterQueue = NULL;
   GCDWebServerHandler* _handler;
   CFHTTPMessageRef _responseMessage;
   GCDWebServerResponse* _response;
+  NSInteger _statusCode;
 }
 @end
 
@@ -398,6 +399,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 }
 
 - (void)_initializeResponseHeadersWithStatusCode:(NSInteger)statusCode {
+  _statusCode = statusCode;
   _responseMessage = CFHTTPMessageCreateResponse(kCFAllocatorDefault, statusCode, NULL, kCFHTTPVersion1_1);
   CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Connection"), CFSTR("Close"));
   CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Server"), (ARC_BRIDGE CFStringRef)[[_server class] serverName]);
@@ -405,16 +407,6 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     NSString* date = [_dateFormatter stringFromDate:[NSDate date]];
     CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Date"), (ARC_BRIDGE CFStringRef)date);
   });
-}
-
-- (void)_abortWithStatusCode:(NSUInteger)statusCode {
-  DCHECK(_responseMessage == NULL);
-  DCHECK((statusCode >= 400) && (statusCode < 600));
-  [self _initializeResponseHeadersWithStatusCode:statusCode];
-  [self _writeHeadersWithCompletionBlock:^(BOOL success) {
-    ;  // Nothing more to do
-  }];
-  LOG_DEBUG(@"Connection aborted with status code %i on socket %i", (int)statusCode, _socket);
 }
 
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
@@ -457,7 +449,6 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
           [self _writeBodyWithCompletionBlock:^(BOOL successInner) {
             
             [_response performClose];
-            LOG_VERBOSE(@"%@ | %@ \"%@ %@\" %i %lu", self.localAddressString, self.remoteAddressString, _request.method, _request.path, (int)_response.statusCode, (unsigned long)_bytesWritten);
             
           }];
         }
@@ -467,7 +458,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       
     }];
   } else {
-    [self _abortWithStatusCode:500];
+    [self abortRequest:_request withStatusCode:500];
   }
   
 }
@@ -476,7 +467,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   NSError* error = nil;
   if (![_request performOpen:&error]) {
     LOG_ERROR(@"Failed opening request body for socket %i: %@", _socket, error);
-    [self _abortWithStatusCode:500];
+    [self abortRequest:_request withStatusCode:500];
     return;
   }
   
@@ -486,7 +477,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       if (![_request performClose:&error]) {
         LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
       }
-      [self _abortWithStatusCode:500];
+      [self abortRequest:_request withStatusCode:500];
       return;
     }
     length -= initialData.length;
@@ -500,7 +491,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
         [self _processRequest];
       } else {
         LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
-        [self _abortWithStatusCode:500];
+        [self abortRequest:_request withStatusCode:500];
       }
       
     }];
@@ -509,7 +500,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       [self _processRequest];
     } else {
       LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
-      [self _abortWithStatusCode:500];
+      [self abortRequest:_request withStatusCode:500];
     }
   }
 }
@@ -518,7 +509,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   NSError* error = nil;
   if (![_request performOpen:&error]) {
     LOG_ERROR(@"Failed opening request body for socket %i: %@", _socket, error);
-    [self _abortWithStatusCode:500];
+    [self abortRequest:_request withStatusCode:500];
     return;
   }
   
@@ -530,7 +521,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       [self _processRequest];
     } else {
       LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
-      [self _abortWithStatusCode:500];
+      [self abortRequest:_request withStatusCode:500];
     }
     
   }];
@@ -581,7 +572,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
                 }];
               } else {
                 LOG_ERROR(@"Unsupported 'Expect' / 'Content-Length' header combination on socket %i", _socket);
-                [self _abortWithStatusCode:417];
+                [self abortRequest:_request withStatusCode:417];
               }
             } else {
               if (_request.usesChunkedTransferEncoding) {
@@ -592,16 +583,18 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
             }
           } else {
             LOG_ERROR(@"Unexpected 'Content-Length' header value on socket %i", _socket);
-            [self _abortWithStatusCode:400];
+            [self abortRequest:_request withStatusCode:400];
           }
         } else {
           [self _processRequest];
         }
       } else {
-        [self _abortWithStatusCode:405];
+        _request = [[GCDWebServerRequest alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:requestPath query:requestQuery];
+        DCHECK(_request);
+        [self abortRequest:_request withStatusCode:405];
       }
     } else {
-      [self _abortWithStatusCode:500];
+      [self abortRequest:nil withStatusCode:500];
     }
     
   }];
@@ -689,12 +682,23 @@ static NSString* _StringFromAddressData(NSData* data) {
   return response;
 }
 
+- (void)abortRequest:(GCDWebServerRequest*)request withStatusCode:(NSInteger)statusCode {
+  DCHECK(_responseMessage == NULL);
+  DCHECK((statusCode >= 400) && (statusCode < 600));
+  [self _initializeResponseHeadersWithStatusCode:statusCode];
+  [self _writeHeadersWithCompletionBlock:^(BOOL success) {
+    ;  // Nothing more to do
+  }];
+  LOG_DEBUG(@"Connection aborted with status code %i on socket %i", (int)statusCode, _socket);
+}
+
 - (void)close {
   int result = close(_socket);
   if (result != 0) {
     LOG_ERROR(@"Failed closing socket %i for connection (%i): %s", _socket, errno, strerror(errno));
   }
   LOG_DEBUG(@"Did close connection on socket %i", _socket);
+  LOG_VERBOSE(@"[%@] %@ %i \"%@ %@\" (%lu | %lu)", self.localAddressString, self.remoteAddressString, (int)_statusCode, _request.method, _request.path, (unsigned long)_bytesRead, (unsigned long)_bytesWritten);
 }
 
 @end

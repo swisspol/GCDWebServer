@@ -43,6 +43,7 @@
 - (void)open;
 - (void)didUpdateBytesRead;  // Called from arbitrary thread after @totalBytesRead is updated - Default implementation does nothing
 - (void)didUpdateBytesWritten;  // Called from arbitrary thread after @totalBytesWritten is updated - Default implementation does nothing
-- (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block;
+- (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block;  // Only called if the request can be processed
+- (void)abortRequest:(GCDWebServerRequest*)request withStatusCode:(NSInteger)statusCode;  // If request headers was malformed, "request" will be nil
 - (void)close;
 @end
