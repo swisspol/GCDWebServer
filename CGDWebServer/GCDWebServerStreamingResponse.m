@@ -25,11 +25,37 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import "GCDWebServerStreamResponse.h"
+#import "GCDWebServerPrivate.h"
 
-typedef NSData* (^GCDWebServerStreamBlock)(NSError** error);
+@interface GCDWebServerStreamingResponse () {
+@private
+  GCDWebServerStreamBlock _block;
+}
+@end
 
-@interface GCDWebServerStreamResponse : GCDWebServerResponse  // Automatically enables chunked transfer encoding
-+ (GCDWebServerStreamResponse*)responseWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block;
-- (id)initWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block;  // Block must return empty NSData when done or nil on error
+@implementation GCDWebServerStreamingResponse
+
++ (GCDWebServerStreamingResponse*)responseWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block {
+  return ARC_AUTORELEASE([[[self class] alloc] initWithContentType:type streamBlock:block]);
+}
+
+- (id)initWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block {
+  if ((self = [super init])) {
+    _block = [block copy];
+    
+    self.contentType = type;
+  }
+  return self;
+}
+
+- (void)dealloc {
+  ARC_RELEASE(_block);
+  
+  ARC_DEALLOC(super);
+}
+
+- (NSData*)readData:(NSError**)error {
+  return _block(error);
+}
+
 @end
