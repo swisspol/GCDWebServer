@@ -28,5 +28,5 @@
 #import "GCDWebServerRequest.h"
 
 @interface GCDWebServerDataRequest : GCDWebServerRequest
-@property(nonatomic, readonly) NSData* data;  // Only valid after open / write / close sequence
+@property(nonatomic, readonly) NSData* data;
 @end

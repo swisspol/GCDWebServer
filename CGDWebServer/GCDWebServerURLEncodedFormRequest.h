@@ -28,6 +28,6 @@
 #import "GCDWebServerDataRequest.h"
 
 @interface GCDWebServerURLEncodedFormRequest : GCDWebServerDataRequest
-@property(nonatomic, readonly) NSDictionary* arguments;  // Only valid after open / write / close sequence
+@property(nonatomic, readonly) NSDictionary* arguments;
 + (NSString*)mimeType;
 @end

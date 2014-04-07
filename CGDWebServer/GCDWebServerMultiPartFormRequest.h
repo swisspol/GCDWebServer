@@ -43,7 +43,7 @@
 @end
 
 @interface GCDWebServerMultiPartFormRequest : GCDWebServerRequest
-@property(nonatomic, readonly) NSDictionary* arguments;  // Only valid after open / write / close sequence
-@property(nonatomic, readonly) NSDictionary* files;  // Only valid after open / write / close sequence
+@property(nonatomic, readonly) NSDictionary* arguments;
+@property(nonatomic, readonly) NSDictionary* files;
 + (NSString*)mimeType;
 @end

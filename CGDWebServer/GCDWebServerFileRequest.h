@@ -28,5 +28,5 @@
 #import "GCDWebServerRequest.h"
 
 @interface GCDWebServerFileRequest : GCDWebServerRequest
-@property(nonatomic, readonly) NSString* filePath;  // Only valid after open / write / close sequence
+@property(nonatomic, readonly) NSString* filePath;
 @end
