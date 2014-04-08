@@ -46,7 +46,7 @@
 @property(nonatomic, assign) id<GCDWebDAVServerDelegate> delegate;
 @property(nonatomic, copy) NSArray* allowedFileExtensions;  // Default is nil i.e. all file extensions are allowed
 @property(nonatomic) BOOL showHiddenFiles;  // Default is NO
-- (id)initWithUploadDirectory:(NSString*)path;
+- (instancetype)initWithUploadDirectory:(NSString*)path;
 @end
 
 @interface GCDWebDAVServer (Subclassing)

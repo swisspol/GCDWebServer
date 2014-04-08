@@ -28,19 +28,19 @@
 #import "GCDWebServerResponse.h"
 
 @interface GCDWebServerDataResponse : GCDWebServerResponse
-+ (GCDWebServerDataResponse*)responseWithData:(NSData*)data contentType:(NSString*)type;
-- (id)initWithData:(NSData*)data contentType:(NSString*)type;
++ (instancetype)responseWithData:(NSData*)data contentType:(NSString*)type;
+- (instancetype)initWithData:(NSData*)data contentType:(NSString*)type;
 @end
 
 @interface GCDWebServerDataResponse (Extensions)
-+ (GCDWebServerDataResponse*)responseWithText:(NSString*)text;
-+ (GCDWebServerDataResponse*)responseWithHTML:(NSString*)html;
-+ (GCDWebServerDataResponse*)responseWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables;
-+ (GCDWebServerDataResponse*)responseWithJSONObject:(id)object;
-+ (GCDWebServerDataResponse*)responseWithJSONObject:(id)object contentType:(NSString*)type;
-- (id)initWithText:(NSString*)text;  // Encodes using UTF-8
-- (id)initWithHTML:(NSString*)html;  // Encodes using UTF-8
-- (id)initWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables;  // Simple template system that replaces all occurences of "%variable%" with corresponding value (encodes using UTF-8)
-- (id)initWithJSONObject:(id)object;
-- (id)initWithJSONObject:(id)object contentType:(NSString*)type;
++ (instancetype)responseWithText:(NSString*)text;
++ (instancetype)responseWithHTML:(NSString*)html;
++ (instancetype)responseWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables;
++ (instancetype)responseWithJSONObject:(id)object;
++ (instancetype)responseWithJSONObject:(id)object contentType:(NSString*)type;
+- (instancetype)initWithText:(NSString*)text;  // Encodes using UTF-8
+- (instancetype)initWithHTML:(NSString*)html;  // Encodes using UTF-8
+- (instancetype)initWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables;  // Simple template system that replaces all occurences of "%variable%" with corresponding value (encodes using UTF-8)
+- (instancetype)initWithJSONObject:(id)object;
+- (instancetype)initWithJSONObject:(id)object contentType:(NSString*)type;
 @end

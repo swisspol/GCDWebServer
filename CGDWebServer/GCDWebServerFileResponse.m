@@ -46,35 +46,35 @@ static inline NSError* _MakePosixError(int code) {
 
 @implementation GCDWebServerFileResponse
 
-+ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path {
++ (instancetype)responseWithFile:(NSString*)path {
   return ARC_AUTORELEASE([[[self class] alloc] initWithFile:path]);
 }
 
-+ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path isAttachment:(BOOL)attachment {
++ (instancetype)responseWithFile:(NSString*)path isAttachment:(BOOL)attachment {
   return ARC_AUTORELEASE([[[self class] alloc] initWithFile:path isAttachment:attachment]);
 }
 
-+ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path byteRange:(NSRange)range {
++ (instancetype)responseWithFile:(NSString*)path byteRange:(NSRange)range {
   return ARC_AUTORELEASE([[[self class] alloc] initWithFile:path byteRange:range]);
 }
 
-+ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment {
++ (instancetype)responseWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment {
   return ARC_AUTORELEASE([[[self class] alloc] initWithFile:path byteRange:range isAttachment:attachment]);
 }
 
-- (id)initWithFile:(NSString*)path {
+- (instancetype)initWithFile:(NSString*)path {
   return [self initWithFile:path byteRange:NSMakeRange(NSNotFound, 0) isAttachment:NO];
 }
 
-- (id)initWithFile:(NSString*)path isAttachment:(BOOL)attachment {
+- (instancetype)initWithFile:(NSString*)path isAttachment:(BOOL)attachment {
   return [self initWithFile:path byteRange:NSMakeRange(NSNotFound, 0) isAttachment:attachment];
 }
 
-- (id)initWithFile:(NSString*)path byteRange:(NSRange)range {
+- (instancetype)initWithFile:(NSString*)path byteRange:(NSRange)range {
   return [self initWithFile:path byteRange:range isAttachment:NO];
 }
 
-- (id)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment {
+- (instancetype)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment {
   struct stat info;
   if (lstat([path fileSystemRepresentation], &info) || !(info.st_mode & S_IFREG)) {
     DNOT_REACHED();

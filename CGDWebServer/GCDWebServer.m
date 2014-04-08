@@ -261,7 +261,7 @@ static void _SignalHandler(int signal) {
   [GCDWebServerConnection class];  // Initialize class immediately to make sure it happens on the main thread
 }
 
-- (id)init {
+- (instancetype)init {
   if ((self = [super init])) {
     _handlers = [[NSMutableArray alloc] init];
   }

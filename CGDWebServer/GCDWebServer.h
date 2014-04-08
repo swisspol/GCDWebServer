@@ -51,6 +51,7 @@ NSString* GCDWebServerGetPrimaryIPv4Address();  // Returns IPv4 address of prima
 @property(nonatomic, readonly, getter=isRunning) BOOL running;
 @property(nonatomic, readonly) NSUInteger port;
 @property(nonatomic, readonly) NSString* bonjourName;  // Only non-nil if Bonjour registration is active
+- (instancetype)init;
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
 - (void)removeAllHandlers;
 

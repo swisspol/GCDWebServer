@@ -28,12 +28,12 @@
 #import "GCDWebServerPrivate.h"
 
 @interface GCDWebServerErrorResponse ()
-- (id)initWithStatusCode:(NSInteger)statusCode underlyingError:(NSError*)underlyingError messageFormat:(NSString*)format arguments:(va_list)arguments;
+- (instancetype)initWithStatusCode:(NSInteger)statusCode underlyingError:(NSError*)underlyingError messageFormat:(NSString*)format arguments:(va_list)arguments;
 @end
 
 @implementation GCDWebServerErrorResponse
 
-+ (GCDWebServerErrorResponse*)responseWithClientError:(GCDWebServerClientErrorHTTPStatusCode)errorCode message:(NSString*)format, ... {
++ (instancetype)responseWithClientError:(GCDWebServerClientErrorHTTPStatusCode)errorCode message:(NSString*)format, ... {
   DCHECK(((NSInteger)errorCode >= 400) && ((NSInteger)errorCode < 500));
   va_list arguments;
   va_start(arguments, format);
@@ -42,7 +42,7 @@
   return response;
 }
 
-+ (GCDWebServerErrorResponse*)responseWithServerError:(GCDWebServerServerErrorHTTPStatusCode)errorCode message:(NSString*)format, ... {
++ (instancetype)responseWithServerError:(GCDWebServerServerErrorHTTPStatusCode)errorCode message:(NSString*)format, ... {
   DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
   va_list arguments;
   va_start(arguments, format);
@@ -51,7 +51,7 @@
   return response;
 }
 
-+ (GCDWebServerErrorResponse*)responseWithClientError:(GCDWebServerClientErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError message:(NSString*)format, ... {
++ (instancetype)responseWithClientError:(GCDWebServerClientErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError message:(NSString*)format, ... {
   DCHECK(((NSInteger)errorCode >= 400) && ((NSInteger)errorCode < 500));
   va_list arguments;
   va_start(arguments, format);
@@ -60,7 +60,7 @@
   return response;
 }
 
-+ (GCDWebServerErrorResponse*)responseWithServerError:(GCDWebServerServerErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError message:(NSString*)format, ... {
++ (instancetype)responseWithServerError:(GCDWebServerServerErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError message:(NSString*)format, ... {
   DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
   va_list arguments;
   va_start(arguments, format);
@@ -73,7 +73,7 @@ static inline NSString* _EscapeHTMLString(NSString* string) {
   return [string stringByReplacingOccurrencesOfString:@"\"" withString:@"&quot;"];
 }
 
-- (id)initWithStatusCode:(NSInteger)statusCode underlyingError:(NSError*)underlyingError messageFormat:(NSString*)format arguments:(va_list)arguments {
+- (instancetype)initWithStatusCode:(NSInteger)statusCode underlyingError:(NSError*)underlyingError messageFormat:(NSString*)format arguments:(va_list)arguments {
   NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
   NSString* title = [NSString stringWithFormat:@"HTTP Error %i", (int)statusCode];
   NSString* error = underlyingError ? [NSString stringWithFormat:@"[%@] %@ (%li)", underlyingError.domain, _EscapeHTMLString(underlyingError.localizedDescription), (long)underlyingError.code] : @"";
@@ -86,7 +86,7 @@ static inline NSString* _EscapeHTMLString(NSString* string) {
   return self;
 }
 
-- (id)initWithClientError:(GCDWebServerClientErrorHTTPStatusCode)errorCode message:(NSString*)format, ... {
+- (instancetype)initWithClientError:(GCDWebServerClientErrorHTTPStatusCode)errorCode message:(NSString*)format, ... {
   DCHECK(((NSInteger)errorCode >= 400) && ((NSInteger)errorCode < 500));
   va_list arguments;
   va_start(arguments, format);
@@ -95,7 +95,7 @@ static inline NSString* _EscapeHTMLString(NSString* string) {
   return self;
 }
 
-- (id)initWithServerError:(GCDWebServerServerErrorHTTPStatusCode)errorCode message:(NSString*)format, ... {
+- (instancetype)initWithServerError:(GCDWebServerServerErrorHTTPStatusCode)errorCode message:(NSString*)format, ... {
   DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
   va_list arguments;
   va_start(arguments, format);
@@ -104,7 +104,7 @@ static inline NSString* _EscapeHTMLString(NSString* string) {
   return self;
 }
 
-- (id)initWithClientError:(GCDWebServerClientErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError message:(NSString*)format, ... {
+- (instancetype)initWithClientError:(GCDWebServerClientErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError message:(NSString*)format, ... {
   DCHECK(((NSInteger)errorCode >= 400) && ((NSInteger)errorCode < 500));
   va_list arguments;
   va_start(arguments, format);
@@ -113,7 +113,7 @@ static inline NSString* _EscapeHTMLString(NSString* string) {
   return self;
 }
 
-- (id)initWithServerError:(GCDWebServerServerErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError message:(NSString*)format, ... {
+- (instancetype)initWithServerError:(GCDWebServerServerErrorHTTPStatusCode)errorCode underlyingError:(NSError*)underlyingError message:(NSString*)format, ... {
   DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
   va_list arguments;
   va_start(arguments, format);

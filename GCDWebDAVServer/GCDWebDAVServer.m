@@ -452,7 +452,7 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
 
 @synthesize uploadDirectory=_uploadDirectory, delegate=_delegate, allowedFileExtensions=_allowedExtensions, showHiddenFiles=_showHidden;
 
-- (id)initWithUploadDirectory:(NSString*)path {
+- (instancetype)initWithUploadDirectory:(NSString*)path {
   if ((self = [super init])) {
     _uploadDirectory = [[path stringByStandardizingPath] copy];
     GCDWebDAVServer* __unsafe_unretained server = self;

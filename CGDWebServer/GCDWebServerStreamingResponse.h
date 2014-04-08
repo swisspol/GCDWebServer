@@ -30,6 +30,6 @@
 typedef NSData* (^GCDWebServerStreamBlock)(NSError** error);
 
 @interface GCDWebServerStreamingResponse : GCDWebServerResponse  // Automatically enables chunked transfer encoding
-+ (GCDWebServerStreamingResponse*)responseWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block;
-- (id)initWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block;  // Block must return empty NSData when done or nil on error
++ (instancetype)responseWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block;
+- (instancetype)initWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block;  // Block must return empty NSData when done or nil on error
 @end

@@ -267,7 +267,7 @@
 @synthesize uploadDirectory=_uploadDirectory, delegate=_delegate, allowedFileExtensions=_allowedExtensions, showHiddenFiles=_showHidden,
             title=_title, header=_header, prologue=_prologue, epilogue=_epilogue, footer=_footer;
 
-- (id)initWithUploadDirectory:(NSString*)path {
+- (instancetype)initWithUploadDirectory:(NSString*)path {
   if ((self = [super init])) {
     NSBundle* siteBundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"GCDWebUploader" ofType:@"bundle"]];
     if (siteBundle == nil) {

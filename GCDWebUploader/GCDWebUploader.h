@@ -48,7 +48,7 @@
 @property(nonatomic, copy) NSString* prologue;  // Default is mini help (must be raw HTML)
 @property(nonatomic, copy) NSString* epilogue;  // Default is nothing (must be raw HTML)
 @property(nonatomic, copy) NSString* footer;  // Default is application name and version (must be HTML escaped)
-- (id)initWithUploadDirectory:(NSString*)path;
+- (instancetype)initWithUploadDirectory:(NSString*)path;
 @end
 
 @interface GCDWebUploader (Subclassing)

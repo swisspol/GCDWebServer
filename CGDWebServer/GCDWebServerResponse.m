@@ -171,11 +171,11 @@
 @synthesize contentType=_type, contentLength=_length, statusCode=_status, cacheControlMaxAge=_maxAge,
             gzipContentEncodingEnabled=_gzipped, additionalHeaders=_headers;
 
-+ (GCDWebServerResponse*)response {
++ (instancetype)response {
   return ARC_AUTORELEASE([[[self class] alloc] init]);
 }
 
-- (id)init {
+- (instancetype)init {
   if ((self = [super init])) {
     _type = nil;
     _length = NSNotFound;
@@ -248,22 +248,22 @@
 
 @implementation GCDWebServerResponse (Extensions)
 
-+ (GCDWebServerResponse*)responseWithStatusCode:(NSInteger)statusCode {
++ (instancetype)responseWithStatusCode:(NSInteger)statusCode {
   return ARC_AUTORELEASE([[self alloc] initWithStatusCode:statusCode]);
 }
 
-+ (GCDWebServerResponse*)responseWithRedirect:(NSURL*)location permanent:(BOOL)permanent {
++ (instancetype)responseWithRedirect:(NSURL*)location permanent:(BOOL)permanent {
   return ARC_AUTORELEASE([[self alloc] initWithRedirect:location permanent:permanent]);
 }
 
-- (id)initWithStatusCode:(NSInteger)statusCode {
+- (instancetype)initWithStatusCode:(NSInteger)statusCode {
   if ((self = [self init])) {
     self.statusCode = statusCode;
   }
   return self;
 }
 
-- (id)initWithRedirect:(NSURL*)location permanent:(BOOL)permanent {
+- (instancetype)initWithRedirect:(NSURL*)location permanent:(BOOL)permanent {
   if ((self = [self init])) {
     self.statusCode = permanent ? kGCDWebServerHTTPStatusCode_MovedPermanently : kGCDWebServerHTTPStatusCode_TemporaryRedirect;
     [self setValue:[location absoluteString] forAdditionalHeader:@"Location"];

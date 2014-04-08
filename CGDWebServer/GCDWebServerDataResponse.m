@@ -36,11 +36,11 @@
 
 @implementation GCDWebServerDataResponse
 
-+ (GCDWebServerDataResponse*)responseWithData:(NSData*)data contentType:(NSString*)type {
++ (instancetype)responseWithData:(NSData*)data contentType:(NSString*)type {
   return ARC_AUTORELEASE([[[self class] alloc] initWithData:data contentType:type]);
 }
 
-- (id)initWithData:(NSData*)data contentType:(NSString*)type {
+- (instancetype)initWithData:(NSData*)data contentType:(NSString*)type {
   if (data == nil) {
     DNOT_REACHED();
     ARC_RELEASE(self);
@@ -77,27 +77,27 @@
 
 @implementation GCDWebServerDataResponse (Extensions)
 
-+ (GCDWebServerDataResponse*)responseWithText:(NSString*)text {
++ (instancetype)responseWithText:(NSString*)text {
   return ARC_AUTORELEASE([[self alloc] initWithText:text]);
 }
 
-+ (GCDWebServerDataResponse*)responseWithHTML:(NSString*)html {
++ (instancetype)responseWithHTML:(NSString*)html {
   return ARC_AUTORELEASE([[self alloc] initWithHTML:html]);
 }
 
-+ (GCDWebServerDataResponse*)responseWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables {
++ (instancetype)responseWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables {
   return ARC_AUTORELEASE([[self alloc] initWithHTMLTemplate:path variables:variables]);
 }
 
-+ (GCDWebServerDataResponse*)responseWithJSONObject:(id)object {
++ (instancetype)responseWithJSONObject:(id)object {
   return ARC_AUTORELEASE([[self alloc] initWithJSONObject:object]);
 }
 
-+ (GCDWebServerDataResponse*)responseWithJSONObject:(id)object contentType:(NSString*)type {
++ (instancetype)responseWithJSONObject:(id)object contentType:(NSString*)type {
   return ARC_AUTORELEASE([[self alloc] initWithJSONObject:object contentType:type]);
 }
 
-- (id)initWithText:(NSString*)text {
+- (instancetype)initWithText:(NSString*)text {
   NSData* data = [text dataUsingEncoding:NSUTF8StringEncoding];
   if (data == nil) {
     DNOT_REACHED();
@@ -107,7 +107,7 @@
   return [self initWithData:data contentType:@"text/plain; charset=utf-8"];
 }
 
-- (id)initWithHTML:(NSString*)html {
+- (instancetype)initWithHTML:(NSString*)html {
   NSData* data = [html dataUsingEncoding:NSUTF8StringEncoding];
   if (data == nil) {
     DNOT_REACHED();
@@ -117,7 +117,7 @@
   return [self initWithData:data contentType:@"text/html; charset=utf-8"];
 }
 
-- (id)initWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables {
+- (instancetype)initWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables {
   NSMutableString* html = [[NSMutableString alloc] initWithContentsOfFile:path encoding:NSUTF8StringEncoding error:NULL];
   [variables enumerateKeysAndObjectsUsingBlock:^(NSString* key, NSString* value, BOOL* stop) {
     [html replaceOccurrencesOfString:[NSString stringWithFormat:@"%%%@%%", key] withString:value options:0 range:NSMakeRange(0, html.length)];
@@ -127,11 +127,11 @@
   return response;
 }
 
-- (id)initWithJSONObject:(id)object {
+- (instancetype)initWithJSONObject:(id)object {
   return [self initWithJSONObject:object contentType:@"application/json"];
 }
 
-- (id)initWithJSONObject:(id)object contentType:(NSString*)type {
+- (instancetype)initWithJSONObject:(id)object contentType:(NSString*)type {
   NSData* data = [NSJSONSerialization dataWithJSONObject:object options:0 error:NULL];
   if (data == nil) {
     ARC_RELEASE(self);

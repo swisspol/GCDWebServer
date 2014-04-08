@@ -39,15 +39,15 @@
 @property(nonatomic) NSInteger statusCode;  // Default is 200
 @property(nonatomic) NSUInteger cacheControlMaxAge;  // Default is 0 seconds i.e. "no-cache"
 @property(nonatomic, getter=isGZipContentEncodingEnabled) BOOL gzipContentEncodingEnabled;  // Default is disabled
-+ (GCDWebServerResponse*) response;
-- (id)init;
++ (instancetype)response;
+- (instancetype)init;
 - (void)setValue:(NSString*)value forAdditionalHeader:(NSString*)header;  // Pass nil value to remove header
 - (BOOL)hasBody;  // Convenience method that checks if "contentType" is not nil
 @end
 
 @interface GCDWebServerResponse (Extensions)
-+ (GCDWebServerResponse*)responseWithStatusCode:(NSInteger)statusCode;
-+ (GCDWebServerResponse*)responseWithRedirect:(NSURL*)location permanent:(BOOL)permanent;
-- (id)initWithStatusCode:(NSInteger)statusCode;
-- (id)initWithRedirect:(NSURL*)location permanent:(BOOL)permanent;
++ (instancetype)responseWithStatusCode:(NSInteger)statusCode;
++ (instancetype)responseWithRedirect:(NSURL*)location permanent:(BOOL)permanent;
+- (instancetype)initWithStatusCode:(NSInteger)statusCode;
+- (instancetype)initWithRedirect:(NSURL*)location permanent:(BOOL)permanent;
 @end

@@ -35,11 +35,11 @@
 
 @implementation GCDWebServerStreamingResponse
 
-+ (GCDWebServerStreamingResponse*)responseWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block {
++ (instancetype)responseWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block {
   return ARC_AUTORELEASE([[[self class] alloc] initWithContentType:type streamBlock:block]);
 }
 
-- (id)initWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block {
+- (instancetype)initWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block {
   if ((self = [super init])) {
     _block = [block copy];
     
