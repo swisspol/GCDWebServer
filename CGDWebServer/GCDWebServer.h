@@ -67,8 +67,6 @@ NSString* GCDWebServerGetPrimaryIPv4Address();  // Returns IPv4 address of prima
 @interface GCDWebServer (Extensions)
 @property(nonatomic, readonly) NSURL* serverURL;  // Only non-nil if server is running
 @property(nonatomic, readonly) NSURL* bonjourServerURL;  // Only non-nil if server is running and Bonjour registration is active
-- (void)logWarning:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
-- (void)logError:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
 #if !TARGET_OS_IPHONE
 - (BOOL)runWithPort:(NSUInteger)port;  // Starts then automatically stops on SIGINT i.e. Ctrl-C (use on main thread only)
 #endif
@@ -84,4 +82,11 @@ NSString* GCDWebServerGetPrimaryIPv4Address();  // Returns IPv4 address of prima
 - (void)addGETHandlerForPath:(NSString*)path staticData:(NSData*)staticData contentType:(NSString*)contentType cacheAge:(NSUInteger)cacheAge;  // Path is case-insensitive
 - (void)addGETHandlerForPath:(NSString*)path filePath:(NSString*)filePath isAttachment:(BOOL)isAttachment cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests;  // Path is case-insensitive
 - (void)addGETHandlerForBasePath:(NSString*)basePath directoryPath:(NSString*)directoryPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests;  // Base path is recursive and case-sensitive
+@end
+
+@interface GCDWebServer (Logging)
+- (void)logVerbose:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
+- (void)logInfo:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
+- (void)logWarning:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
+- (void)logError:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
 @end

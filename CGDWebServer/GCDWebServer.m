@@ -483,24 +483,6 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
   return nil;
 }
 
-- (void)logWarning:(NSString*)format, ... {
-  va_list arguments;
-  va_start(arguments, format);
-  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
-  va_end(arguments);
-  LOG_WARNING(@"%@", message);
-  ARC_RELEASE(message);
-}
-
-- (void)logError:(NSString*)format, ... {
-  va_list arguments;
-  va_start(arguments, format);
-  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
-  va_end(arguments);
-  LOG_ERROR(@"%@", message);
-  ARC_RELEASE(message);
-}
-
 #if !TARGET_OS_IPHONE
 
 - (BOOL)runWithPort:(NSUInteger)port {
@@ -678,6 +660,46 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
   } else {
     DNOT_REACHED();
   }
+}
+
+@end
+
+@implementation GCDWebServer (Logging)
+
+- (void)logVerbose:(NSString*)format, ... {
+  va_list arguments;
+  va_start(arguments, format);
+  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
+  va_end(arguments);
+  LOG_VERBOSE(@"%@", message);
+  ARC_RELEASE(message);
+}
+
+- (void)logInfo:(NSString*)format, ... {
+  va_list arguments;
+  va_start(arguments, format);
+  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
+  va_end(arguments);
+  LOG_INFO(@"%@", message);
+  ARC_RELEASE(message);
+}
+
+- (void)logWarning:(NSString*)format, ... {
+  va_list arguments;
+  va_start(arguments, format);
+  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
+  va_end(arguments);
+  LOG_WARNING(@"%@", message);
+  ARC_RELEASE(message);
+}
+
+- (void)logError:(NSString*)format, ... {
+  va_list arguments;
+  va_start(arguments, format);
+  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
+  va_end(arguments);
+  LOG_ERROR(@"%@", message);
+  ARC_RELEASE(message);
 }
 
 @end
