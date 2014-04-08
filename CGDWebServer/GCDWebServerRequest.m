@@ -171,12 +171,15 @@
     NSString* lengthHeader = [_headers objectForKey:@"Content-Length"];
     if (lengthHeader) {
       NSInteger length = [lengthHeader integerValue];
-      if (_chunked || !_type || (length < 0)) {
+      if (_chunked || (length < 0)) {
         DNOT_REACHED();
         ARC_RELEASE(self);
         return nil;
       }
       _length = length;
+      if (_type == nil) {
+        _type = kGCDWebServerDefaultMimeType;
+      }
     } else {
       if (_type && !_chunked) {
         DNOT_REACHED();
