@@ -212,8 +212,7 @@
 }
 
 - (NSData*)readData:(NSError**)error {
-  [self doesNotRecognizeSelector:_cmd];
-  return nil;
+  return [NSData data];
 }
 
 - (void)close {

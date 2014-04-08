@@ -249,8 +249,7 @@
 }
 
 - (BOOL)writeData:(NSData*)data error:(NSError**)error {
-  [self doesNotRecognizeSelector:_cmd];
-  return NO;
+  return YES;
 }
 
 - (BOOL)close:(NSError**)error {
