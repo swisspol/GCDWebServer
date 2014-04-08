@@ -25,14 +25,18 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import "GCDWebUploader.h"
+#import "GCDWebServer.h"
 #import "GCDWebServerDataRequest.h"
 #import "GCDWebServerURLEncodedFormRequest.h"
 #import "GCDWebServerDataResponse.h"
 
+#import "GCDWebDAVServer.h"
+
+#import "GCDWebUploader.h"
+
 int main(int argc, const char* argv[]) {
   BOOL success = NO;
-  int mode = (argc == 2 ? MIN(MAX(atoi(argv[1]), 0), 3) : 0);
+  int mode = (argc == 2 ? MIN(MAX(atoi(argv[1]), 0), 4) : 0);
   @autoreleasepool {
     GCDWebServer* webServer = nil;
     switch (mode) {
@@ -90,6 +94,11 @@ int main(int argc, const char* argv[]) {
       }
       
       case 3: {
+        webServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:@"/tmp"];
+        break;
+      }
+      
+      case 4: {
         webServer = [[GCDWebUploader alloc] initWithUploadDirectory:@"/tmp"];
         break;
       }

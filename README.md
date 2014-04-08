@@ -16,6 +16,7 @@ Extra built-in features:
 
 Included extensions:
 * [GCDWebUploader](GCDWebUploader/GCDWebUploader.h): subclass of GCDWebServer that implements an interface for uploading and downloading files from an iOS app's sandbox using a web browser
+* [GCDWebDAVServer](GCDWebDAVServer/GCDWebDAVServer.h): subclass of GCDWebServer that implements a class 1 [WebDAV](https://en.wikipedia.org/wiki/WebDAV) server
 
 What's not available out of the box but can be implemented on top of the API:
 * Authentication like [Basic Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication)
