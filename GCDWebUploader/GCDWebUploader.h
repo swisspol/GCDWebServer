@@ -54,4 +54,6 @@
 @interface GCDWebUploader (Subclassing)
 - (BOOL)shouldUploadFileAtPath:(NSString*)path withTemporaryFile:(NSString*)tempPath;  // Default implementation returns YES
 - (BOOL)shouldMoveItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath;  // Default implementation returns YES
+- (BOOL)shouldDeleteItemAtPath:(NSString*)path;  // Default implementation returns YES
+- (BOOL)shouldCreateDirectoryAtPath:(NSString*)path;  // Default implementation returns YES
 @end
