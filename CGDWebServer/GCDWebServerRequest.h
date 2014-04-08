@@ -39,10 +39,10 @@
 @property(nonatomic, readonly) NSDictionary* headers;
 @property(nonatomic, readonly) NSString* path;
 @property(nonatomic, readonly) NSDictionary* query;  // May be nil
-@property(nonatomic, readonly) NSString* contentType;  // Automatically parsed from headers (nil if request has no body)
+@property(nonatomic, readonly) NSString* contentType;  // Automatically parsed from headers (nil if request has no body or set to "application/octet-stream" if a body is present without a "Content-Type" header)
 @property(nonatomic, readonly) NSUInteger contentLength;  // Automatically parsed from headers (NSNotFound if request has no "Content-Length" header)
 @property(nonatomic, readonly) NSRange byteRange;  // Automatically parsed from headers ([NSNotFound, 0] if request has no "Range" header, [offset, length] for byte range from beginning or [NSNotFound, -bytes] from end)
 - (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query;
-- (BOOL)hasBody;  // Convenience method
+- (BOOL)hasBody;  // Convenience method that checks if "contentType" is not nil
 - (BOOL)hasByteRange;  // Convenience method that checks "byteRange"
 @end

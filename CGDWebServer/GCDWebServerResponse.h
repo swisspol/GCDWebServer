@@ -34,15 +34,15 @@
 @end
 
 @interface GCDWebServerResponse : NSObject <GCDWebServerBodyReader>
-@property(nonatomic, copy) NSString* contentType;  // Default is nil i.e. no body
-@property(nonatomic) NSUInteger contentLength;  // Default is NSNotFound i.e. undefined
+@property(nonatomic, copy) NSString* contentType;  // Default is nil i.e. no body (must be set if a body is present)
+@property(nonatomic) NSUInteger contentLength;  // Default is NSNotFound i.e. undefined (if a body is present but length is undefined, chunked transfer encoding will be enabled)
 @property(nonatomic) NSInteger statusCode;  // Default is 200
 @property(nonatomic) NSUInteger cacheControlMaxAge;  // Default is 0 seconds i.e. "no-cache"
 @property(nonatomic, getter=isGZipContentEncodingEnabled) BOOL gzipContentEncodingEnabled;  // Default is disabled
 + (GCDWebServerResponse*) response;
 - (id)init;
-- (void)setValue:(NSString*)value forAdditionalHeader:(NSString*)header;
-- (BOOL)hasBody;  // Convenience method
+- (void)setValue:(NSString*)value forAdditionalHeader:(NSString*)header;  // Pass nil value to remove header
+- (BOOL)hasBody;  // Convenience method that checks if "contentType" is not nil
 @end
 
 @interface GCDWebServerResponse (Extensions)

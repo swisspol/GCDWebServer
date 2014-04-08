@@ -448,7 +448,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
         if ([_response hasBody]) {
           [self _writeBodyWithCompletionBlock:^(BOOL successInner) {
             
-            [_response performClose];
+            [_response performClose];  // TODO: There's nothing we can do on failure as headers have already been sent
             
           }];
         }
