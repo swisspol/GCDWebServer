@@ -38,6 +38,8 @@
 		E22112991690B7AA0048D2B2 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E22112981690B7AA0048D2B2 /* CFNetwork.framework */; };
 		E221129B1690B7B10048D2B2 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E221129A1690B7B10048D2B2 /* UIKit.framework */; };
 		E221129D1690B7BA0048D2B2 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E221129C1690B7BA0048D2B2 /* MobileCoreServices.framework */; };
+		E276647C18F3BC2100A034BA /* GCDWebServerErrorResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = E276647B18F3BC2100A034BA /* GCDWebServerErrorResponse.m */; };
+		E276647D18F3BC2100A034BA /* GCDWebServerErrorResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = E276647B18F3BC2100A034BA /* GCDWebServerErrorResponse.m */; };
 		E2A0E7ED18F1D03700C580B1 /* GCDWebServerDataResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = E2A0E7EC18F1D03700C580B1 /* GCDWebServerDataResponse.m */; };
 		E2A0E7EE18F1D03700C580B1 /* GCDWebServerDataResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = E2A0E7EC18F1D03700C580B1 /* GCDWebServerDataResponse.m */; };
 		E2A0E7F118F1D12E00C580B1 /* GCDWebServerFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = E2A0E7F018F1D12E00C580B1 /* GCDWebServerFileResponse.m */; };
@@ -113,6 +115,8 @@
 		E22112981690B7AA0048D2B2 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.0.sdk/System/Library/Frameworks/CFNetwork.framework; sourceTree = DEVELOPER_DIR; };
 		E221129A1690B7B10048D2B2 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.0.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		E221129C1690B7BA0048D2B2 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.0.sdk/System/Library/Frameworks/MobileCoreServices.framework; sourceTree = DEVELOPER_DIR; };
+		E276647A18F3BC2100A034BA /* GCDWebServerErrorResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebServerErrorResponse.h; sourceTree = "<group>"; };
+		E276647B18F3BC2100A034BA /* GCDWebServerErrorResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebServerErrorResponse.m; sourceTree = "<group>"; };
 		E2A0E7EB18F1D03700C580B1 /* GCDWebServerDataResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebServerDataResponse.h; sourceTree = "<group>"; };
 		E2A0E7EC18F1D03700C580B1 /* GCDWebServerDataResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebServerDataResponse.m; sourceTree = "<group>"; };
 		E2A0E7EF18F1D12E00C580B1 /* GCDWebServerFileResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebServerFileResponse.h; sourceTree = "<group>"; };
@@ -196,6 +200,8 @@
 				E2A0E7F818F1D24700C580B1 /* GCDWebServerDataRequest.m */,
 				E2A0E7EB18F1D03700C580B1 /* GCDWebServerDataResponse.h */,
 				E2A0E7EC18F1D03700C580B1 /* GCDWebServerDataResponse.m */,
+				E276647A18F3BC2100A034BA /* GCDWebServerErrorResponse.h */,
+				E276647B18F3BC2100A034BA /* GCDWebServerErrorResponse.m */,
 				E2A0E7FB18F1D36C00C580B1 /* GCDWebServerFileRequest.h */,
 				E2A0E7FC18F1D36C00C580B1 /* GCDWebServerFileRequest.m */,
 				E2A0E7EF18F1D12E00C580B1 /* GCDWebServerFileResponse.h */,
@@ -357,6 +363,7 @@
 				E2A0E80518F1D4A700C580B1 /* GCDWebServerURLEncodedFormRequest.m in Sources */,
 				E2A0E7F918F1D24700C580B1 /* GCDWebServerDataRequest.m in Sources */,
 				E22112891690B63A0048D2B2 /* GCDWebServerRequest.m in Sources */,
+				E276647C18F3BC2100A034BA /* GCDWebServerErrorResponse.m in Sources */,
 				E2A0E7ED18F1D03700C580B1 /* GCDWebServerDataResponse.m in Sources */,
 				E2A0E7F518F1D1E500C580B1 /* GCDWebServerStreamingResponse.m in Sources */,
 				E2A0E80118F1D3DE00C580B1 /* GCDWebServerMultiPartFormRequest.m in Sources */,
@@ -372,6 +379,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E22112861690B63A0048D2B2 /* GCDWebServer.m in Sources */,
+				E276647D18F3BC2100A034BA /* GCDWebServerErrorResponse.m in Sources */,
 				E2A0E7EE18F1D03700C580B1 /* GCDWebServerDataResponse.m in Sources */,
 				E2A0E80218F1D3DE00C580B1 /* GCDWebServerMultiPartFormRequest.m in Sources */,
 				E22112881690B63A0048D2B2 /* GCDWebServerConnection.m in Sources */,

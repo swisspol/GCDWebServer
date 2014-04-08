@@ -60,6 +60,7 @@
 #import "GCDWebServerURLEncodedFormRequest.h"
 
 #import "GCDWebServerDataResponse.h"
+#import "GCDWebServerErrorResponse.h"
 #import "GCDWebServerFileResponse.h"
 #import "GCDWebServerStreamingResponse.h"
 
