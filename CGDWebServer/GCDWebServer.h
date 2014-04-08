@@ -67,6 +67,8 @@ NSString* GCDWebServerGetPrimaryIPv4Address();  // Returns IPv4 address of prima
 @interface GCDWebServer (Extensions)
 @property(nonatomic, readonly) NSURL* serverURL;  // Only non-nil if server is running
 @property(nonatomic, readonly) NSURL* bonjourServerURL;  // Only non-nil if server is running and Bonjour registration is active
+- (void)logWarning:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
+- (void)logError:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
 #if !TARGET_OS_IPHONE
 - (BOOL)runWithPort:(NSUInteger)port;  // Starts then automatically stops on SIGINT i.e. Ctrl-C (use on main thread only)
 #endif
