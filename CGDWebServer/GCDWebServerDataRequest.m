@@ -38,7 +38,6 @@
 @synthesize data=_data;
 
 - (void)dealloc {
-  DCHECK(_data != nil);
   ARC_RELEASE(_data);
   
   ARC_DEALLOC(super);
