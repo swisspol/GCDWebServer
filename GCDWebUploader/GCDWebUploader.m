@@ -42,7 +42,7 @@
 @interface GCDWebUploader () {
 @private
   NSString* _uploadDirectory;
-  id<GCDWebUploaderDelegate> delegate;
+  id<GCDWebUploaderDelegate> __unsafe_unretained _delegate;
   NSArray* _allowedExtensions;
   BOOL _showHidden;
   NSString* _title;
