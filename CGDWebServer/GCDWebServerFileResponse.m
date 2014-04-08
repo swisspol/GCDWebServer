@@ -100,7 +100,7 @@ static inline NSError* _MakePosixError(int code) {
     if (range.location != NSNotFound) {
       _offset = range.location;
       _size = range.length;
-      [self setStatusCode:206];
+      [self setStatusCode:kGCDWebServerHTTPStatusCode_PartialContent];
       [self setValue:[NSString stringWithFormat:@"bytes %i-%i/%i", (int)range.location, (int)(range.location + range.length - 1), (int)info.st_size] forAdditionalHeader:@"Content-Range"];
       LOG_DEBUG(@"Using content bytes range [%i-%i] for file \"%@\"", (int)range.location, (int)(range.location + range.length - 1), path);
     } else {

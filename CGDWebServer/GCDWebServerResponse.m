@@ -179,7 +179,7 @@
   if ((self = [super init])) {
     _type = nil;
     _length = NSNotFound;
-    _status = 200;
+    _status = kGCDWebServerHTTPStatusCode_OK;
     _maxAge = 0;
     _headers = [[NSMutableDictionary alloc] init];
     _encoders = [[NSMutableArray alloc] init];
@@ -253,6 +253,14 @@
   return ARC_AUTORELEASE([[self alloc] initWithStatusCode:statusCode]);
 }
 
++ (GCDWebServerResponse*)responseWithClientError:(GCDWebServerClientErrorHTTPStatusCode)error {
+  return ARC_AUTORELEASE([[self alloc] initWithClientError:error]);
+}
+
++ (GCDWebServerResponse*)responseWithServerError:(GCDWebServerServerErrorHTTPStatusCode)error {
+  return ARC_AUTORELEASE([[self alloc] initWithServerError:error]);
+}
+
 + (GCDWebServerResponse*)responseWithRedirect:(NSURL*)location permanent:(BOOL)permanent {
   return ARC_AUTORELEASE([[self alloc] initWithRedirect:location permanent:permanent]);
 }
@@ -264,9 +272,19 @@
   return self;
 }
 
+- (id)initWithClientError:(GCDWebServerClientErrorHTTPStatusCode)error {
+  DCHECK(((NSInteger)error >= 400) && ((NSInteger)error < 500));
+  return [self initWithStatusCode:error];
+}
+
+- (id)initWithServerError:(GCDWebServerServerErrorHTTPStatusCode)error {
+  DCHECK(((NSInteger)error >= 500) && ((NSInteger)error < 600));
+  return [self initWithStatusCode:error];
+}
+
 - (id)initWithRedirect:(NSURL*)location permanent:(BOOL)permanent {
   if ((self = [self init])) {
-    self.statusCode = permanent ? 301 : 307;
+    self.statusCode = permanent ? kGCDWebServerHTTPStatusCode_MovedPermanently : kGCDWebServerHTTPStatusCode_TemporaryRedirect;
     [self setValue:[location absoluteString] forAdditionalHeader:@"Location"];
   }
   return self;

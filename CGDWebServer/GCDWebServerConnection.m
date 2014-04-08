@@ -458,7 +458,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       
     }];
   } else {
-    [self abortRequest:_request withStatusCode:500];
+    [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
   }
   
 }
@@ -467,7 +467,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   NSError* error = nil;
   if (![_request performOpen:&error]) {
     LOG_ERROR(@"Failed opening request body for socket %i: %@", _socket, error);
-    [self abortRequest:_request withStatusCode:500];
+    [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
     return;
   }
   
@@ -477,7 +477,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       if (![_request performClose:&error]) {
         LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
       }
-      [self abortRequest:_request withStatusCode:500];
+      [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
       return;
     }
     length -= initialData.length;
@@ -491,7 +491,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
         [self _processRequest];
       } else {
         LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
-        [self abortRequest:_request withStatusCode:500];
+        [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
       }
       
     }];
@@ -500,7 +500,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       [self _processRequest];
     } else {
       LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
-      [self abortRequest:_request withStatusCode:500];
+      [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
     }
   }
 }
@@ -509,7 +509,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   NSError* error = nil;
   if (![_request performOpen:&error]) {
     LOG_ERROR(@"Failed opening request body for socket %i: %@", _socket, error);
-    [self abortRequest:_request withStatusCode:500];
+    [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
     return;
   }
   
@@ -521,7 +521,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       [self _processRequest];
     } else {
       LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
-      [self abortRequest:_request withStatusCode:500];
+      [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
     }
     
   }];
@@ -572,7 +572,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
                 }];
               } else {
                 LOG_ERROR(@"Unsupported 'Expect' / 'Content-Length' header combination on socket %i", _socket);
-                [self abortRequest:_request withStatusCode:417];
+                [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_ExpectationFailed];
               }
             } else {
               if (_request.usesChunkedTransferEncoding) {
@@ -583,7 +583,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
             }
           } else {
             LOG_ERROR(@"Unexpected 'Content-Length' header value on socket %i", _socket);
-            [self abortRequest:_request withStatusCode:400];
+            [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_BadRequest];
           }
         } else {
           [self _processRequest];
@@ -591,10 +591,10 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       } else {
         _request = [[GCDWebServerRequest alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:requestPath query:requestQuery];
         DCHECK(_request);
-        [self abortRequest:_request withStatusCode:405];
+        [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_MethodNotAllowed];
       }
     } else {
-      [self abortRequest:nil withStatusCode:500];
+      [self abortRequest:nil withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
     }
     
   }];

@@ -670,7 +670,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
       if (response) {
         response.cacheControlMaxAge = cacheAge;
       } else {
-        response = [GCDWebServerResponse responseWithStatusCode:404];
+        response = [GCDWebServerResponse responseWithClientError:kGCDWebServerHTTPStatusCode_NotFound];
       }
       return response;
       

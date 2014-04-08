@@ -127,6 +127,7 @@
 		E2A0E80018F1D3DE00C580B1 /* GCDWebServerMultiPartFormRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebServerMultiPartFormRequest.m; sourceTree = "<group>"; };
 		E2A0E80318F1D4A700C580B1 /* GCDWebServerURLEncodedFormRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebServerURLEncodedFormRequest.h; sourceTree = "<group>"; };
 		E2A0E80418F1D4A700C580B1 /* GCDWebServerURLEncodedFormRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebServerURLEncodedFormRequest.m; sourceTree = "<group>"; };
+		E2A0E81018F3737B00C580B1 /* GCDWebServerHTTPStatusCodes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GCDWebServerHTTPStatusCodes.h; sourceTree = "<group>"; };
 		E2B0D4A618F13495009A7927 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		E2B0D4A818F134A8009A7927 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk/usr/lib/libz.dylib; sourceTree = DEVELOPER_DIR; };
 		E2BE850718E77ECA0061360B /* GCDWebUploader.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = GCDWebUploader.bundle; sourceTree = "<group>"; };
@@ -199,6 +200,7 @@
 				E2A0E7FC18F1D36C00C580B1 /* GCDWebServerFileRequest.m */,
 				E2A0E7EF18F1D12E00C580B1 /* GCDWebServerFileResponse.h */,
 				E2A0E7F018F1D12E00C580B1 /* GCDWebServerFileResponse.m */,
+				E2A0E81018F3737B00C580B1 /* GCDWebServerHTTPStatusCodes.h */,
 				E2A0E7FF18F1D3DE00C580B1 /* GCDWebServerMultiPartFormRequest.h */,
 				E2A0E80018F1D3DE00C580B1 /* GCDWebServerMultiPartFormRequest.m */,
 				E22112801690B63A0048D2B2 /* GCDWebServerPrivate.h */,

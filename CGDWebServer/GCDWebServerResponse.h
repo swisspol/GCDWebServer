@@ -25,7 +25,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import <Foundation/Foundation.h>
+#import "GCDWebServerHTTPStatusCodes.h"
 
 @protocol GCDWebServerBodyReader <NSObject>
 - (BOOL)open:(NSError**)error;  // Return NO on error ("error" is guaranteed to be non-NULL)
@@ -47,7 +47,11 @@
 
 @interface GCDWebServerResponse (Extensions)
 + (GCDWebServerResponse*)responseWithStatusCode:(NSInteger)statusCode;
++ (GCDWebServerResponse*)responseWithClientError:(GCDWebServerClientErrorHTTPStatusCode)error;
++ (GCDWebServerResponse*)responseWithServerError:(GCDWebServerServerErrorHTTPStatusCode)error;
 + (GCDWebServerResponse*)responseWithRedirect:(NSURL*)location permanent:(BOOL)permanent;
 - (id)initWithStatusCode:(NSInteger)statusCode;
+- (id)initWithClientError:(GCDWebServerClientErrorHTTPStatusCode)error;
+- (id)initWithServerError:(GCDWebServerServerErrorHTTPStatusCode)error;
 - (id)initWithRedirect:(NSURL*)location permanent:(BOOL)permanent;
 @end

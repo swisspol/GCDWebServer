@@ -50,6 +50,8 @@
 #define ARC_DISPATCH_RELEASE(__OBJECT__) dispatch_release(__OBJECT__)
 #endif
 
+#import "GCDWebServerHTTPStatusCodes.h"
+
 #import "GCDWebServerConnection.h"
 
 #import "GCDWebServerDataRequest.h"
