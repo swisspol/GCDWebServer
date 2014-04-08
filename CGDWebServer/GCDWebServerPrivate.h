@@ -103,6 +103,10 @@ extern void GCDLogMessage(long level, NSString* format, ...) NS_FORMAT_FUNCTION(
 #define kGCDWebServerGCDQueue dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
 #define kGCDWebServerErrorDomain @"GCDWebServerErrorDomain"
 
+static inline BOOL GCDWebServerIsValidByteRange(NSRange range) {
+  return ((range.location != NSNotFound) || (range.length > 0));
+}
+
 extern NSString* GCDWebServerExtractHeaderParameter(NSString* header, NSString* attribute);
 extern NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset);
 

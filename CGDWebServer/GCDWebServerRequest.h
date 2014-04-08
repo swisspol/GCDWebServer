@@ -44,4 +44,5 @@
 @property(nonatomic, readonly) NSRange byteRange;  // Automatically parsed from headers ([NSNotFound, 0] if request has no "Range" header, [offset, length] for byte range from beginning or [NSNotFound, -bytes] from end)
 - (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query;
 - (BOOL)hasBody;  // Convenience method
+- (BOOL)hasByteRange;  // Convenience method that checks "byteRange"
 @end

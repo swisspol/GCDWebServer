@@ -237,6 +237,10 @@
   return _type ? YES : NO;
 }
 
+- (BOOL)hasByteRange {
+  return GCDWebServerIsValidByteRange(_range);
+}
+
 - (BOOL)open:(NSError**)error {
   return YES;
 }

@@ -81,7 +81,7 @@ static inline NSError* _MakePosixError(int code) {
     ARC_RELEASE(self);
     return nil;
   }
-  if ((range.location != NSNotFound) || (range.length > 0)) {
+  if (GCDWebServerIsValidByteRange(range)) {
     if (range.location != NSNotFound) {
       range.location = MIN(range.location, (NSUInteger)info.st_size);
       range.length = MIN(range.length, (NSUInteger)info.st_size - range.location);
