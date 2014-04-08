@@ -56,10 +56,7 @@
 }
 @end
 
-@implementation GCDWebUploader
-
-@synthesize uploadDirectory=_uploadDirectory, delegate=_delegate, allowedFileExtensions=_allowedExtensions, showHiddenFiles=_showHidden,
-            title=_title, header=_header, prologue=_prologue, epilogue=_epilogue, footer=_footer;
+@implementation GCDWebUploader (Methods)
 
 - (BOOL)_checkFileExtension:(NSString*)fileName {
   if (_allowedExtensions && ![_allowedExtensions containsObject:[[fileName pathExtension] lowercaseString]]) {
@@ -85,6 +82,190 @@
   }
   return path;
 }
+
+- (GCDWebServerResponse*)listDirectory:(GCDWebServerRequest*)request {
+  NSString* relativePath = [[request query] objectForKey:@"path"];
+  NSString* absolutePath = [_uploadDirectory stringByAppendingPathComponent:relativePath];
+  BOOL isDirectory;
+  if ([[NSFileManager defaultManager] fileExistsAtPath:absolutePath isDirectory:&isDirectory]) {
+    if (isDirectory) {
+      NSError* error = nil;
+      NSArray* contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:absolutePath error:&error];
+      if (contents) {
+        NSMutableArray* array = [NSMutableArray array];
+        for (NSString* item in [contents sortedArrayUsingSelector:@selector(localizedStandardCompare:)]) {
+          if (_showHidden || ![item hasPrefix:@"."]) {
+            NSDictionary* attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[absolutePath stringByAppendingPathComponent:item] error:NULL];
+            NSString* type = [attributes objectForKey:NSFileType];
+            if ([type isEqualToString:NSFileTypeRegular] && [self _checkFileExtension:item]) {
+              [array addObject:@{
+                                 @"path": [relativePath stringByAppendingPathComponent:item],
+                                 @"name": item,
+                                 @"size": [attributes objectForKey:NSFileSize]
+                                 }];
+            } else if ([type isEqualToString:NSFileTypeDirectory]) {
+              [array addObject:@{
+                                 @"path": [[relativePath stringByAppendingPathComponent:item] stringByAppendingString:@"/"],
+                                 @"name": item
+                                 }];
+            }
+          }
+        }
+        return [GCDWebServerDataResponse responseWithJSONObject:array];
+      } else {
+        return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed listing directory \"%@\"", relativePath];
+      }
+    } else {
+      return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"\"%@\" is not a directory", relativePath];
+    }
+  } else {
+    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_NotFound message:@"\"%@\" does not exist", relativePath];
+  }
+}
+
+- (GCDWebServerResponse*)downloadFile:(GCDWebServerRequest*)request {
+  NSString* relativePath = [[request query] objectForKey:@"path"];
+  NSString* absolutePath = [_uploadDirectory stringByAppendingPathComponent:relativePath];
+  BOOL isDirectory;
+  if ([[NSFileManager defaultManager] fileExistsAtPath:absolutePath isDirectory:&isDirectory]) {
+    if (isDirectory) {
+      return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"\"%@\" is a directory", relativePath];
+    } else {
+      if ([_delegate respondsToSelector:@selector(webUploader:didDownloadFileAtPath:  )]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+          [_delegate webUploader:self didDownloadFileAtPath:absolutePath];
+        });
+      }
+      return [GCDWebServerFileResponse responseWithFile:absolutePath isAttachment:YES];
+    }
+  } else {
+    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_NotFound message:@"\"%@\" does not exist", relativePath];
+  }
+}
+
+- (GCDWebServerResponse*)uploadFile:(GCDWebServerMultiPartFormRequest*)request {
+  NSRange range = [[request.headers objectForKey:@"Accept"] rangeOfString:@"application/json" options:NSCaseInsensitiveSearch];
+  NSString* contentType = (range.location != NSNotFound ? @"application/json" : @"text/plain; charset=utf-8");  // Required when using iFrame transport (see https://github.com/blueimp/jQuery-File-Upload/wiki/Setup)
+  
+  GCDWebServerMultiPartFile* file = [request.files objectForKey:@"files[]"];
+  if ((![file.fileName hasPrefix:@"."] || _showHidden) && [self _checkFileExtension:file.fileName]) {
+    NSString* relativePath = [(GCDWebServerMultiPartArgument*)[request.arguments objectForKey:@"path"] string];
+    NSString* absolutePath = [self _uniquePathForPath:[[_uploadDirectory stringByAppendingPathComponent:relativePath] stringByAppendingPathComponent:file.fileName]];
+    if ([self shouldUploadFileAtPath:absolutePath withTemporaryFile:file.temporaryPath]) {
+      NSError* error = nil;
+      if ([[NSFileManager defaultManager] moveItemAtPath:file.temporaryPath toPath:absolutePath error:&error]) {
+        if ([_delegate respondsToSelector:@selector(webUploader:didUploadFileAtPath:)]) {
+          dispatch_async(dispatch_get_main_queue(), ^{
+            [_delegate webUploader:self didUploadFileAtPath:absolutePath];
+          });
+        }
+        return [GCDWebServerDataResponse responseWithJSONObject:@{} contentType:contentType];
+      } else {
+        return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed moving uploaded file to \"%@\"", relativePath];
+      }
+    } else {
+      return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Uploading file \"%@\" to \"%@\" is not allowed", file.fileName, relativePath];
+    }
+  } else {
+    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Uploaded file name \"%@\" is not allowed", file.fileName];
+  }
+}
+
+- (GCDWebServerResponse*)moveItem:(GCDWebServerURLEncodedFormRequest*)request {
+  NSString* oldRelativePath = [request.arguments objectForKey:@"oldPath"];
+  NSString* oldAbsolutePath = [_uploadDirectory stringByAppendingPathComponent:oldRelativePath];
+  BOOL isDirectory;
+  if ([[NSFileManager defaultManager] fileExistsAtPath:oldAbsolutePath isDirectory:&isDirectory]) {
+    NSString* newRelativePath = [request.arguments objectForKey:@"newPath"];
+    if (!_showHidden) {
+      for (NSString* component in [newRelativePath pathComponents]) {
+        if ([component hasPrefix:@"."]) {
+          return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"Item path \"%@\" is not allowed", newRelativePath];
+        }
+      }
+    }
+    if (!isDirectory && ![self _checkFileExtension:newRelativePath]) {
+      return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Item path \"%@\" is not allowed", newRelativePath];
+    }
+    NSString* newAbsolutePath = [self _uniquePathForPath:[_uploadDirectory stringByAppendingPathComponent:newRelativePath]];
+    if ([self shouldMoveItemFromPath:oldAbsolutePath toPath:newAbsolutePath]) {
+      [[NSFileManager defaultManager] createDirectoryAtPath:[newAbsolutePath stringByDeletingLastPathComponent] withIntermediateDirectories:YES attributes:nil error:NULL];
+      NSError* error = nil;
+      if ([[NSFileManager defaultManager] moveItemAtPath:oldAbsolutePath toPath:newAbsolutePath error:&error]) {
+        if ([_delegate respondsToSelector:@selector(webUploader:didMoveItemFromPath:toPath:)]) {
+          dispatch_async(dispatch_get_main_queue(), ^{
+            [_delegate webUploader:self didMoveItemFromPath:oldAbsolutePath toPath:newAbsolutePath];
+          });
+        }
+        return [GCDWebServerDataResponse responseWithJSONObject:@{}];
+      } else {
+        return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed moving \"%@\" to \"%@\"", oldRelativePath, newRelativePath];
+      }
+    } else {
+      return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Moving \"%@\" to \"%@\" is not allowed", oldRelativePath, newRelativePath];
+    }
+  } else {
+    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_NotFound message:@"\"%@\" does not exist", oldRelativePath];
+  }
+}
+
+- (GCDWebServerResponse*)deleteItem:(GCDWebServerURLEncodedFormRequest*)request {
+  NSString* relativePath = [request.arguments objectForKey:@"path"];
+  NSString* absolutePath = [_uploadDirectory stringByAppendingPathComponent:relativePath];
+  if ([[NSFileManager defaultManager] fileExistsAtPath:absolutePath]) {
+    if ([self shouldDeleteItemAtPath:absolutePath]) {
+      NSError* error = nil;
+      if ([[NSFileManager defaultManager] removeItemAtPath:absolutePath error:&error]) {
+        if ([_delegate respondsToSelector:@selector(webUploader:didDeleteItemAtPath:)]) {
+          dispatch_async(dispatch_get_main_queue(), ^{
+            [_delegate webUploader:self didDeleteItemAtPath:absolutePath];
+          });
+        }
+        return [GCDWebServerDataResponse responseWithJSONObject:@{}];
+      } else {
+        return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed deleting \"%@\"", relativePath];
+      }
+    } else {
+      return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Deleting \"%@\" is not allowed", relativePath];
+    }
+  } else {
+    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_NotFound message:@"\"%@\" does not exist", relativePath];
+  }
+}
+
+- (GCDWebServerResponse*)createDirectory:(GCDWebServerURLEncodedFormRequest*)request {
+  NSString* relativePath = [request.arguments objectForKey:@"path"];
+  if (!_showHidden) {
+    for (NSString* component in [relativePath pathComponents]) {
+      if ([component hasPrefix:@"."]) {
+        return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Directory path \"%@\" is not allowed", relativePath];
+      }
+    }
+  }
+  NSString* absolutePath = [self _uniquePathForPath:[_uploadDirectory stringByAppendingPathComponent:relativePath]];
+  if ([self shouldCreateDirectoryAtPath:absolutePath]) {
+    NSError* error = nil;
+    if ([[NSFileManager defaultManager] createDirectoryAtPath:absolutePath withIntermediateDirectories:YES attributes:nil error:&error]) {
+      if ([_delegate respondsToSelector:@selector(webUploader:didCreateDirectoryAtPath:)]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+          [_delegate webUploader:self didCreateDirectoryAtPath:absolutePath];
+        });
+      }
+      return [GCDWebServerDataResponse responseWithJSONObject:@{}];
+    } else {
+      return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed creating directory \"%@\"", relativePath];
+    }
+  } else {
+    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Creating directory \"%@\" is not allowed", relativePath];
+  }
+}
+
+@end
+
+@implementation GCDWebUploader
+
+@synthesize uploadDirectory=_uploadDirectory, delegate=_delegate, allowedFileExtensions=_allowedExtensions, showHiddenFiles=_showHidden,
+            title=_title, header=_header, prologue=_prologue, epilogue=_epilogue, footer=_footer;
 
 - (id)initWithUploadDirectory:(NSString*)path {
   if ((self = [super init])) {
@@ -160,199 +341,32 @@
     
     // File listing
     [self addHandlerForMethod:@"GET" path:@"/list" requestClass:[GCDWebServerRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-      
-      NSString* relativePath = [[request query] objectForKey:@"path"];
-      NSString* absolutePath = [server.uploadDirectory stringByAppendingPathComponent:relativePath];
-      BOOL isDirectory;
-      if ([[NSFileManager defaultManager] fileExistsAtPath:absolutePath isDirectory:&isDirectory]) {
-        if (isDirectory) {
-          BOOL showHidden = server.showHiddenFiles;
-          NSError* error = nil;
-          NSArray* contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:absolutePath error:&error];
-          if (contents) {
-            NSMutableArray* array = [NSMutableArray array];
-            for (NSString* item in [contents sortedArrayUsingSelector:@selector(localizedStandardCompare:)]) {
-              if (showHidden || ![item hasPrefix:@"."]) {
-                NSDictionary* attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[absolutePath stringByAppendingPathComponent:item] error:NULL];
-                NSString* type = [attributes objectForKey:NSFileType];
-                if ([type isEqualToString:NSFileTypeRegular] && [server _checkFileExtension:item]) {
-                  [array addObject:@{
-                                     @"path": [relativePath stringByAppendingPathComponent:item],
-                                     @"name": item,
-                                     @"size": [attributes objectForKey:NSFileSize]
-                                     }];
-                } else if ([type isEqualToString:NSFileTypeDirectory]) {
-                  [array addObject:@{
-                                     @"path": [[relativePath stringByAppendingPathComponent:item] stringByAppendingString:@"/"],
-                                     @"name": item
-                                     }];
-                }
-              }
-            }
-            return [GCDWebServerDataResponse responseWithJSONObject:array];
-          } else {
-            return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed listing directory \"%@\"", relativePath];
-          }
-        } else {
-          return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"\"%@\" is not a directory", relativePath];
-        }
-      } else {
-        return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_NotFound message:@"\"%@\" does not exist", relativePath];
-      }
-      
+      return [server listDirectory:request];
     }];
     
     // File download
     [self addHandlerForMethod:@"GET" path:@"/download" requestClass:[GCDWebServerRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-      
-      NSString* relativePath = [[request query] objectForKey:@"path"];
-      NSString* absolutePath = [server.uploadDirectory stringByAppendingPathComponent:relativePath];
-      BOOL isDirectory;
-      if ([[NSFileManager defaultManager] fileExistsAtPath:absolutePath isDirectory:&isDirectory]) {
-        if (isDirectory) {
-          return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"\"%@\" is a directory", relativePath];
-        } else {
-          if ([server.delegate respondsToSelector:@selector(webUploader:didDownloadFileAtPath:  )]) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-              [server.delegate webUploader:server didDownloadFileAtPath:absolutePath];
-            });
-          }
-          return [GCDWebServerFileResponse responseWithFile:absolutePath isAttachment:YES];
-        }
-      } else {
-        return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_NotFound message:@"\"%@\" does not exist", relativePath];
-      }
-      
+      return [server downloadFile:request];
     }];
     
     // File upload
     [self addHandlerForMethod:@"POST" path:@"/upload" requestClass:[GCDWebServerMultiPartFormRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-      
-      // Required when using iFrame transport (see https://github.com/blueimp/jQuery-File-Upload/wiki/Setup)
-      NSRange range = [[request.headers objectForKey:@"Accept"] rangeOfString:@"application/json" options:NSCaseInsensitiveSearch];
-      NSString* contentType = (range.location != NSNotFound ? @"application/json" : @"text/plain; charset=utf-8");
-      
-      GCDWebServerMultiPartFile* file = [[(GCDWebServerMultiPartFormRequest*)request files] objectForKey:@"files[]"];
-      if ((![file.fileName hasPrefix:@"."] || server.showHiddenFiles) && [server _checkFileExtension:file.fileName]) {
-        NSString* relativePath = [(GCDWebServerMultiPartArgument*)[[(GCDWebServerURLEncodedFormRequest*)request arguments] objectForKey:@"path"] string];
-        NSString* absolutePath = [server _uniquePathForPath:[[server.uploadDirectory stringByAppendingPathComponent:relativePath] stringByAppendingPathComponent:file.fileName]];
-        if ([server shouldUploadFileAtPath:absolutePath withTemporaryFile:file.temporaryPath]) {
-          NSError* error = nil;
-          if ([[NSFileManager defaultManager] moveItemAtPath:file.temporaryPath toPath:absolutePath error:&error]) {
-            if ([server.delegate respondsToSelector:@selector(webUploader:didUploadFileAtPath:)]) {
-              dispatch_async(dispatch_get_main_queue(), ^{
-                [server.delegate webUploader:server didUploadFileAtPath:absolutePath];
-              });
-            }
-            return [GCDWebServerDataResponse responseWithJSONObject:@{} contentType:contentType];
-          } else {
-            return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed moving uploaded file to \"%@\"", relativePath];
-          }
-        } else {
-          return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Uploading file \"%@\" to \"%@\" is not allowed", file.fileName, relativePath];
-        }
-      } else {
-        return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Uploaded file name \"%@\" is not allowed", file.fileName];
-      }
-      
+      return [server uploadFile:(GCDWebServerMultiPartFormRequest*)request];
     }];
     
     // File and folder moving
     [self addHandlerForMethod:@"POST" path:@"/move" requestClass:[GCDWebServerURLEncodedFormRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-      
-      NSString* oldRelativePath = [[(GCDWebServerURLEncodedFormRequest*)request arguments] objectForKey:@"oldPath"];
-      NSString* oldAbsolutePath = [server.uploadDirectory stringByAppendingPathComponent:oldRelativePath];
-      BOOL isDirectory;
-      if ([[NSFileManager defaultManager] fileExistsAtPath:oldAbsolutePath isDirectory:&isDirectory]) {
-        NSString* newRelativePath = [[(GCDWebServerURLEncodedFormRequest*)request arguments] objectForKey:@"newPath"];
-        if (!server.showHiddenFiles) {
-          for (NSString* component in [newRelativePath pathComponents]) {
-            if ([component hasPrefix:@"."]) {
-              return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"Item path \"%@\" is not allowed", newRelativePath];
-            }
-          }
-        }
-        if (!isDirectory && ![server _checkFileExtension:newRelativePath]) {
-          return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Item path \"%@\" is not allowed", newRelativePath];
-        }
-        NSString* newAbsolutePath = [server _uniquePathForPath:[server.uploadDirectory stringByAppendingPathComponent:newRelativePath]];
-        if ([server shouldMoveItemFromPath:oldAbsolutePath toPath:newAbsolutePath]) {
-          [[NSFileManager defaultManager] createDirectoryAtPath:[newAbsolutePath stringByDeletingLastPathComponent] withIntermediateDirectories:YES attributes:nil error:NULL];
-          NSError* error = nil;
-          if ([[NSFileManager defaultManager] moveItemAtPath:oldAbsolutePath toPath:newAbsolutePath error:&error]) {
-            if ([server.delegate respondsToSelector:@selector(webUploader:didMoveItemFromPath:toPath:)]) {
-              dispatch_async(dispatch_get_main_queue(), ^{
-                [server.delegate webUploader:server didMoveItemFromPath:oldAbsolutePath toPath:newAbsolutePath];
-              });
-            }
-            return [GCDWebServerDataResponse responseWithJSONObject:@{}];
-          } else {
-            return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed moving \"%@\" to \"%@\"", oldRelativePath, newRelativePath];
-          }
-        } else {
-          return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Moving \"%@\" to \"%@\" is not allowed", oldRelativePath, newRelativePath];
-        }
-      } else {
-        return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_NotFound message:@"\"%@\" does not exist", oldRelativePath];
-      }
-      
+      return [server moveItem:(GCDWebServerURLEncodedFormRequest*)request];
     }];
     
-    // File deletion
+    // File and folder deletion
     [self addHandlerForMethod:@"POST" path:@"/delete" requestClass:[GCDWebServerURLEncodedFormRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-      
-      NSString* relativePath = [[(GCDWebServerURLEncodedFormRequest*)request arguments] objectForKey:@"path"];
-      NSString* absolutePath = [server.uploadDirectory stringByAppendingPathComponent:relativePath];
-      if ([[NSFileManager defaultManager] fileExistsAtPath:absolutePath]) {
-        if ([server shouldDeleteItemAtPath:absolutePath]) {
-          NSError* error = nil;
-          if ([[NSFileManager defaultManager] removeItemAtPath:absolutePath error:&error]) {
-            if ([server.delegate respondsToSelector:@selector(webUploader:didDeleteItemAtPath:)]) {
-              dispatch_async(dispatch_get_main_queue(), ^{
-                [server.delegate webUploader:server didDeleteItemAtPath:absolutePath];
-              });
-            }
-            return [GCDWebServerDataResponse responseWithJSONObject:@{}];
-          } else {
-            return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed deleting \"%@\"", relativePath];
-          }
-        } else {
-          return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Deleting \"%@\" is not allowed", relativePath];
-        }
-      } else {
-        return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_NotFound message:@"\"%@\" does not exist", relativePath];
-      }
-      
+      return [server deleteItem:(GCDWebServerURLEncodedFormRequest*)request];
     }];
     
     // Directory creation
     [self addHandlerForMethod:@"POST" path:@"/create" requestClass:[GCDWebServerURLEncodedFormRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-      
-      NSString* relativePath = [[(GCDWebServerURLEncodedFormRequest*)request arguments] objectForKey:@"path"];
-      if (!server.showHiddenFiles) {
-        for (NSString* component in [relativePath pathComponents]) {
-          if ([component hasPrefix:@"."]) {
-            return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Directory path \"%@\" is not allowed", relativePath];
-          }
-        }
-      }
-      NSString* absolutePath = [server _uniquePathForPath:[server.uploadDirectory stringByAppendingPathComponent:relativePath]];
-      if ([server shouldCreateDirectoryAtPath:absolutePath]) {
-        NSError* error = nil;
-        if ([[NSFileManager defaultManager] createDirectoryAtPath:absolutePath withIntermediateDirectories:YES attributes:nil error:&error]) {
-          if ([server.delegate respondsToSelector:@selector(webUploader:didCreateDirectoryAtPath:)]) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-              [server.delegate webUploader:server didCreateDirectoryAtPath:absolutePath];
-            });
-          }
-          return [GCDWebServerDataResponse responseWithJSONObject:@{}];
-        } else {
-          return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed creating directory \"%@\"", relativePath];
-        }
-      } else {
-        return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Creating directory \"%@\" is not allowed", relativePath];
-      }
-      
+      return [server createDirectory:(GCDWebServerURLEncodedFormRequest*)request];
     }];
     
   }
