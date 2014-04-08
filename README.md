@@ -64,8 +64,8 @@ int main(int argc, const char* argv[]) {
 }
 ```
 
-Adding File Upload to iOS Apps
-==============================
+Web Based Uploads in iOS Apps
+=============================
 
 GCDWebUploader is a subclass of GCDWebServer that provides a ready-to-use HTML 5 file uploader & downloader. This lets users upload, download and delete files from a directory inside your iOS app's sandbox using a clean user interface in their web browser.
 
@@ -79,6 +79,25 @@ Simply instantiate and run a GCDWebUploader instance then visit http://{YOUR-IOS
   GCDWebUploader* webUploader = [[GCDWebUploader alloc] initWithUploadDirectory:documentsPath];
   [webUploader start];
   NSLog(@"Visit %@ in your web browser", webUploader.serverURL);
+  return YES;
+}
+```
+
+WebDAV Server in iOS Apps
+=========================
+
+GCDWebDAVServer is a subclass of GCDWebServer that provides a class 1 compliant [WebDAV](https://en.wikipedia.org/wiki/WebDAV) server. This lets users upload, download and delete files from a directory inside your iOS app's sandbox using any WebDAV client like [Transmit](https://panic.com/transmit/) (Mac), [ForkLift](http://binarynights.com/forklift/) (Mac) or [CyberDuck](http://cyberduck.io/) (Mac / Windows).
+
+Simply instantiate and run a GCDWebDAVServer instance then connect to http://{YOUR-IOS-DEVICE-IP-ADDRESS}/ using a WebDAV client:
+
+```objectivec
+#import "GCDWebDAVServer.h"
+
+- (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
+  NSString* documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+  GCDWebDAVServer* davServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:documentsPath];
+  [davServer start];
+  NSLog(@"Visit %@ in your WebDAV client", davServer.serverURL);
   return YES;
 }
 ```
