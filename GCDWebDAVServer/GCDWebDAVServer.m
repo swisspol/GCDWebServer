@@ -51,7 +51,6 @@ typedef NS_ENUM(NSInteger, DAVProperties) {
 @interface GCDWebDAVServer () {
 @private
   NSString* _uploadDirectory;
-  BOOL _macMode;
   id<GCDWebDAVServerDelegate> __unsafe_unretained _delegate;
   NSArray* _allowedExtensions;
   BOOL _showHidden;
@@ -74,7 +73,7 @@ static inline BOOL _IsMacFinder(GCDWebServerRequest* request) {
 
 - (GCDWebServerResponse*)performOPTIONS:(GCDWebServerRequest*)request {
   GCDWebServerResponse* response = [GCDWebServerResponse response];
-  if (_macMode && _IsMacFinder(request)) {
+  if (_IsMacFinder(request)) {
     [response setValue:@"1, 2" forAdditionalHeader:@"DAV"];  // Classes 1 and 2
   } else {
     [response setValue:@"1" forAdditionalHeader:@"DAV"];  // Class 1
@@ -446,7 +445,7 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
 }
 
 - (GCDWebServerResponse*)performLOCK:(GCDWebServerDataRequest*)request {
-  if (!_macMode || !_IsMacFinder(request)) {
+  if (!_IsMacFinder(request)) {
     return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_MethodNotAllowed message:@"LOCK method only allowed for Mac Finder"];
   }
   
@@ -534,7 +533,7 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
 }
 
 - (GCDWebServerResponse*)performUNLOCK:(GCDWebServerRequest*)request {
-  if (!_macMode || !_IsMacFinder(request)) {
+  if (!_IsMacFinder(request)) {
     return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_MethodNotAllowed message:@"UNLOCK method only allowed for Mac Finder"];
   }
   
@@ -560,13 +559,8 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
 @synthesize uploadDirectory=_uploadDirectory, delegate=_delegate, allowedFileExtensions=_allowedExtensions, showHiddenFiles=_showHidden;
 
 - (instancetype)initWithUploadDirectory:(NSString*)path {
-  return [self initWithUploadDirectory:path macFinderMode:NO];
-}
-
-- (instancetype)initWithUploadDirectory:(NSString*)path macFinderMode:(BOOL)macFinderMode {
   if ((self = [super init])) {
     _uploadDirectory = [[path stringByStandardizingPath] copy];
-    _macMode = macFinderMode;
     GCDWebDAVServer* __unsafe_unretained server = self;
     
     // 9.1 PROPFIND method

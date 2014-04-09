@@ -97,7 +97,7 @@ int main(int argc, const char* argv[]) {
       }
       
       case 3: {
-        webServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:[[NSFileManager defaultManager] currentDirectoryPath] macFinderMode:YES];
+        webServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:[[NSFileManager defaultManager] currentDirectoryPath]];
         break;
       }
       
