@@ -110,7 +110,7 @@
     if ((result != Z_OK) && (result != Z_STREAM_END)) {
       ARC_RELEASE(decodedData);
       *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
-      return nil;
+      return NO;
     }
     length += maxLength - _stream.avail_out;
     if (_stream.avail_out > 0) {
