@@ -31,6 +31,16 @@ Requirements:
 * OS X 10.7 or later (x86_64)
 * iOS 5.0 or later (armv7, armv7s or arm64)
 
+Getting Started
+===============
+
+Download or checkout the source for GCDWebServer then add the entire "GCDWebServer" subfolder to your Xcode project. If you intend to use one of the extensions like GCDWebDAVServer or GCDWebUploader, add these subfolders as well.
+
+Alternatively, you can install GCDWebServer using [CocoaPods](http://cocoapods.org/) by simply adding this line to your Xcode project's Podfile:
+```
+pod "GCDWebServer", "~> 2.0"
+```
+
 Hello World
 ===========
 
