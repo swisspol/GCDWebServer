@@ -166,7 +166,7 @@
     _path = [path copy];
     _query = ARC_RETAIN(query);
     
-    _type = ARC_RETAIN([_headers objectForKey:@"Content-Type"]);
+    _type = ARC_RETAIN([[_headers objectForKey:@"Content-Type"] lowercaseString]);
     _chunked = [[[_headers objectForKey:@"Transfer-Encoding"] lowercaseString] isEqualToString:@"chunked"];
     NSString* lengthHeader = [_headers objectForKey:@"Content-Length"];
     if (lengthHeader) {
