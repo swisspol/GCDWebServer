@@ -4,16 +4,16 @@ Overview
 GCDWebServer is a lightweight GCD based HTTP 1.1 server designed to be embedded in Mac & iOS apps. It was written from scratch with the following goals in mind:
 * Easy to use and understand architecture with only 4 core classes: server, connection, request and response
 * Well designed API for easy integration and customization
-* Entirely built with an event-driven design using [Grand Central Dispatch](http://en.wikipedia.org/wiki/Grand_Central_Dispatch) for maximum performance and concurrency
+* Entirely built with an event-driven design using [Grand Central Dispatch](http://en.wikipedia.org/wiki/Grand_Central_Dispatch) for maximal performance and concurrency
 * No dependencies on third-party source code
 * Available under a friendly [New BSD License](LICENSE)
 
 Extra built-in features:
-* Support for streaming large HTTP bodies for requests and responses to minimize memory usage
-* Built-in parser for web forms submitted using "application/x-www-form-urlencoded" or "multipart/form-data" encodings (including file uploads)
-* JSON
-* [Chunked transfer encoding](https://en.wikipedia.org/wiki/Chunked_transfer_encoding) for both requests and responses
-* [HTTP compression](https://en.wikipedia.org/wiki/HTTP_compression) with gzip for both requests and responses
+* Minimize memory usage with disk streaming of large HTTP request or response bodies
+* Parser for [web forms](http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4) submitted using "application/x-www-form-urlencoded" or "multipart/form-data" encodings (including file uploads)
+* [JSON](http://www.json.org/) parsing and serialization for request and response HTTP bodies
+* [Chunked transfer encoding](https://en.wikipedia.org/wiki/Chunked_transfer_encoding) for request and response HTTP bodies
+* [HTTP compression](https://en.wikipedia.org/wiki/HTTP_compression) with gzip for request and response HTTP bodies
 
 Included extensions:
 * [GCDWebUploader](GCDWebUploader/GCDWebUploader.h): subclass of GCDWebServer that implements an interface for uploading and downloading files from an iOS app's sandbox using a web browser
