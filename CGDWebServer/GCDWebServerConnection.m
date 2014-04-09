@@ -45,8 +45,6 @@ static NSData* _CRLFData = nil;
 static NSData* _CRLFCRLFData = nil;
 static NSData* _continueData = nil;
 static NSData* _lastChunkData = nil;
-static NSDateFormatter* _dateFormatter = nil;
-static dispatch_queue_t _formatterQueue = NULL;
 
 @interface GCDWebServerConnection () {
 @private
@@ -384,18 +382,6 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   if (_lastChunkData == nil) {
     _lastChunkData = [[NSData alloc] initWithBytes:"0\r\n\r\n" length:5];
   }
-  if (_dateFormatter == nil) {
-    DCHECK([NSThread isMainThread]);  // NSDateFormatter should be initialized on main thread
-    _dateFormatter = [[NSDateFormatter alloc] init];
-    _dateFormatter.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
-    _dateFormatter.dateFormat = @"EEE',' dd MMM yyyy HH':'mm':'ss 'GMT'";
-    _dateFormatter.locale = ARC_AUTORELEASE([[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]);
-    DCHECK(_dateFormatter);
-  }
-  if (_formatterQueue == NULL) {
-    _formatterQueue = dispatch_queue_create(NULL, DISPATCH_QUEUE_SERIAL);
-    DCHECK(_formatterQueue);
-  }
 }
 
 - (void)_initializeResponseHeadersWithStatusCode:(NSInteger)statusCode {
@@ -403,10 +389,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   _responseMessage = CFHTTPMessageCreateResponse(kCFAllocatorDefault, statusCode, NULL, kCFHTTPVersion1_1);
   CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Connection"), CFSTR("Close"));
   CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Server"), (ARC_BRIDGE CFStringRef)[[_server class] serverName]);
-  dispatch_sync(_formatterQueue, ^{
-    NSString* date = [_dateFormatter stringFromDate:[NSDate date]];
-    CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Date"), (ARC_BRIDGE CFStringRef)date);
-  });
+  CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Date"), (ARC_BRIDGE CFStringRef)GCDWebServerFormatHTTPDate([NSDate date]));
 }
 
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html

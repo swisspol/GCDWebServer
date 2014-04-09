@@ -63,6 +63,8 @@
 }
 @end
 
+static NSDateFormatter* _dateFormatterRFC822 = nil;
+static dispatch_queue_t _dateFormatterQueue = NULL;
 #if !TARGET_OS_IPHONE
 static BOOL _run;
 #endif
@@ -113,6 +115,22 @@ NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset) {
     encoding = CFStringConvertEncodingToNSStringEncoding(CFStringConvertIANACharSetNameToEncoding((CFStringRef)charset));
   }
   return (encoding != kCFStringEncodingInvalidId ? encoding : NSUTF8StringEncoding);
+}
+
+NSString* GCDWebServerFormatHTTPDate(NSDate* date) {
+  __block NSString* string;
+  dispatch_sync(_dateFormatterQueue, ^{
+    string = [_dateFormatterRFC822 stringFromDate:date];  // HTTP/1.1 server must use RFC822
+  });
+  return string;
+}
+
+NSDate* GCDWebServerParseHTTPDate(NSString* string) {
+  __block NSDate* date;
+  dispatch_sync(_dateFormatterQueue, ^{
+    date = [_dateFormatterRFC822 dateFromString:string];  // TODO: Handle RFC 850 and ANSI C's asctime() format (http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3)
+  });
+  return date;
 }
 
 NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
@@ -258,7 +276,18 @@ static void _SignalHandler(int signal) {
 @synthesize handlers=_handlers, port=_port;
 
 + (void)initialize {
-  [GCDWebServerConnection class];  // Initialize class immediately to make sure it happens on the main thread
+  if (_dateFormatterRFC822 == nil) {
+    DCHECK([NSThread isMainThread]);  // NSDateFormatter should be initialized on main thread
+    _dateFormatterRFC822 = [[NSDateFormatter alloc] init];
+    _dateFormatterRFC822.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
+    _dateFormatterRFC822.dateFormat = @"EEE',' dd MMM yyyy HH':'mm':'ss 'GMT'";
+    _dateFormatterRFC822.locale = ARC_AUTORELEASE([[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]);
+    DCHECK(_dateFormatterRFC822);
+  }
+  if (_dateFormatterQueue == NULL) {
+    _dateFormatterQueue = dispatch_queue_create(NULL, DISPATCH_QUEUE_SERIAL);
+    DCHECK(_dateFormatterQueue);
+  }
 }
 
 - (instancetype)init {

@@ -110,6 +110,8 @@ static inline BOOL GCDWebServerIsValidByteRange(NSRange range) {
 
 extern NSString* GCDWebServerExtractHeaderParameter(NSString* header, NSString* attribute);
 extern NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset);
+extern NSString* GCDWebServerFormatHTTPDate(NSDate* date);
+extern NSDate* GCDWebServerParseHTTPDate(NSString* string);
 
 @interface GCDWebServerConnection ()
 - (id)initWithServer:(GCDWebServer*)server localAddress:(NSData*)localAddress remoteAddress:(NSData*)remoteAddress socket:(CFSocketNativeHandle)socket;
