@@ -533,7 +533,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   [self _readHeadersWithCompletionBlock:^(NSData* extraData) {
     
     if (extraData) {
-      NSString* requestMethod = [ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestMethod(_requestMessage)) uppercaseString];
+      NSString* requestMethod = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestMethod(_requestMessage));  // Method verbs are case-sensitive and uppercase
       DCHECK(requestMethod);
       NSURL* requestURL = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestURL(_requestMessage));
       DCHECK(requestURL);
@@ -545,7 +545,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
         requestQuery = GCDWebServerParseURLEncodedForm(queryString);
         DCHECK(requestQuery);
       }
-      NSDictionary* requestHeaders = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyAllHeaderFields(_requestMessage));
+      NSDictionary* requestHeaders = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyAllHeaderFields(_requestMessage));  // Header names are case-insensitive but CFHTTPMessageCopyAllHeaderFields() will standardize the common ones
       DCHECK(requestHeaders);
       for (_handler in _server.handlers) {
         _request = ARC_RETAIN(_handler.matchBlock(requestMethod, requestURL, requestHeaders, requestPath, requestQuery));
