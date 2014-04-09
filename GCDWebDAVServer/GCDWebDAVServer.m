@@ -561,7 +561,11 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
 - (instancetype)initWithUploadDirectory:(NSString*)path {
   if ((self = [super init])) {
     _uploadDirectory = [[path stringByStandardizingPath] copy];
+#if __has_feature(objc_arc)
     GCDWebDAVServer* __unsafe_unretained server = self;
+#else
+    __block GCDWebDAVServer* server = self;
+#endif
     
     // 9.1 PROPFIND method
     [self addDefaultHandlerForMethod:@"PROPFIND" requestClass:[GCDWebServerDataRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {

@@ -277,7 +277,11 @@
       return nil;
     }
     _uploadDirectory = [[path stringByStandardizingPath] copy];
+#if __has_feature(objc_arc)
     GCDWebUploader* __unsafe_unretained server = self;
+#else
+    __block GCDWebUploader* server = self;
+#endif
     
     // Resource files
     [self addGETHandlerForBasePath:@"/" directoryPath:[siteBundle resourcePath] indexFilename:nil cacheAge:3600 allowRangeRequests:NO];
