@@ -423,10 +423,12 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     if (_response.eTag) {
       CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("ETag"), (ARC_BRIDGE CFStringRef)_response.eTag);
     }
-    if (_response.cacheControlMaxAge > 0) {
-      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Cache-Control"), (ARC_BRIDGE CFStringRef)[NSString stringWithFormat:@"max-age=%i, public", (int)_response.cacheControlMaxAge]);
-    } else {
-      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Cache-Control"), CFSTR("no-cache"));
+    if ((_response.statusCode >= 200) && (_response.statusCode < 300)) {
+      if (_response.cacheControlMaxAge > 0) {
+        CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Cache-Control"), (ARC_BRIDGE CFStringRef)[NSString stringWithFormat:@"max-age=%i, public", (int)_response.cacheControlMaxAge]);
+      } else {
+        CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Cache-Control"), CFSTR("no-cache"));
+      }
     }
     if (_response.contentType != nil) {
       CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Type"), (ARC_BRIDGE CFStringRef)GCDWebServerNormalizeHeaderValue(_response.contentType));
