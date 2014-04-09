@@ -27,55 +27,25 @@
 
 #import <Foundation/Foundation.h>
 
-@interface GCDWebServerRequest : NSObject
+@protocol GCDWebServerBodyWriter <NSObject>
+- (BOOL)open:(NSError**)error;  // Return NO on error ("error" is guaranteed to be non-NULL)
+- (BOOL)writeData:(NSData*)data error:(NSError**)error;  // Return NO on error ("error" is guaranteed to be non-NULL)
+- (BOOL)close:(NSError**)error;  // Return NO on error ("error" is guaranteed to be non-NULL)
+@end
+
+@interface GCDWebServerRequest : NSObject <GCDWebServerBodyWriter>
 @property(nonatomic, readonly) NSString* method;
 @property(nonatomic, readonly) NSURL* URL;
 @property(nonatomic, readonly) NSDictionary* headers;
 @property(nonatomic, readonly) NSString* path;
 @property(nonatomic, readonly) NSDictionary* query;  // May be nil
-@property(nonatomic, readonly) NSString* contentType;  // Automatically parsed from headers (nil if request has no body)
-@property(nonatomic, readonly) NSUInteger contentLength;  // Automatically parsed from headers
+@property(nonatomic, readonly) NSString* contentType;  // Automatically parsed from headers (nil if request has no body or set to "application/octet-stream" if a body is present without a "Content-Type" header)
+@property(nonatomic, readonly) NSUInteger contentLength;  // Automatically parsed from headers (NSNotFound if request has no "Content-Length" header)
+@property(nonatomic, readonly) NSDate* ifModifiedSince;  // Automatically parsed from headers (nil if request has no "If-Modified-Since" header or it is malformatted)
+@property(nonatomic, readonly) NSString* ifNoneMatch;  // Automatically parsed from headers (nil if request has no "If-None-Match" header)
 @property(nonatomic, readonly) NSRange byteRange;  // Automatically parsed from headers ([NSNotFound, 0] if request has no "Range" header, [offset, length] for byte range from beginning or [NSNotFound, -bytes] from end)
-- (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query;
-- (BOOL)hasBody;  // Convenience method
-@end
-
-@interface GCDWebServerRequest (Subclassing)
-- (BOOL)open;  // Implementation required
-- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length;  // Implementation required
-- (BOOL)close;  // Implementation required
-@end
-
-@interface GCDWebServerDataRequest : GCDWebServerRequest
-@property(nonatomic, readonly) NSData* data;  // Only valid after open / write / close sequence
-@end
-
-@interface GCDWebServerFileRequest : GCDWebServerRequest
-@property(nonatomic, readonly) NSString* filePath;  // Only valid after open / write / close sequence
-@end
-
-@interface GCDWebServerURLEncodedFormRequest : GCDWebServerDataRequest
-@property(nonatomic, readonly) NSDictionary* arguments;  // Only valid after open / write / close sequence
-+ (NSString*)mimeType;
-@end
-
-@interface GCDWebServerMultiPart : NSObject
-@property(nonatomic, readonly) NSString* contentType;  // May be nil
-@property(nonatomic, readonly) NSString* mimeType;  // Defaults to "text/plain" per specifications if undefined
-@end
-
-@interface GCDWebServerMultiPartArgument : GCDWebServerMultiPart
-@property(nonatomic, readonly) NSData* data;
-@property(nonatomic, readonly) NSString* string;  // May be nil (only valid for text mime types)
-@end
-
-@interface GCDWebServerMultiPartFile : GCDWebServerMultiPart
-@property(nonatomic, readonly) NSString* fileName;  // May be nil
-@property(nonatomic, readonly) NSString* temporaryPath;
-@end
-
-@interface GCDWebServerMultiPartFormRequest : GCDWebServerRequest
-@property(nonatomic, readonly) NSDictionary* arguments;  // Only valid after open / write / close sequence
-@property(nonatomic, readonly) NSDictionary* files;  // Only valid after open / write / close sequence
-+ (NSString*)mimeType;
+@property(nonatomic, readonly) BOOL acceptsGzipContentEncoding;
+- (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query;
+- (BOOL)hasBody;  // Convenience method that checks if "contentType" is not nil
+- (BOOL)hasByteRange;  // Convenience method that checks "byteRange"
 @end

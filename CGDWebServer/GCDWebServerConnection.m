@@ -30,7 +30,6 @@
 #import "GCDWebServerPrivate.h"
 
 #define kHeadersReadBuffer 1024
-#define kBodyWriteBufferSize (32 * 1024)
 
 typedef void (^ReadBufferCompletionBlock)(dispatch_data_t buffer);
 typedef void (^ReadDataCompletionBlock)(NSData* data);
@@ -42,10 +41,10 @@ typedef void (^WriteDataCompletionBlock)(BOOL success);
 typedef void (^WriteHeadersCompletionBlock)(BOOL success);
 typedef void (^WriteBodyCompletionBlock)(BOOL success);
 
-static NSData* _separatorData = nil;
+static NSData* _CRLFData = nil;
+static NSData* _CRLFCRLFData = nil;
 static NSData* _continueData = nil;
-static NSDateFormatter* _dateFormatter = nil;
-static dispatch_queue_t _formatterQueue = NULL;
+static NSData* _lastChunkData = nil;
 
 @interface GCDWebServerConnection () {
 @private
@@ -55,12 +54,14 @@ static dispatch_queue_t _formatterQueue = NULL;
   CFSocketNativeHandle _socket;
   NSUInteger _bytesRead;
   NSUInteger _bytesWritten;
+  BOOL _virtualHEAD;
   
   CFHTTPMessageRef _requestMessage;
   GCDWebServerRequest* _request;
   GCDWebServerHandler* _handler;
   CFHTTPMessageRef _responseMessage;
   GCDWebServerResponse* _response;
+  NSInteger _statusCode;
 }
 @end
 
@@ -122,7 +123,7 @@ static dispatch_queue_t _formatterQueue = NULL;
         [data appendBytes:bufferChunk length:size];
         return true;
       });
-      NSRange range = [data rangeOfData:_separatorData options:0 range:NSMakeRange(0, data.length)];
+      NSRange range = [data rangeOfData:_CRLFCRLFData options:0 range:NSMakeRange(0, data.length)];
       if (range.location == NSNotFound) {
         if (CFHTTPMessageAppendBytes(_requestMessage, data.bytes, data.length)) {
           [self _readHeadersWithCompletionBlock:block];
@@ -152,22 +153,23 @@ static dispatch_queue_t _formatterQueue = NULL;
 }
 
 - (void)_readBodyWithRemainingLength:(NSUInteger)length completionBlock:(ReadBodyCompletionBlock)block {
-  DCHECK([_request hasBody]);
+  DCHECK([_request hasBody] && ![_request usesChunkedTransferEncoding]);
   [self _readBufferWithLength:length completionBlock:^(dispatch_data_t buffer) {
     
     if (buffer) {
-      NSInteger remainingLength = length - dispatch_data_get_size(buffer);
-      if (remainingLength >= 0) {
-        bool success = dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t offset, const void* bufferChunk, size_t size) {
-          NSInteger result = [_request write:bufferChunk maxLength:size];
-          if (result != (NSInteger)size) {
-            LOG_ERROR(@"Failed writing request body on socket %i (error %i)", _socket, (int)result);
+      if (dispatch_data_get_size(buffer) <= length) {
+        bool success = dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t offset, const void* chunkBytes, size_t chunkSize) {
+          NSData* data = [NSData dataWithBytesNoCopy:(void*)chunkBytes length:chunkSize freeWhenDone:NO];
+          NSError* error = nil;
+          if (![_request performWriteData:data error:&error]) {
+            LOG_ERROR(@"Failed writing request body on socket %i: %@", _socket, error);
             return false;
           }
           return true;
         });
         if (success) {
-          if (remainingLength > 0) {
+          NSUInteger remainingLength = length - dispatch_data_get_size(buffer);
+          if (remainingLength) {
             [self _readBodyWithRemainingLength:remainingLength completionBlock:block];
           } else {
             block(YES);
@@ -176,9 +178,78 @@ static dispatch_queue_t _formatterQueue = NULL;
           block(NO);
         }
       } else {
+        LOG_ERROR(@"Unexpected extra content reading request body on socket %i", _socket);
         block(NO);
         DNOT_REACHED();
       }
+    } else {
+      block(NO);
+    }
+    
+  }];
+}
+
+static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
+  char buffer[size + 1];
+  bcopy(bytes, buffer, size);
+  buffer[size] = 0;
+  char* end = NULL;
+  long result = strtol(buffer, &end, 16);
+  return ((end != NULL) && (*end == 0) && (result >= 0) ? result : NSNotFound);
+}
+
+- (void)_readNextBodyChunk:(NSMutableData*)chunkData completionBlock:(ReadBodyCompletionBlock)block {
+  DCHECK([_request hasBody] && [_request usesChunkedTransferEncoding]);
+  
+  while (1) {
+    NSRange range = [chunkData rangeOfData:_CRLFData options:0 range:NSMakeRange(0, chunkData.length)];
+    if (range.location == NSNotFound) {
+      break;
+    }
+    NSRange extensionRange = [chunkData rangeOfData:[NSData dataWithBytes:";" length:1] options:0 range:NSMakeRange(0, range.location)];  // Ignore chunk extensions
+    NSUInteger length = _ScanHexNumber((char*)chunkData.bytes, extensionRange.location != NSNotFound ? extensionRange.location : range.location);
+    if (length != NSNotFound) {
+      if (length) {
+        if (chunkData.length < range.location + range.length + length + 2) {
+          break;
+        }
+        const char* ptr = (char*)chunkData.bytes + range.location + range.length + length;
+        if ((*ptr == '\r') && (*(ptr + 1) == '\n')) {
+          NSError* error = nil;
+          if ([_request performWriteData:[chunkData subdataWithRange:NSMakeRange(range.location + range.length, length)] error:&error]) {
+            [chunkData replaceBytesInRange:NSMakeRange(0, range.location + range.length + length + 2) withBytes:NULL length:0];
+          } else {
+            LOG_ERROR(@"Failed writing request body on socket %i: %@", _socket, error);
+            block(NO);
+            return;
+          }
+        } else {
+          LOG_ERROR(@"Missing terminating CRLF sequence for chunk reading request body on socket %i", _socket);
+          block(NO);
+          return;
+        }
+      } else {
+        NSRange trailerRange = [chunkData rangeOfData:_CRLFCRLFData options:0 range:NSMakeRange(range.location, chunkData.length - range.location)];  // Ignore trailers
+        if (trailerRange.location != NSNotFound) {
+          block(YES);
+          return;
+        }
+      }
+    } else {
+      LOG_ERROR(@"Invalid chunk length reading request body on socket %i", _socket);
+      block(NO);
+      return;
+    }
+  }
+  
+  [self _readBufferWithLength:SIZE_T_MAX completionBlock:^(dispatch_data_t buffer) {
+    
+    if (buffer) {
+      dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t offset, const void* chunkBytes, size_t chunkSize) {
+        [chunkData appendBytes:chunkBytes length:chunkSize];
+        return true;
+      });
+      [self _readNextBodyChunk:chunkData completionBlock:block];
     } else {
       block(NO);
     }
@@ -234,27 +305,53 @@ static dispatch_queue_t _formatterQueue = NULL;
 
 - (void)_writeBodyWithCompletionBlock:(WriteBodyCompletionBlock)block {
   DCHECK([_response hasBody]);
-  void* buffer = malloc(kBodyWriteBufferSize);
-  NSInteger result = [_response read:buffer maxLength:kBodyWriteBufferSize];
-  if (result > 0) {
-    dispatch_data_t wrapper = dispatch_data_create(buffer, result, NULL, DISPATCH_DATA_DESTRUCTOR_FREE);
-    [self _writeBuffer:wrapper withCompletionBlock:^(BOOL success) {
-      
-      if (success) {
-        [self _writeBodyWithCompletionBlock:block];
-      } else {
-        block(NO);
+  NSError* error = nil;
+  NSData* data = [_response performReadData:&error];
+  if (data) {
+    if (data.length) {
+      if (_response.usesChunkedTransferEncoding) {
+        const char* hexString = [[NSString stringWithFormat:@"%lx", (unsigned long)data.length] UTF8String];
+        size_t hexLength = strlen(hexString);
+        NSData* chunk = [NSMutableData dataWithLength:(hexLength + 2 + data.length + 2)];
+        if (chunk == nil) {
+          LOG_ERROR(@"Failed allocating memory for response body chunk for socket %i: %@", _socket, error);
+          block(NO);
+          return;
+        }
+        char* ptr = (char*)[(NSMutableData*)chunk mutableBytes];
+        bcopy(hexString, ptr, hexLength);
+        ptr += hexLength;
+        *ptr++ = '\r';
+        *ptr++ = '\n';
+        bcopy(data.bytes, ptr, data.length);
+        ptr += data.length;
+        *ptr++ = '\r';
+        *ptr = '\n';
+        data = chunk;
       }
-      
-    }];
-    ARC_DISPATCH_RELEASE(wrapper);
-  } else if (result < 0) {
-    LOG_ERROR(@"Failed reading response body on socket %i (error %i)", _socket, (int)result);
-    block(NO);
-    free(buffer);
+      [self _writeData:data withCompletionBlock:^(BOOL success) {
+        
+        if (success) {
+          [self _writeBodyWithCompletionBlock:block];
+        } else {
+          block(NO);
+        }
+        
+      }];
+    } else {
+      if (_response.usesChunkedTransferEncoding) {
+        [self _writeData:_lastChunkData withCompletionBlock:^(BOOL success) {
+          
+          block(success);
+          
+        }];
+      } else {
+        block(YES);
+      }
+    }
   } else {
-    block(YES);
-    free(buffer);
+    LOG_ERROR(@"Failed reading response body for socket %i: %@", _socket, error);
+    block(NO);
   }
 }
 
@@ -265,9 +362,13 @@ static dispatch_queue_t _formatterQueue = NULL;
 @synthesize server=_server, localAddressData=_localAddress, remoteAddressData=_remoteAddress, totalBytesRead=_bytesRead, totalBytesWritten=_bytesWritten;
 
 + (void)initialize {
-  if (_separatorData == nil) {
-    _separatorData = [[NSData alloc] initWithBytes:"\r\n\r\n" length:4];
-    DCHECK(_separatorData);
+  if (_CRLFData == nil) {
+    _CRLFData = [[NSData alloc] initWithBytes:"\r\n" length:2];
+    DCHECK(_CRLFData);
+  }
+  if (_CRLFCRLFData == nil) {
+    _CRLFCRLFData = [[NSData alloc] initWithBytes:"\r\n\r\n" length:4];
+    DCHECK(_CRLFCRLFData);
   }
   if (_continueData == nil) {
     CFHTTPMessageRef message = CFHTTPMessageCreateResponse(kCFAllocatorDefault, 100, NULL, kCFHTTPVersion1_1);
@@ -279,61 +380,64 @@ static dispatch_queue_t _formatterQueue = NULL;
     CFRelease(message);
     DCHECK(_continueData);
   }
-  if (_dateFormatter == nil) {
-    DCHECK([NSThread isMainThread]);  // NSDateFormatter should be initialized on main thread
-    _dateFormatter = [[NSDateFormatter alloc] init];
-    _dateFormatter.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
-    _dateFormatter.dateFormat = @"EEE',' dd MMM yyyy HH':'mm':'ss 'GMT'";
-    _dateFormatter.locale = ARC_AUTORELEASE([[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]);
-    DCHECK(_dateFormatter);
-  }
-  if (_formatterQueue == NULL) {
-    _formatterQueue = dispatch_queue_create(NULL, DISPATCH_QUEUE_SERIAL);
-    DCHECK(_formatterQueue);
+  if (_lastChunkData == nil) {
+    _lastChunkData = [[NSData alloc] initWithBytes:"0\r\n\r\n" length:5];
   }
 }
 
 - (void)_initializeResponseHeadersWithStatusCode:(NSInteger)statusCode {
+  _statusCode = statusCode;
   _responseMessage = CFHTTPMessageCreateResponse(kCFAllocatorDefault, statusCode, NULL, kCFHTTPVersion1_1);
   CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Connection"), CFSTR("Close"));
   CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Server"), (ARC_BRIDGE CFStringRef)[[_server class] serverName]);
-  dispatch_sync(_formatterQueue, ^{
-    NSString* date = [_dateFormatter stringFromDate:[NSDate date]];
-    CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Date"), (ARC_BRIDGE CFStringRef)date);
-  });
-}
-
-- (void)_abortWithStatusCode:(NSUInteger)statusCode {
-  DCHECK(_responseMessage == NULL);
-  DCHECK((statusCode >= 400) && (statusCode < 600));
-  [self _initializeResponseHeadersWithStatusCode:statusCode];
-  [self _writeHeadersWithCompletionBlock:^(BOOL success) {
-    ;  // Nothing more to do
-  }];
-  LOG_DEBUG(@"Connection aborted with status code %i on socket %i", (int)statusCode, _socket);
+  CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Date"), (ARC_BRIDGE CFStringRef)GCDWebServerFormatHTTPDate([NSDate date]));
 }
 
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
 - (void)_processRequest {
   DCHECK(_responseMessage == NULL);
+  BOOL hasBody = NO;
   
   GCDWebServerResponse* response = [self processRequest:_request withBlock:_handler.processBlock];
-  if (![response hasBody] || [response open]) {
-    _response = ARC_RETAIN(response);
+  if (response) {
+    response = [self replaceResponse:response forRequest:_request];
+    if (response) {
+      if ([response hasBody]) {
+        [response prepareForReading];
+        hasBody = !_virtualHEAD;
+      }
+      NSError* error = nil;
+      if (hasBody && ![response performOpen:&error]) {
+        LOG_ERROR(@"Failed opening response body for socket %i: %@", _socket, error);
+      } else {
+        _response = ARC_RETAIN(response);
+      }
+    }
   }
   
   if (_response) {
     [self _initializeResponseHeadersWithStatusCode:_response.statusCode];
-    if (_response.cacheControlMaxAge > 0) {
-      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Cache-Control"), (ARC_BRIDGE CFStringRef)[NSString stringWithFormat:@"max-age=%i, public", (int)_response.cacheControlMaxAge]);
-    } else {
-      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Cache-Control"), CFSTR("no-cache"));
+    if (_response.lastModifiedDate) {
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Last-Modified"), (ARC_BRIDGE CFStringRef)GCDWebServerFormatHTTPDate(_response.lastModifiedDate));
+    }
+    if (_response.eTag) {
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("ETag"), (ARC_BRIDGE CFStringRef)_response.eTag);
+    }
+    if ((_response.statusCode >= 200) && (_response.statusCode < 300)) {
+      if (_response.cacheControlMaxAge > 0) {
+        CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Cache-Control"), (ARC_BRIDGE CFStringRef)[NSString stringWithFormat:@"max-age=%i, public", (int)_response.cacheControlMaxAge]);
+      } else {
+        CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Cache-Control"), CFSTR("no-cache"));
+      }
     }
     if (_response.contentType != nil) {
-      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Type"), (ARC_BRIDGE CFStringRef)_response.contentType);
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Type"), (ARC_BRIDGE CFStringRef)GCDWebServerNormalizeHeaderValue(_response.contentType));
     }
     if (_response.contentLength != NSNotFound) {
       CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Length"), (ARC_BRIDGE CFStringRef)[NSString stringWithFormat:@"%lu", (unsigned long)_response.contentLength]);
+    }
+    if (_response.usesChunkedTransferEncoding) {
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Transfer-Encoding"), CFSTR("chunked"));
     }
     [_response.additionalHeaders enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL* stop) {
       CFHTTPMessageSetHeaderFieldValue(_responseMessage, (ARC_BRIDGE CFStringRef)key, (ARC_BRIDGE CFStringRef)obj);
@@ -341,63 +445,87 @@ static dispatch_queue_t _formatterQueue = NULL;
     [self _writeHeadersWithCompletionBlock:^(BOOL success) {
       
       if (success) {
-        if ([_response hasBody]) {
+        if (hasBody) {
           [self _writeBodyWithCompletionBlock:^(BOOL successInner) {
             
-            [_response close];  // Can't do anything with result anyway
+            [_response performClose];  // TODO: There's nothing we can do on failure as headers have already been sent
             
           }];
         }
-      } else if ([_response hasBody]) {
-        [_response close];  // Can't do anything with result anyway
+      } else if (hasBody) {
+        [_response performClose];
       }
       
     }];
   } else {
-    [self _abortWithStatusCode:500];
+    [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
   }
   
 }
 
-- (void)_readRequestBody:(NSData*)initialData {
-  if ([_request open]) {
-    NSInteger length = _request.contentLength;
-    if (initialData.length) {
-      NSInteger result = [_request write:initialData.bytes maxLength:initialData.length];
-      if (result == (NSInteger)initialData.length) {
-        length -= initialData.length;
-        DCHECK(length >= 0);
-      } else {
-        LOG_ERROR(@"Failed writing request body on socket %i (error %i)", _socket, (int)result);
-        length = -1;
+- (void)_readBodyWithLength:(NSUInteger)length initialData:(NSData*)initialData {
+  NSError* error = nil;
+  if (![_request performOpen:&error]) {
+    LOG_ERROR(@"Failed opening request body for socket %i: %@", _socket, error);
+    [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
+    return;
+  }
+  
+  if (initialData.length) {
+    if (![_request performWriteData:initialData error:&error]) {
+      LOG_ERROR(@"Failed writing request body on socket %i: %@", _socket, error);
+      if (![_request performClose:&error]) {
+        LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
       }
+      [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
+      return;
     }
-    if (length > 0) {
-      [self _readBodyWithRemainingLength:length completionBlock:^(BOOL success) {
-        
-        if (![_request close]) {
-          success = NO;
-        }
-        if (success) {
-          [self _processRequest];
-        } else {
-          [self _abortWithStatusCode:500];
-        }
-        
-      }];
-    } else if (length == 0) {
-      if ([_request close]) {
+    length -= initialData.length;
+  }
+  
+  if (length) {
+    [self _readBodyWithRemainingLength:length completionBlock:^(BOOL success) {
+      
+      NSError* localError = nil;
+      if ([_request performClose:&localError]) {
         [self _processRequest];
       } else {
-        [self _abortWithStatusCode:500];
+        LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
+        [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
       }
-    } else {
-      [_request close];  // Can't do anything with result anyway
-      [self _abortWithStatusCode:500];
-    }
+      
+    }];
   } else {
-    [self _abortWithStatusCode:500];
+    if ([_request performClose:&error]) {
+      [self _processRequest];
+    } else {
+      LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
+      [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
+    }
   }
+}
+
+- (void)_readChunkedBodyWithInitialData:(NSData*)initialData {
+  NSError* error = nil;
+  if (![_request performOpen:&error]) {
+    LOG_ERROR(@"Failed opening request body for socket %i: %@", _socket, error);
+    [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
+    return;
+  }
+  
+  NSMutableData* chunkData = [[NSMutableData alloc] initWithData:initialData];
+  [self _readNextBodyChunk:chunkData completionBlock:^(BOOL success) {
+  
+    NSError* localError = nil;
+    if ([_request performClose:&localError]) {
+      [self _processRequest];
+    } else {
+      LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
+      [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
+    }
+    
+  }];
+  ARC_RELEASE(chunkData);
 }
 
 - (void)_readRequestHeaders {
@@ -405,8 +533,12 @@ static dispatch_queue_t _formatterQueue = NULL;
   [self _readHeadersWithCompletionBlock:^(NSData* extraData) {
     
     if (extraData) {
-      NSString* requestMethod = [ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestMethod(_requestMessage)) uppercaseString];
+      NSString* requestMethod = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestMethod(_requestMessage));  // Method verbs are case-sensitive and uppercase
       DCHECK(requestMethod);
+      if ([[_server class] shouldAutomaticallyMapHEADToGET] && [requestMethod isEqualToString:@"HEAD"]) {
+        requestMethod = @"GET";
+        _virtualHEAD = YES;
+      }
       NSURL* requestURL = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestURL(_requestMessage));
       DCHECK(requestURL);
       NSString* requestPath = GCDWebServerUnescapeURLString(ARC_BRIDGE_RELEASE(CFURLCopyPath((CFURLRef)requestURL)));  // Don't use -[NSURL path] which strips the ending slash
@@ -417,7 +549,7 @@ static dispatch_queue_t _formatterQueue = NULL;
         requestQuery = GCDWebServerParseURLEncodedForm(queryString);
         DCHECK(requestQuery);
       }
-      NSDictionary* requestHeaders = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyAllHeaderFields(_requestMessage));
+      NSDictionary* requestHeaders = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyAllHeaderFields(_requestMessage));  // Header names are case-insensitive but CFHTTPMessageCopyAllHeaderFields() will standardize the common ones
       DCHECK(requestHeaders);
       for (_handler in _server.handlers) {
         _request = ARC_RETAIN(_handler.matchBlock(requestMethod, requestURL, requestHeaders, requestPath, requestQuery));
@@ -426,37 +558,48 @@ static dispatch_queue_t _formatterQueue = NULL;
         }
       }
       if (_request) {
-        if (_request.hasBody) {
-          if (extraData.length <= _request.contentLength) {
+        if ([_request hasBody]) {
+          [_request prepareForWriting];
+          if (_request.usesChunkedTransferEncoding || (extraData.length <= _request.contentLength)) {
             NSString* expectHeader = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyHeaderFieldValue(_requestMessage, CFSTR("Expect")));
             if (expectHeader) {
               if ([expectHeader caseInsensitiveCompare:@"100-continue"] == NSOrderedSame) {
                 [self _writeData:_continueData withCompletionBlock:^(BOOL success) {
                   
                   if (success) {
-                    [self _readRequestBody:extraData];
+                    if (_request.usesChunkedTransferEncoding) {
+                      [self _readChunkedBodyWithInitialData:extraData];
+                    } else {
+                      [self _readBodyWithLength:_request.contentLength initialData:extraData];
+                    }
                   }
                   
                 }];
               } else {
                 LOG_ERROR(@"Unsupported 'Expect' / 'Content-Length' header combination on socket %i", _socket);
-                [self _abortWithStatusCode:417];
+                [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_ExpectationFailed];
               }
             } else {
-              [self _readRequestBody:extraData];
+              if (_request.usesChunkedTransferEncoding) {
+                [self _readChunkedBodyWithInitialData:extraData];
+              } else {
+                [self _readBodyWithLength:_request.contentLength initialData:extraData];
+              }
             }
           } else {
             LOG_ERROR(@"Unexpected 'Content-Length' header value on socket %i", _socket);
-            [self _abortWithStatusCode:400];
+            [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_BadRequest];
           }
         } else {
           [self _processRequest];
         }
       } else {
-        [self _abortWithStatusCode:405];
+        _request = [[GCDWebServerRequest alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:requestPath query:requestQuery];
+        DCHECK(_request);
+        [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_MethodNotAllowed];
       }
     } else {
-      [self _abortWithStatusCode:500];
+      [self abortRequest:nil withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
     }
     
   }];
@@ -533,11 +676,10 @@ static NSString* _StringFromAddressData(NSData* data) {
 }
 
 - (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block {
-  LOG_DEBUG(@"Connection on socket %i processing %@ request for \"%@\" (%lu bytes body)", _socket, _request.method, _request.path, (unsigned long)_request.contentLength);
+  LOG_DEBUG(@"Connection on socket %i processing request \"%@ %@\" with %lu bytes body", _socket, _virtualHEAD ? @"HEAD" : _request.method, _request.path, (unsigned long)_bytesRead);
   GCDWebServerResponse* response = nil;
   @try {
     response = block(request);
-    LOG_VERBOSE(@"%@ | %@ \"%@ %@\" %i %lu", self.localAddressString, self.remoteAddressString, _request.method, _request.path, (int)response.statusCode, (unsigned long)(response.contentLength != NSNotFound ? response.contentLength : 0));
   }
   @catch (NSException* exception) {
     LOG_EXCEPTION(exception);
@@ -545,12 +687,52 @@ static NSString* _StringFromAddressData(NSData* data) {
   return response;
 }
 
+// http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.26
+static inline BOOL _CompareResources(NSString* responseETag, NSString* requestETag, NSDate* responseLastModified, NSDate* requestLastModified) {
+  if ([requestETag isEqualToString:@"*"] && (!responseLastModified || !requestLastModified || ([responseLastModified compare:requestLastModified] != NSOrderedDescending))) {
+    return YES;
+  } else {
+    if ([responseETag isEqualToString:requestETag]) {
+      return YES;
+    }
+    if (responseLastModified && requestLastModified && ([responseLastModified compare:requestLastModified] != NSOrderedDescending)) {
+      return YES;
+    }
+  }
+  return NO;
+}
+
+- (GCDWebServerResponse*)replaceResponse:(GCDWebServerResponse*)response forRequest:(GCDWebServerRequest*)request {
+  if ((response.statusCode >= 200) && (response.statusCode < 300) && _CompareResources(response.eTag, request.ifNoneMatch, response.lastModifiedDate, request.ifModifiedSince)) {
+    NSInteger code = [request.method isEqualToString:@"HEAD"] || [request.method isEqualToString:@"GET"] ? kGCDWebServerHTTPStatusCode_NotModified : kGCDWebServerHTTPStatusCode_PreconditionFailed;
+    GCDWebServerResponse* newResponse = [GCDWebServerResponse responseWithStatusCode:code];
+    newResponse.cacheControlMaxAge = response.cacheControlMaxAge;
+    newResponse.lastModifiedDate = response.lastModifiedDate;
+    newResponse.eTag = response.eTag;
+    DCHECK(newResponse);
+    return newResponse;
+  }
+  return response;
+}
+
+- (void)abortRequest:(GCDWebServerRequest*)request withStatusCode:(NSInteger)statusCode {
+  DCHECK(_responseMessage == NULL);
+  DCHECK((statusCode >= 400) && (statusCode < 600));
+  [self _initializeResponseHeadersWithStatusCode:statusCode];
+  [self _writeHeadersWithCompletionBlock:^(BOOL success) {
+    ;  // Nothing more to do
+  }];
+  LOG_DEBUG(@"Connection aborted with status code %i on socket %i", (int)statusCode, _socket);
+}
+
 - (void)close {
   int result = close(_socket);
   if (result != 0) {
     LOG_ERROR(@"Failed closing socket %i for connection (%i): %s", _socket, errno, strerror(errno));
+  } else {
+    LOG_DEBUG(@"Did close connection on socket %i", _socket);
   }
-  LOG_DEBUG(@"Did close connection on socket %i", _socket);
+  LOG_VERBOSE(@"[%@] %@ %i \"%@ %@\" (%lu | %lu)", self.localAddressString, self.remoteAddressString, (int)_statusCode, _virtualHEAD ? @"HEAD" : _request.method, _request.path, (unsigned long)_bytesRead, (unsigned long)_bytesWritten);
 }
 
 @end

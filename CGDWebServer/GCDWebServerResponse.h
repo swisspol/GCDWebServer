@@ -27,63 +27,29 @@
 
 #import <Foundation/Foundation.h>
 
-typedef NSData* (^GCDWebServerChunkBlock)();
-
-@interface GCDWebServerResponse : NSObject
-@property(nonatomic, copy) NSString* contentType;  // Default is nil i.e. no body
-@property(nonatomic) NSUInteger contentLength;  // Default is NSNotFound i.e. undefined
-@property(nonatomic) NSInteger statusCode;  // Default is 200
-@property(nonatomic) NSUInteger cacheControlMaxAge;  // Default is 0 seconds i.e. "no-cache"
-@property(nonatomic, readonly) NSDictionary* additionalHeaders;
-+ (GCDWebServerResponse*) response;
-- (id)init;
-- (void)setValue:(NSString*)value forAdditionalHeader:(NSString*)header;
-- (BOOL)hasBody;  // Convenience method
+@protocol GCDWebServerBodyReader <NSObject>
+- (BOOL)open:(NSError**)error;  // Return NO on error ("error" is guaranteed to be non-NULL)
+- (NSData*)readData:(NSError**)error;  // Must return nil on error or empty NSData if at end ("error" is guaranteed to be non-NULL)
+- (void)close;
 @end
 
-@interface GCDWebServerResponse (Subclassing)
-- (BOOL)open;  // Implementation required
-- (NSInteger)read:(void*)buffer maxLength:(NSUInteger)length;  // Implementation required
-- (BOOL)close;  // Implementation required
+@interface GCDWebServerResponse : NSObject <GCDWebServerBodyReader>
+@property(nonatomic, copy) NSString* contentType;  // Default is nil i.e. no body (must be set if a body is present)
+@property(nonatomic) NSUInteger contentLength;  // Default is NSNotFound i.e. undefined (if a body is present but length is undefined, chunked transfer encoding will be enabled)
+@property(nonatomic) NSInteger statusCode;  // Default is 200
+@property(nonatomic) NSUInteger cacheControlMaxAge;  // Default is 0 seconds i.e. "Cache-Control: no-cache"
+@property(nonatomic, retain) NSDate* lastModifiedDate;  // Default is nil i.e. no "Last-Modified" header
+@property(nonatomic, copy) NSString* eTag;  // Default is nil i.e. no "ETag" header
+@property(nonatomic, getter=isGZipContentEncodingEnabled) BOOL gzipContentEncodingEnabled;  // Default is disabled
++ (instancetype)response;
+- (instancetype)init;
+- (void)setValue:(NSString*)value forAdditionalHeader:(NSString*)header;  // Pass nil value to remove header
+- (BOOL)hasBody;  // Convenience method that checks if "contentType" is not nil
 @end
 
 @interface GCDWebServerResponse (Extensions)
-+ (GCDWebServerResponse*)responseWithStatusCode:(NSInteger)statusCode;
-+ (GCDWebServerResponse*)responseWithRedirect:(NSURL*)location permanent:(BOOL)permanent;
-- (id)initWithStatusCode:(NSInteger)statusCode;
-- (id)initWithRedirect:(NSURL*)location permanent:(BOOL)permanent;
-@end
-
-@interface GCDWebServerDataResponse : GCDWebServerResponse
-+ (GCDWebServerDataResponse*)responseWithData:(NSData*)data contentType:(NSString*)type;
-- (id)initWithData:(NSData*)data contentType:(NSString*)type;
-@end
-
-@interface GCDWebServerDataResponse (Extensions)
-+ (GCDWebServerDataResponse*)responseWithText:(NSString*)text;
-+ (GCDWebServerDataResponse*)responseWithHTML:(NSString*)html;
-+ (GCDWebServerDataResponse*)responseWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables;
-+ (GCDWebServerDataResponse*)responseWithJSONObject:(id)object;
-+ (GCDWebServerDataResponse*)responseWithJSONObject:(id)object contentType:(NSString*)type;
-- (id)initWithText:(NSString*)text;  // Encodes using UTF-8
-- (id)initWithHTML:(NSString*)html;  // Encodes using UTF-8
-- (id)initWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables;  // Simple template system that replaces all occurences of "%variable%" with corresponding value (encodes using UTF-8)
-- (id)initWithJSONObject:(id)object;
-- (id)initWithJSONObject:(id)object contentType:(NSString*)type;
-@end
-
-@interface GCDWebServerFileResponse : GCDWebServerResponse
-+ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path;
-+ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path isAttachment:(BOOL)attachment;
-+ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path byteRange:(NSRange)range;
-+ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment;
-- (id)initWithFile:(NSString*)path;
-- (id)initWithFile:(NSString*)path isAttachment:(BOOL)attachment;
-- (id)initWithFile:(NSString*)path byteRange:(NSRange)range;  // Pass [NSNotFound, 0] to disable byte range entirely, [offset, length] to enable byte range from beginning of file or [NSNotFound, -bytes] from end of file
-- (id)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment;
-@end
-
-@interface GCDWebServerChunkedResponse : GCDWebServerResponse  // Use chunked transfer encoding
-+ (GCDWebServerChunkedResponse*)responseWithContentType:(NSString*)type chunkBlock:(GCDWebServerChunkBlock)block;
-- (id)initWithContentType:(NSString*)type chunkBlock:(GCDWebServerChunkBlock)block;  // Return nil when done
++ (instancetype)responseWithStatusCode:(NSInteger)statusCode;
++ (instancetype)responseWithRedirect:(NSURL*)location permanent:(BOOL)permanent;
+- (instancetype)initWithStatusCode:(NSInteger)statusCode;
+- (instancetype)initWithRedirect:(NSURL*)location permanent:(BOOL)permanent;
 @end

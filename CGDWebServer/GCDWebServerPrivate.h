@@ -50,7 +50,19 @@
 #define ARC_DISPATCH_RELEASE(__OBJECT__) dispatch_release(__OBJECT__)
 #endif
 
+#import "GCDWebServerHTTPStatusCodes.h"
+
 #import "GCDWebServerConnection.h"
+
+#import "GCDWebServerDataRequest.h"
+#import "GCDWebServerFileRequest.h"
+#import "GCDWebServerMultiPartFormRequest.h"
+#import "GCDWebServerURLEncodedFormRequest.h"
+
+#import "GCDWebServerDataResponse.h"
+#import "GCDWebServerErrorResponse.h"
+#import "GCDWebServerFileResponse.h"
+#import "GCDWebServerStreamingResponse.h"
 
 #ifdef __GCDWEBSERVER_LOGGING_HEADER__
 
@@ -90,6 +102,19 @@ extern void GCDLogMessage(long level, NSString* format, ...) NS_FORMAT_FUNCTION(
 
 #define kGCDWebServerDefaultMimeType @"application/octet-stream"
 #define kGCDWebServerGCDQueue dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+#define kGCDWebServerErrorDomain @"GCDWebServerErrorDomain"
+
+static inline BOOL GCDWebServerIsValidByteRange(NSRange range) {
+  return ((range.location != NSNotFound) || (range.length > 0));
+}
+
+extern NSString* GCDWebServerNormalizeHeaderValue(NSString* value);
+extern NSString* GCDWebServerTruncateHeaderValue(NSString* value);
+extern NSString* GCDWebServerExtractHeaderValueParameter(NSString* header, NSString* attribute);
+extern NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset);
+extern NSString* GCDWebServerFormatHTTPDate(NSDate* date);
+extern NSDate* GCDWebServerParseHTTPDate(NSString* string);
+extern NSString* GCDWebServerDescribeData(NSData* data, NSString* contentType);
 
 @interface GCDWebServerConnection ()
 - (id)initWithServer:(GCDWebServer*)server localAddress:(NSData*)localAddress remoteAddress:(NSData*)remoteAddress socket:(CFSocketNativeHandle)socket;
@@ -103,4 +128,21 @@ extern void GCDLogMessage(long level, NSString* format, ...) NS_FORMAT_FUNCTION(
 @property(nonatomic, readonly) GCDWebServerMatchBlock matchBlock;
 @property(nonatomic, readonly) GCDWebServerProcessBlock processBlock;
 - (id)initWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
+@end
+
+@interface GCDWebServerRequest ()
+@property(nonatomic, readonly) BOOL usesChunkedTransferEncoding;
+- (void)prepareForWriting;
+- (BOOL)performOpen:(NSError**)error;
+- (BOOL)performWriteData:(NSData*)data error:(NSError**)error;
+- (BOOL)performClose:(NSError**)error;
+@end
+
+@interface GCDWebServerResponse ()
+@property(nonatomic, readonly) NSDictionary* additionalHeaders;
+@property(nonatomic, readonly) BOOL usesChunkedTransferEncoding;
+- (void)prepareForReading;
+- (BOOL)performOpen:(NSError**)error;
+- (NSData*)performReadData:(NSError**)error;
+- (void)performClose;
 @end

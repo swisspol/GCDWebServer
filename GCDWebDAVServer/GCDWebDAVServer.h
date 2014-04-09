@@ -25,35 +25,34 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// Requires HEADER_SEARCH_PATHS = "$(SDKROOT)/usr/include/libxml2" in Xcode build settings
+
 #import "GCDWebServer.h"
 
-@class GCDWebUploader;
+@class GCDWebDAVServer;
 
-@protocol GCDWebUploaderDelegate <NSObject>
+@protocol GCDWebDAVServerDelegate <NSObject>
 @optional
-- (void)webUploader:(GCDWebUploader*)uploader didDownloadFileAtPath:(NSString*)path;
-- (void)webUploader:(GCDWebUploader*)uploader didUploadFileAtPath:(NSString*)path;
-- (void)webUploader:(GCDWebUploader*)uploader didMoveItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath;
-- (void)webUploader:(GCDWebUploader*)uploader didDeleteItemAtPath:(NSString*)path;
-- (void)webUploader:(GCDWebUploader*)uploader didCreateDirectoryAtPath:(NSString*)path;
+- (void)davServer:(GCDWebDAVServer*)uploader didDownloadFileAtPath:(NSString*)path;
+- (void)davServer:(GCDWebDAVServer*)uploader didUploadFileAtPath:(NSString*)path;
+- (void)davServer:(GCDWebDAVServer*)uploader didMoveItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath;
+- (void)davServer:(GCDWebDAVServer*)uploader didCopyItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath;
+- (void)davServer:(GCDWebDAVServer*)uploader didDeleteItemAtPath:(NSString*)path;
+- (void)davServer:(GCDWebDAVServer*)uploader didCreateDirectoryAtPath:(NSString*)path;
 @end
 
-@interface GCDWebUploader : GCDWebServer
+@interface GCDWebDAVServer : GCDWebServer
 @property(nonatomic, readonly) NSString* uploadDirectory;
-@property(nonatomic, assign) id<GCDWebUploaderDelegate> delegate;
+@property(nonatomic, assign) id<GCDWebDAVServerDelegate> delegate;
 @property(nonatomic, copy) NSArray* allowedFileExtensions;  // Default is nil i.e. all file extensions are allowed
 @property(nonatomic) BOOL showHiddenFiles;  // Default is NO
-@property(nonatomic, copy) NSString* title;  // Default is application name (must be HTML escaped)
-@property(nonatomic, copy) NSString* header;  // Default is same as title (must be HTML escaped)
-@property(nonatomic, copy) NSString* prologue;  // Default is mini help (must be raw HTML)
-@property(nonatomic, copy) NSString* epilogue;  // Default is nothing (must be raw HTML)
-@property(nonatomic, copy) NSString* footer;  // Default is application name and version (must be HTML escaped)
 - (instancetype)initWithUploadDirectory:(NSString*)path;
 @end
 
-@interface GCDWebUploader (Subclassing)
+@interface GCDWebDAVServer (Subclassing)
 - (BOOL)shouldUploadFileAtPath:(NSString*)path withTemporaryFile:(NSString*)tempPath;  // Default implementation returns YES
 - (BOOL)shouldMoveItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath;  // Default implementation returns YES
+- (BOOL)shouldCopyItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath;  // Default implementation returns YES
 - (BOOL)shouldDeleteItemAtPath:(NSString*)path;  // Default implementation returns YES
 - (BOOL)shouldCreateDirectoryAtPath:(NSString*)path;  // Default implementation returns YES
 @end

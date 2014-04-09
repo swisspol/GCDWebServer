@@ -25,26 +25,43 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import "GCDWebServer.h"
+#import "GCDWebServerPrivate.h"
 
-@class GCDWebServerHandler;
-
-@interface GCDWebServerConnection : NSObject
-@property(nonatomic, readonly) GCDWebServer* server;
-@property(nonatomic, readonly) NSData* localAddressData;  // struct sockaddr
-@property(nonatomic, readonly) NSString* localAddressString;
-@property(nonatomic, readonly) NSData* remoteAddressData;  // struct sockaddr
-@property(nonatomic, readonly) NSString* remoteAddressString;
-@property(nonatomic, readonly) NSUInteger totalBytesRead;
-@property(nonatomic, readonly) NSUInteger totalBytesWritten;
+@interface GCDWebServerStreamingResponse () {
+@private
+  GCDWebServerStreamBlock _block;
+}
 @end
 
-@interface GCDWebServerConnection (Subclassing)
-- (void)open;
-- (void)didUpdateBytesRead;  // Called from arbitrary thread after @totalBytesRead is updated - Default implementation does nothing
-- (void)didUpdateBytesWritten;  // Called from arbitrary thread after @totalBytesWritten is updated - Default implementation does nothing
-- (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block;  // Only called if the request can be processed
-- (GCDWebServerResponse*)replaceResponse:(GCDWebServerResponse*)response forRequest:(GCDWebServerRequest*)request;  // Default implementation replaces any response matching the "ETag" or "Last-Modified-Date" header of the request by a barebone "Not-Modified" (304) one
-- (void)abortRequest:(GCDWebServerRequest*)request withStatusCode:(NSInteger)statusCode;  // If request headers was malformed, "request" will be nil
-- (void)close;
+@implementation GCDWebServerStreamingResponse
+
++ (instancetype)responseWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block {
+  return ARC_AUTORELEASE([[[self class] alloc] initWithContentType:type streamBlock:block]);
+}
+
+- (instancetype)initWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block {
+  if ((self = [super init])) {
+    _block = [block copy];
+    
+    self.contentType = type;
+  }
+  return self;
+}
+
+- (void)dealloc {
+  ARC_RELEASE(_block);
+  
+  ARC_DEALLOC(super);
+}
+
+- (NSData*)readData:(NSError**)error {
+  return _block(error);
+}
+
+- (NSString*)description {
+  NSMutableString* description = [NSMutableString stringWithString:[super description]];
+  [description appendString:@"\n\n<STREAM>"];
+  return description;
+}
+
 @end

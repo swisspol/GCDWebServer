@@ -25,26 +25,49 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import "GCDWebServer.h"
+#import "GCDWebServerPrivate.h"
 
-@class GCDWebServerHandler;
-
-@interface GCDWebServerConnection : NSObject
-@property(nonatomic, readonly) GCDWebServer* server;
-@property(nonatomic, readonly) NSData* localAddressData;  // struct sockaddr
-@property(nonatomic, readonly) NSString* localAddressString;
-@property(nonatomic, readonly) NSData* remoteAddressData;  // struct sockaddr
-@property(nonatomic, readonly) NSString* remoteAddressString;
-@property(nonatomic, readonly) NSUInteger totalBytesRead;
-@property(nonatomic, readonly) NSUInteger totalBytesWritten;
+@interface GCDWebServerURLEncodedFormRequest () {
+@private
+  NSDictionary* _arguments;
+}
 @end
 
-@interface GCDWebServerConnection (Subclassing)
-- (void)open;
-- (void)didUpdateBytesRead;  // Called from arbitrary thread after @totalBytesRead is updated - Default implementation does nothing
-- (void)didUpdateBytesWritten;  // Called from arbitrary thread after @totalBytesWritten is updated - Default implementation does nothing
-- (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block;  // Only called if the request can be processed
-- (GCDWebServerResponse*)replaceResponse:(GCDWebServerResponse*)response forRequest:(GCDWebServerRequest*)request;  // Default implementation replaces any response matching the "ETag" or "Last-Modified-Date" header of the request by a barebone "Not-Modified" (304) one
-- (void)abortRequest:(GCDWebServerRequest*)request withStatusCode:(NSInteger)statusCode;  // If request headers was malformed, "request" will be nil
-- (void)close;
+@implementation GCDWebServerURLEncodedFormRequest
+
+@synthesize arguments=_arguments;
+
++ (NSString*)mimeType {
+  return @"application/x-www-form-urlencoded";
+}
+
+- (void)dealloc {
+  ARC_RELEASE(_arguments);
+  
+  ARC_DEALLOC(super);
+}
+
+- (BOOL)close:(NSError**)error {
+  if (![super close:error]) {
+    return NO;
+  }
+  
+  NSString* charset = GCDWebServerExtractHeaderValueParameter(self.contentType, @"charset");
+  NSString* string = [[NSString alloc] initWithData:self.data encoding:GCDWebServerStringEncodingFromCharset(charset)];
+  _arguments = ARC_RETAIN(GCDWebServerParseURLEncodedForm(string));
+  DCHECK(_arguments);
+  ARC_RELEASE(string);
+  
+  return YES;
+}
+
+- (NSString*)description {
+  NSMutableString* description = [NSMutableString stringWithString:[super description]];
+  [description appendString:@"\n"];
+  for (NSString* argument in [[_arguments allKeys] sortedArrayUsingSelector:@selector(compare:)]) {
+    [description appendFormat:@"\n%@ = %@", argument, [_arguments objectForKey:argument]];
+  }
+  return description;
+}
+
 @end

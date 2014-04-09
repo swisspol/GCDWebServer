@@ -51,6 +51,7 @@ NSString* GCDWebServerGetPrimaryIPv4Address();  // Returns IPv4 address of prima
 @property(nonatomic, readonly, getter=isRunning) BOOL running;
 @property(nonatomic, readonly) NSUInteger port;
 @property(nonatomic, readonly) NSString* bonjourName;  // Only non-nil if Bonjour registration is active
+- (instancetype)init;
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
 - (void)removeAllHandlers;
 
@@ -62,6 +63,7 @@ NSString* GCDWebServerGetPrimaryIPv4Address();  // Returns IPv4 address of prima
 @interface GCDWebServer (Subclassing)
 + (Class)connectionClass;
 + (NSString*)serverName;  // Default is class name
++ (BOOL)shouldAutomaticallyMapHEADToGET;  // Default is YES which means HEAD requests are mapped to GET requests with the response body being discarded
 @end
 
 @interface GCDWebServer (Extensions)
@@ -82,4 +84,11 @@ NSString* GCDWebServerGetPrimaryIPv4Address();  // Returns IPv4 address of prima
 - (void)addGETHandlerForPath:(NSString*)path staticData:(NSData*)staticData contentType:(NSString*)contentType cacheAge:(NSUInteger)cacheAge;  // Path is case-insensitive
 - (void)addGETHandlerForPath:(NSString*)path filePath:(NSString*)filePath isAttachment:(BOOL)isAttachment cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests;  // Path is case-insensitive
 - (void)addGETHandlerForBasePath:(NSString*)basePath directoryPath:(NSString*)directoryPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests;  // Base path is recursive and case-sensitive
+@end
+
+@interface GCDWebServer (Logging)
+- (void)logVerbose:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
+- (void)logInfo:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
+- (void)logWarning:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
+- (void)logError:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
 @end

@@ -2,16 +2,22 @@ Overview
 ========
 
 GCDWebServer is a lightweight GCD based HTTP 1.1 server designed to be embedded in Mac & iOS apps. It was written from scratch with the following goals in mind:
-* Easy to use and understand: only 4 main classes and less than 10 source code files
+* Easy to use and understand architecture with only 4 core classes: server, connection, request and response
 * Well designed API for easy integration and customization
-* Entirely built with an event-driven design using [Grand Central Dispatch](http://en.wikipedia.org/wiki/Grand_Central_Dispatch) for maximum performance and concurrency
-* Support for streaming large HTTP bodies for requests and responses to minimize memory usage
-* Built-in parser for web forms submitted using "application/x-www-form-urlencoded" or "multipart/form-data" encodings (including file uploads)
+* Entirely built with an event-driven design using [Grand Central Dispatch](http://en.wikipedia.org/wiki/Grand_Central_Dispatch) for maximal performance and concurrency
 * No dependencies on third-party source code
 * Available under a friendly [New BSD License](LICENSE)
 
+Extra built-in features:
+* Minimize memory usage with disk streaming of large HTTP request or response bodies
+* Parser for [web forms](http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4) submitted using "application/x-www-form-urlencoded" or "multipart/form-data" encodings (including file uploads)
+* [JSON](http://www.json.org/) parsing and serialization for request and response HTTP bodies
+* [Chunked transfer encoding](https://en.wikipedia.org/wiki/Chunked_transfer_encoding) for request and response HTTP bodies
+* [HTTP compression](https://en.wikipedia.org/wiki/HTTP_compression) with gzip for request and response HTTP bodies
+
 Included extensions:
 * [GCDWebUploader](GCDWebUploader/GCDWebUploader.h): subclass of GCDWebServer that implements an interface for uploading and downloading files from an iOS app's sandbox using a web browser
+* [GCDWebDAVServer](GCDWebDAVServer/GCDWebDAVServer.h): subclass of GCDWebServer that implements a class 1 [WebDAV](https://en.wikipedia.org/wiki/WebDAV) server (with partial class 2 support for OS X Finder)
 
 What's not available out of the box but can be implemented on top of the API:
 * Authentication like [Basic Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication)
@@ -24,6 +30,16 @@ What's not supported (but not really required from an embedded HTTP server):
 Requirements:
 * OS X 10.7 or later (x86_64)
 * iOS 5.0 or later (armv7, armv7s or arm64)
+
+Getting Started
+===============
+
+Download or checkout the source for GCDWebServer then add the entire "GCDWebServer" subfolder to your Xcode project. If you intend to use one of the extensions like GCDWebDAVServer or GCDWebUploader, add these subfolders as well.
+
+Alternatively, you can install GCDWebServer using [CocoaPods](http://cocoapods.org/) by simply adding this line to your Xcode project's Podfile:
+```
+pod "GCDWebServer", "~> 2.0"
+```
 
 Hello World
 ===========
@@ -59,10 +75,10 @@ int main(int argc, const char* argv[]) {
 }
 ```
 
-Adding File Upload to iOS Apps
-==============================
+Web Based Uploads in iOS Apps
+=============================
 
-GCDWebUploader is a subclass of GCDWebServer that provides a ready-to-use HTML 5 file uploader & downloader. This lets users upload, download and delete files from a directory inside your iOS app's sandbox using a clean user interface in their web browser.
+GCDWebUploader is a subclass of GCDWebServer that provides a ready-to-use HTML 5 file uploader & downloader. This lets users upload, download, delete files and create directories from a directory inside your iOS app's sandbox using a clean user interface in their web browser.
 
 Simply instantiate and run a GCDWebUploader instance then visit http://{YOUR-IOS-DEVICE-IP-ADDRESS}/ from your web browser:
 
@@ -74,6 +90,27 @@ Simply instantiate and run a GCDWebUploader instance then visit http://{YOUR-IOS
   GCDWebUploader* webUploader = [[GCDWebUploader alloc] initWithUploadDirectory:documentsPath];
   [webUploader start];
   NSLog(@"Visit %@ in your web browser", webUploader.serverURL);
+  return YES;
+}
+```
+
+WebDAV Server in iOS Apps
+=========================
+
+GCDWebDAVServer is a subclass of GCDWebServer that provides a class 1 compliant [WebDAV](https://en.wikipedia.org/wiki/WebDAV) server. This lets users upload, download, delete files and create directories from a directory inside your iOS app's sandbox using any WebDAV client like [Transmit](https://panic.com/transmit/) (Mac), [ForkLift](http://binarynights.com/forklift/) (Mac) or [CyberDuck](http://cyberduck.io/) (Mac / Windows).
+
+GCDWebDAVServer should also work with the [OS X Finder](http://support.apple.com/kb/PH13859) as it is partially class 2 compliant (but only when the client is the OS X WebDAV implementation).
+
+Simply instantiate and run a GCDWebDAVServer instance then connect to http://{YOUR-IOS-DEVICE-IP-ADDRESS}/ using a WebDAV client:
+
+```objectivec
+#import "GCDWebDAVServer.h"
+
+- (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
+  NSString* documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+  GCDWebDAVServer* davServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:documentsPath];
+  [davServer start];
+  NSLog(@"Visit %@ in your WebDAV client", davServer.serverURL);
   return YES;
 }
 ```
@@ -224,6 +261,6 @@ NSString* websitePath = [[NSBundle mainBundle] pathForResource:@"Website" ofType
 Final Example: File Downloads and Uploads From iOS App
 ======================================================
 
-GCDWebServer was originally written for the [ComicFlow](http://itunes.apple.com/us/app/comicflow/id409290355?mt=8) comic reader app for iPad. It uses it to provide a web server for people to upload and download comic files directly over WiFi to and from the app.
+GCDWebServer was originally written for the [ComicFlow](http://itunes.apple.com/us/app/comicflow/id409290355?mt=8) comic reader app for iPad. It allow users to connect to their iPad with their web browser over WiFi and then upload, download and organize comic files inside the app.
 
 ComicFlow is [entirely open-source](https://github.com/swisspol/ComicFlow) and you can see how it uses GCDWebUploader in the [WebServer.m](https://github.com/swisspol/ComicFlow/blob/master/Classes/WebServer.m) file.

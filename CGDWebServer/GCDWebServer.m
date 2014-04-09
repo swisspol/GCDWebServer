@@ -63,6 +63,8 @@
 }
 @end
 
+static NSDateFormatter* _dateFormatterRFC822 = nil;
+static dispatch_queue_t _dateFormatterQueue = NULL;
 #if !TARGET_OS_IPHONE
 static BOOL _run;
 #endif
@@ -87,6 +89,78 @@ void GCDLogMessage(long level, NSString* format, ...) {
 }
 
 #endif
+
+NSString* GCDWebServerNormalizeHeaderValue(NSString* value) {
+  if (value) {
+    NSRange range = [value rangeOfString:@";"];  // Assume part before ";" separator is case-insensitive
+    if (range.location != NSNotFound) {
+      value = [[[value substringToIndex:range.location] lowercaseString] stringByAppendingString:[value substringFromIndex:range.location]];
+    } else {
+      value = [value lowercaseString];
+    }
+  }
+  return value;
+}
+
+NSString* GCDWebServerTruncateHeaderValue(NSString* value) {
+  DCHECK([value isEqualToString:GCDWebServerNormalizeHeaderValue(value)]);
+  NSRange range = [value rangeOfString:@";"];
+  return range.location != NSNotFound ? [value substringToIndex:range.location] : value;
+}
+
+NSString* GCDWebServerExtractHeaderValueParameter(NSString* value, NSString* name) {
+  DCHECK([value isEqualToString:GCDWebServerNormalizeHeaderValue(value)]);
+  NSString* parameter = nil;
+  NSScanner* scanner = [[NSScanner alloc] initWithString:value];
+  [scanner setCaseSensitive:NO];  // Assume parameter names are case-insensitive
+  NSString* string = [NSString stringWithFormat:@"%@=", name];
+  if ([scanner scanUpToString:string intoString:NULL]) {
+    [scanner scanString:string intoString:NULL];
+    if ([scanner scanString:@"\"" intoString:NULL]) {
+      [scanner scanUpToString:@"\"" intoString:&parameter];
+    } else {
+      [scanner scanUpToCharactersFromSet:[NSCharacterSet whitespaceCharacterSet] intoString:&parameter];
+    }
+  }
+  ARC_RELEASE(scanner);
+  return parameter;
+}
+
+// http://www.w3schools.com/tags/ref_charactersets.asp
+NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset) {
+  NSStringEncoding encoding = kCFStringEncodingInvalidId;
+  if (charset) {
+    encoding = CFStringConvertEncodingToNSStringEncoding(CFStringConvertIANACharSetNameToEncoding((CFStringRef)charset));
+  }
+  return (encoding != kCFStringEncodingInvalidId ? encoding : NSUTF8StringEncoding);
+}
+
+NSString* GCDWebServerFormatHTTPDate(NSDate* date) {
+  __block NSString* string;
+  dispatch_sync(_dateFormatterQueue, ^{
+    string = [_dateFormatterRFC822 stringFromDate:date];  // HTTP/1.1 server must use RFC822
+  });
+  return string;
+}
+
+NSDate* GCDWebServerParseHTTPDate(NSString* string) {
+  __block NSDate* date;
+  dispatch_sync(_dateFormatterQueue, ^{
+    date = [_dateFormatterRFC822 dateFromString:string];  // TODO: Handle RFC 850 and ANSI C's asctime() format (http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3)
+  });
+  return date;
+}
+
+NSString* GCDWebServerDescribeData(NSData* data, NSString* contentType) {
+  if ([contentType hasPrefix:@"text/"] || [contentType isEqualToString:@"application/json"] || [contentType isEqualToString:@"application/xml"]) {
+    NSString* charset = GCDWebServerExtractHeaderValueParameter(contentType, @"charset");
+    NSString* string = [[NSString alloc] initWithData:data encoding:GCDWebServerStringEncodingFromCharset(charset)];
+    if (string) {
+      return ARC_AUTORELEASE(string);
+    }
+  }
+  return [NSString stringWithFormat:@"<%lu bytes>", (unsigned long)data.length];
+}
 
 NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
   static NSDictionary* _overrides = nil;
@@ -118,6 +192,7 @@ NSString* GCDWebServerUnescapeURLString(NSString* string) {
   return ARC_BRIDGE_RELEASE(CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault, (CFStringRef)string, CFSTR(""), kCFStringEncodingUTF8));
 }
 
+// http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4.1
 NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
   NSMutableDictionary* parameters = [NSMutableDictionary dictionary];
   NSScanner* scanner = [[NSScanner alloc] initWithString:form];
@@ -231,10 +306,21 @@ static void _SignalHandler(int signal) {
 @synthesize handlers=_handlers, port=_port;
 
 + (void)initialize {
-  [GCDWebServerConnection class];  // Initialize class immediately to make sure it happens on the main thread
+  if (_dateFormatterRFC822 == nil) {
+    DCHECK([NSThread isMainThread]);  // NSDateFormatter should be initialized on main thread
+    _dateFormatterRFC822 = [[NSDateFormatter alloc] init];
+    _dateFormatterRFC822.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
+    _dateFormatterRFC822.dateFormat = @"EEE',' dd MMM yyyy HH':'mm':'ss 'GMT'";
+    _dateFormatterRFC822.locale = ARC_AUTORELEASE([[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]);
+    DCHECK(_dateFormatterRFC822);
+  }
+  if (_dateFormatterQueue == NULL) {
+    _dateFormatterQueue = dispatch_queue_create(NULL, DISPATCH_QUEUE_SERIAL);
+    DCHECK(_dateFormatterQueue);
+  }
 }
 
-- (id)init {
+- (instancetype)init {
   if ((self = [super init])) {
     _handlers = [[NSMutableArray alloc] init];
   }
@@ -424,6 +510,10 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
   return NSStringFromClass(self);
 }
 
++ (BOOL)shouldAutomaticallyMapHEADToGET {
+  return YES;
+}
+
 @end
 
 @implementation GCDWebServer (Extensions)
@@ -484,6 +574,9 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 - (void)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block {
   [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
     
+    if (![requestMethod isEqualToString:method]) {
+      return nil;
+    }
     return ARC_AUTORELEASE([[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
     
   } processBlock:block];
@@ -586,7 +679,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 - (void)addGETHandlerForBasePath:(NSString*)basePath directoryPath:(NSString*)directoryPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests {
   if ([basePath hasPrefix:@"/"] && [basePath hasSuffix:@"/"]) {
 #if __has_feature(objc_arc)
-    __unsafe_unretained GCDWebServer* server = self;
+    GCDWebServer* __unsafe_unretained server = self;
 #else
     __block GCDWebServer* server = self;
 #endif
@@ -626,7 +719,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
       if (response) {
         response.cacheControlMaxAge = cacheAge;
       } else {
-        response = [GCDWebServerResponse responseWithStatusCode:404];
+        response = [GCDWebServerResponse responseWithStatusCode:kGCDWebServerHTTPStatusCode_NotFound];
       }
       return response;
       
@@ -634,6 +727,46 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
   } else {
     DNOT_REACHED();
   }
+}
+
+@end
+
+@implementation GCDWebServer (Logging)
+
+- (void)logVerbose:(NSString*)format, ... {
+  va_list arguments;
+  va_start(arguments, format);
+  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
+  va_end(arguments);
+  LOG_VERBOSE(@"%@", message);
+  ARC_RELEASE(message);
+}
+
+- (void)logInfo:(NSString*)format, ... {
+  va_list arguments;
+  va_start(arguments, format);
+  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
+  va_end(arguments);
+  LOG_INFO(@"%@", message);
+  ARC_RELEASE(message);
+}
+
+- (void)logWarning:(NSString*)format, ... {
+  va_list arguments;
+  va_start(arguments, format);
+  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
+  va_end(arguments);
+  LOG_WARNING(@"%@", message);
+  ARC_RELEASE(message);
+}
+
+- (void)logError:(NSString*)format, ... {
+  va_list arguments;
+  va_start(arguments, format);
+  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
+  va_end(arguments);
+  LOG_ERROR(@"%@", message);
+  ARC_RELEASE(message);
 }
 
 @end

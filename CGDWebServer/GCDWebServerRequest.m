@@ -25,17 +25,115 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#import <zlib.h>
+
 #import "GCDWebServerPrivate.h"
 
-#define kMultiPartBufferSize (256 * 1024)
+#define kZlibErrorDomain @"ZlibErrorDomain"
+#define kGZipInitialBufferSize (256 * 1024)
 
-enum {
-  kParserState_Undefined = 0,
-  kParserState_Start,
-  kParserState_Headers,
-  kParserState_Content,
-  kParserState_End
-};
+@interface GCDWebServerBodyDecoder : NSObject <GCDWebServerBodyWriter>
+- (id)initWithRequest:(GCDWebServerRequest*)request writer:(id<GCDWebServerBodyWriter>)writer;
+@end
+
+@interface GCDWebServerGZipDecoder : GCDWebServerBodyDecoder
+@end
+
+@interface GCDWebServerBodyDecoder () {
+@private
+  GCDWebServerRequest* __unsafe_unretained _request;
+  id<GCDWebServerBodyWriter> __unsafe_unretained _writer;
+}
+@end
+
+@implementation GCDWebServerBodyDecoder
+
+- (id)initWithRequest:(GCDWebServerRequest*)request writer:(id<GCDWebServerBodyWriter>)writer {
+  if ((self = [super init])) {
+    _request = request;
+    _writer = writer;
+  }
+  return self;
+}
+
+- (BOOL)open:(NSError**)error {
+  return [_writer open:error];
+}
+
+- (BOOL)writeData:(NSData*)data error:(NSError**)error {
+  return [_writer writeData:data error:error];
+}
+
+- (BOOL)close:(NSError**)error {
+  return [_writer close:error];
+}
+
+@end
+
+@interface GCDWebServerGZipDecoder () {
+@private
+  z_stream _stream;
+  BOOL _finished;
+}
+@end
+
+@implementation GCDWebServerGZipDecoder
+
+- (BOOL)open:(NSError**)error {
+  int result = inflateInit2(&_stream, 15 + 16);
+  if (result != Z_OK) {
+    *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
+    return NO;
+  }
+  if (![super open:error]) {
+    deflateEnd(&_stream);
+    return NO;
+  }
+  return YES;
+}
+
+- (BOOL)writeData:(NSData*)data error:(NSError**)error {
+  DCHECK(!_finished);
+  _stream.next_in = (Bytef*)data.bytes;
+  _stream.avail_in = (uInt)data.length;
+  NSMutableData* decodedData = [[NSMutableData alloc] initWithLength:kGZipInitialBufferSize];
+  if (decodedData == nil) {
+    DNOT_REACHED();
+    return NO;
+  }
+  NSUInteger length = 0;
+  while (1) {
+    NSUInteger maxLength = decodedData.length - length;
+    _stream.next_out = (Bytef*)((char*)decodedData.mutableBytes + length);
+    _stream.avail_out = (uInt)maxLength;
+    int result = inflate(&_stream, Z_NO_FLUSH);
+    if ((result != Z_OK) && (result != Z_STREAM_END)) {
+      ARC_RELEASE(decodedData);
+      *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
+      return NO;
+    }
+    length += maxLength - _stream.avail_out;
+    if (_stream.avail_out > 0) {
+      if (result == Z_STREAM_END) {
+        _finished = YES;
+      }
+      break;
+    }
+    decodedData.length = 2 * decodedData.length;  // zlib has used all the output buffer so resize it and try again in case more data is available
+  }
+  decodedData.length = length;
+  BOOL success = length ? [super writeData:decodedData error:error] : YES;  // No need to call writer if we have no data yet
+  ARC_RELEASE(decodedData);
+  return success;
+}
+
+- (BOOL)close:(NSError**)error {
+  DCHECK(_finished);
+  inflateEnd(&_stream);
+  return [super close:error];
+}
+
+@end
 
 @interface GCDWebServerRequest () {
 @private
@@ -45,104 +143,25 @@ enum {
   NSString* _path;
   NSDictionary* _query;
   NSString* _type;
+  BOOL _chunked;
   NSUInteger _length;
+  NSDate* _modifiedSince;
+  NSString* _noneMatch;
   NSRange _range;
-}
-@end
-
-@interface GCDWebServerDataRequest () {
-@private
-  NSMutableData* _data;
-}
-@end
-
-@interface GCDWebServerFileRequest () {
-@private
-  NSString* _filePath;
-  int _file;
-}
-@end
-
-@interface GCDWebServerURLEncodedFormRequest () {
-@private
-  NSDictionary* _arguments;
-}
-@end
-
-@interface GCDWebServerMultiPart () {
-@private
-  NSString* _contentType;
-  NSString* _mimeType;
-}
-@end
-
-@interface GCDWebServerMultiPartArgument () {
-@private
-  NSData* _data;
-  NSString* _string;
-}
-@end
-
-@interface GCDWebServerMultiPartFile () {
-@private
-  NSString* _fileName;
-  NSString* _temporaryPath;
-}
-@end
-
-@interface GCDWebServerMultiPartFormRequest () {
-@private
-  NSData* _boundary;
+  BOOL _gzipAccepted;
   
-  NSUInteger _parserState;
-  NSMutableData* _parserData;
-  NSString* _controlName;
-  NSString* _fileName;
-  NSString* _contentType;
-  NSString* _tmpPath;
-  int _tmpFile;
-  
-  NSMutableDictionary* _arguments;
-  NSMutableDictionary* _files;
+  BOOL _opened;
+  NSMutableArray* _decoders;
+  id<GCDWebServerBodyWriter> __unsafe_unretained _writer;
 }
 @end
-
-static NSData* _newlineData = nil;
-static NSData* _newlinesData = nil;
-static NSData* _dashNewlineData = nil;
-
-static NSString* _ExtractHeaderParameter(NSString* header, NSString* attribute) {
-  NSString* value = nil;
-  if (header) {
-    NSScanner* scanner = [[NSScanner alloc] initWithString:header];
-    NSString* string = [NSString stringWithFormat:@"%@=", attribute];
-    if ([scanner scanUpToString:string intoString:NULL]) {
-      [scanner scanString:string intoString:NULL];
-      if ([scanner scanString:@"\"" intoString:NULL]) {
-        [scanner scanUpToString:@"\"" intoString:&value];
-      } else {
-        [scanner scanUpToCharactersFromSet:[NSCharacterSet whitespaceCharacterSet] intoString:&value];
-      }
-    }
-    ARC_RELEASE(scanner);
-  }
-  return value;
-}
-
-// http://www.w3schools.com/tags/ref_charactersets.asp
-static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
-  NSStringEncoding encoding = kCFStringEncodingInvalidId;
-  if (charset) {
-    encoding = CFStringConvertEncodingToNSStringEncoding(CFStringConvertIANACharSetNameToEncoding((CFStringRef)charset));
-  }
-  return (encoding != kCFStringEncodingInvalidId ? encoding : NSUTF8StringEncoding);
-}
 
 @implementation GCDWebServerRequest : NSObject
 
-@synthesize method=_method, URL=_url, headers=_headers, path=_path, query=_query, contentType=_type, contentLength=_length, byteRange=_range;
+@synthesize method=_method, URL=_url, headers=_headers, path=_path, query=_query, contentType=_type, contentLength=_length, ifModifiedSince=_modifiedSince, ifNoneMatch=_noneMatch,
+            byteRange=_range, acceptsGzipContentEncoding=_gzipAccepted, usesChunkedTransferEncoding=_chunked;
 
-- (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
+- (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
   if ((self = [super init])) {
     _method = [method copy];
     _url = ARC_RETAIN(url);
@@ -150,24 +169,42 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
     _path = [path copy];
     _query = ARC_RETAIN(query);
     
-    _type = ARC_RETAIN([_headers objectForKey:@"Content-Type"]);
+    _type = ARC_RETAIN(GCDWebServerNormalizeHeaderValue([_headers objectForKey:@"Content-Type"]));
+    _chunked = [GCDWebServerNormalizeHeaderValue([_headers objectForKey:@"Transfer-Encoding"]) isEqualToString:@"chunked"];
     NSString* lengthHeader = [_headers objectForKey:@"Content-Length"];
-    if (_type) {
+    if (lengthHeader) {
       NSInteger length = [lengthHeader integerValue];
-      if ((lengthHeader == nil) || (length < 0)) {
+      if (_chunked || (length < 0)) {
         DNOT_REACHED();
         ARC_RELEASE(self);
         return nil;
       }
       _length = length;
-    } else if (lengthHeader) {
-      DNOT_REACHED();
-      ARC_RELEASE(self);
-      return nil;
+      if (_type == nil) {
+        _type = kGCDWebServerDefaultMimeType;
+      }
+    } else if (_chunked) {
+      if (_type == nil) {
+        _type = kGCDWebServerDefaultMimeType;
+      }
+      _length = NSNotFound;
+    } else {
+      if (_type) {
+        DNOT_REACHED();
+        ARC_RELEASE(self);
+        return nil;
+      }
+      _length = NSNotFound;
     }
     
+    NSString* modifiedHeader = [_headers objectForKey:@"If-Modified-Since"];
+    if (modifiedHeader) {
+      _modifiedSince = [GCDWebServerParseHTTPDate(modifiedHeader) copy];
+    }
+    _noneMatch = ARC_RETAIN([_headers objectForKey:@"If-None-Match"]);
+    
     _range = NSMakeRange(NSNotFound, 0);
-    NSString* rangeHeader = [[_headers objectForKey:@"Range"] lowercaseString];
+    NSString* rangeHeader = GCDWebServerNormalizeHeaderValue([_headers objectForKey:@"Range"]);
     if (rangeHeader) {
       if ([rangeHeader hasPrefix:@"bytes="]) {
         NSArray* components = [[rangeHeader substringFromIndex:6] componentsSeparatedByString:@","];
@@ -195,6 +232,12 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
         LOG_WARNING(@"Failed to parse 'Range' header \"%@\" for url: %@", rangeHeader, url);
       }
     }
+    
+    if ([[_headers objectForKey:@"Accept-Encoding"] rangeOfString:@"gzip"].location != NSNotFound) {
+      _gzipAccepted = YES;
+    }
+    
+    _decoders = [[NSMutableArray alloc] init];
   }
   return self;
 }
@@ -206,6 +249,9 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
   ARC_RELEASE(_path);
   ARC_RELEASE(_query);
   ARC_RELEASE(_type);
+  ARC_RELEASE(_modifiedSince);
+  ARC_RELEASE(_noneMatch);
+  ARC_RELEASE(_decoders);
   
   ARC_DEALLOC(super);
 }
@@ -214,408 +260,63 @@ static NSStringEncoding _StringEncodingFromCharset(NSString* charset) {
   return _type ? YES : NO;
 }
 
-@end
-
-@implementation GCDWebServerRequest (Subclassing)
-
-- (BOOL)open {
-  [self doesNotRecognizeSelector:_cmd];
-  return NO;
+- (BOOL)hasByteRange {
+  return GCDWebServerIsValidByteRange(_range);
 }
 
-- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length {
-  [self doesNotRecognizeSelector:_cmd];
-  return -1;
-}
-
-- (BOOL)close {
-  [self doesNotRecognizeSelector:_cmd];
-  return NO;
-}
-
-@end
-
-@implementation GCDWebServerDataRequest
-
-@synthesize data=_data;
-
-- (void)dealloc {
-  DCHECK(_data != nil);
-  ARC_RELEASE(_data);
-  
-  ARC_DEALLOC(super);
-}
-
-- (BOOL)open {
-  DCHECK(_data == nil);
-  _data = [[NSMutableData alloc] initWithCapacity:self.contentLength];
-  return _data ? YES : NO;
-}
-
-- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length {
-  DCHECK(_data != nil);
-  [_data appendBytes:buffer length:length];
-  return length;
-}
-
-- (BOOL)close {
-  DCHECK(_data != nil);
+- (BOOL)open:(NSError**)error {
   return YES;
 }
 
-@end
+- (BOOL)writeData:(NSData*)data error:(NSError**)error {
+  return YES;
+}
 
-@implementation GCDWebServerFileRequest
+- (BOOL)close:(NSError**)error {
+  return YES;
+}
 
-@synthesize filePath=_filePath;
-
-- (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
-  if ((self = [super initWithMethod:method url:url headers:headers path:path query:query])) {
-    _filePath = ARC_RETAIN([NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]]);
+- (void)prepareForWriting {
+  _writer = self;
+  if ([GCDWebServerNormalizeHeaderValue([self.headers objectForKey:@"Content-Encoding"]) isEqualToString:@"gzip"]) {
+    GCDWebServerGZipDecoder* decoder = [[GCDWebServerGZipDecoder alloc] initWithRequest:self writer:_writer];
+    [_decoders addObject:decoder];
+    ARC_RELEASE(decoder);
+    _writer = decoder;
   }
-  return self;
 }
 
-- (void)dealloc {
-  DCHECK(_file < 0);
-  unlink([_filePath fileSystemRepresentation]);
-  ARC_RELEASE(_filePath);
-  
-  ARC_DEALLOC(super);
-}
-
-- (BOOL)open {
-  DCHECK(_file == 0);
-  _file = open([_filePath fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-  return (_file > 0 ? YES : NO);
-}
-
-- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length {
-  DCHECK(_file > 0);
-  return write(_file, buffer, length);
-}
-
-- (BOOL)close {
-  DCHECK(_file > 0);
-  int result = close(_file);
-  _file = -1;
-  return (result == 0 ? YES : NO);
-}
-
-@end
-
-@implementation GCDWebServerURLEncodedFormRequest
-
-@synthesize arguments=_arguments;
-
-+ (NSString*)mimeType {
-  return @"application/x-www-form-urlencoded";
-}
-
-- (void)dealloc {
-  ARC_RELEASE(_arguments);
-  
-  ARC_DEALLOC(super);
-}
-
-- (BOOL)close {
-  if (![super close]) {
+- (BOOL)performOpen:(NSError**)error {
+  DCHECK(_type);
+  DCHECK(_writer);
+  if (_opened) {
+    DNOT_REACHED();
     return NO;
   }
-  
-  NSString* charset = _ExtractHeaderParameter(self.contentType, @"charset");
-  NSString* string = [[NSString alloc] initWithData:self.data encoding:_StringEncodingFromCharset(charset)];
-  _arguments = ARC_RETAIN(GCDWebServerParseURLEncodedForm(string));
-  ARC_RELEASE(string);
-  
-  return (_arguments ? YES : NO);
+  _opened = YES;
+  return [_writer open:error];
 }
 
-@end
-
-@implementation GCDWebServerMultiPart
-
-@synthesize contentType=_contentType, mimeType=_mimeType;
-
-- (id)initWithContentType:(NSString*)contentType {
-  if ((self = [super init])) {
-    _contentType = [contentType copy];
-    NSArray* components = [_contentType componentsSeparatedByString:@";"];
-    if (components.count) {
-      _mimeType = ARC_RETAIN([[components objectAtIndex:0] lowercaseString]);
-    }
-    if (_mimeType == nil) {
-      _mimeType = @"text/plain";
-    }
-  }
-  return self;
+- (BOOL)performWriteData:(NSData*)data error:(NSError**)error {
+  DCHECK(_opened);
+  return [_writer writeData:data error:error];
 }
 
-- (void)dealloc {
-  ARC_RELEASE(_contentType);
-  ARC_RELEASE(_mimeType);
-  
-  ARC_DEALLOC(super);
-}
-
-@end
-
-@implementation GCDWebServerMultiPartArgument
-
-@synthesize data=_data, string=_string;
-
-- (id)initWithContentType:(NSString*)contentType data:(NSData*)data {
-  if ((self = [super initWithContentType:contentType])) {
-    _data = ARC_RETAIN(data);
-    
-    if ([self.mimeType hasPrefix:@"text/"]) {
-      NSString* charset = _ExtractHeaderParameter(self.contentType, @"charset");
-      _string = [[NSString alloc] initWithData:_data encoding:_StringEncodingFromCharset(charset)];
-    }
-  }
-  return self;
-}
-
-- (void)dealloc {
-  ARC_RELEASE(_data);
-  ARC_RELEASE(_string);
-  
-  ARC_DEALLOC(super);
+- (BOOL)performClose:(NSError**)error {
+  DCHECK(_opened);
+  return [_writer close:error];
 }
 
 - (NSString*)description {
-  return [NSString stringWithFormat:@"<%@ | '%@' | %i bytes>", [self class], self.mimeType, (int)_data.length];
-}
-
-@end
-
-@implementation GCDWebServerMultiPartFile
-
-@synthesize fileName=_fileName, temporaryPath=_temporaryPath;
-
-- (id)initWithContentType:(NSString*)contentType fileName:(NSString*)fileName temporaryPath:(NSString*)temporaryPath {
-  if ((self = [super initWithContentType:contentType])) {
-    _fileName = [fileName copy];
-    _temporaryPath = [temporaryPath copy];
+  NSMutableString* description = [NSMutableString stringWithFormat:@"%@ %@", _method, _path];
+  for (NSString* argument in [[_query allKeys] sortedArrayUsingSelector:@selector(compare:)]) {
+    [description appendFormat:@"\n  %@ = %@", argument, [_query objectForKey:argument]];
   }
-  return self;
-}
-
-- (void)dealloc {
-  unlink([_temporaryPath fileSystemRepresentation]);
-  
-  ARC_RELEASE(_fileName);
-  ARC_RELEASE(_temporaryPath);
-  
-  ARC_DEALLOC(super);
-}
-
-- (NSString*)description {
-  return [NSString stringWithFormat:@"<%@ | '%@' | '%@>'", [self class], self.mimeType, _fileName];
-}
-
-@end
-
-@implementation GCDWebServerMultiPartFormRequest
-
-@synthesize arguments=_arguments, files=_files;
-
-+ (void)initialize {
-  if (_newlineData == nil) {
-    _newlineData = [[NSData alloc] initWithBytes:"\r\n" length:2];
-    DCHECK(_newlineData);
+  [description appendString:@"\n"];
+  for (NSString* header in [[_headers allKeys] sortedArrayUsingSelector:@selector(compare:)]) {
+    [description appendFormat:@"\n%@: %@", header, [_headers objectForKey:header]];
   }
-  if (_newlinesData == nil) {
-    _newlinesData = [[NSData alloc] initWithBytes:"\r\n\r\n" length:4];
-    DCHECK(_newlinesData);
-  }
-  if (_dashNewlineData == nil) {
-    _dashNewlineData = [[NSData alloc] initWithBytes:"--\r\n" length:4];
-    DCHECK(_dashNewlineData);
-  }
-}
-
-+ (NSString*)mimeType {
-  return @"multipart/form-data";
-}
-
-- (id)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
-  if ((self = [super initWithMethod:method url:url headers:headers path:path query:query])) {
-    NSString* boundary = _ExtractHeaderParameter(self.contentType, @"boundary");
-    if (boundary) {
-      NSData* data = [[NSString stringWithFormat:@"--%@", boundary] dataUsingEncoding:NSASCIIStringEncoding];
-      _boundary = ARC_RETAIN(data);
-    }
-    if (_boundary == nil) {
-      DNOT_REACHED();
-      ARC_RELEASE(self);
-      return nil;
-    }
-    
-    _arguments = [[NSMutableDictionary alloc] init];
-    _files = [[NSMutableDictionary alloc] init];
-  }
-  return self;
-}
-
-- (BOOL)open {
-  DCHECK(_parserData == nil);
-  _parserData = [[NSMutableData alloc] initWithCapacity:kMultiPartBufferSize];
-  _parserState = kParserState_Start;
-  return YES;
-}
-
-// http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4
-- (BOOL)_parseData {
-  BOOL success = YES;
-  
-  if (_parserState == kParserState_Headers) {
-    NSRange range = [_parserData rangeOfData:_newlinesData options:0 range:NSMakeRange(0, _parserData.length)];
-    if (range.location != NSNotFound) {
-      
-      ARC_RELEASE(_controlName);
-      _controlName = nil;
-      ARC_RELEASE(_fileName);
-      _fileName = nil;
-      ARC_RELEASE(_contentType);
-      _contentType = nil;
-      ARC_RELEASE(_tmpPath);
-      _tmpPath = nil;
-      CFHTTPMessageRef message = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, true);
-      const char* temp = "GET / HTTP/1.0\r\n";
-      CFHTTPMessageAppendBytes(message, (const UInt8*)temp, strlen(temp));
-      CFHTTPMessageAppendBytes(message, _parserData.bytes, range.location + range.length);
-      if (CFHTTPMessageIsHeaderComplete(message)) {
-        NSString* controlName = nil;
-        NSString* fileName = nil;
-        NSDictionary* headers = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyAllHeaderFields(message));
-        NSString* contentDisposition = [headers objectForKey:@"Content-Disposition"];
-        if ([[contentDisposition lowercaseString] hasPrefix:@"form-data;"]) {
-          controlName = _ExtractHeaderParameter(contentDisposition, @"name");
-          fileName = _ExtractHeaderParameter(contentDisposition, @"filename");
-        }
-        _controlName = [controlName copy];
-        _fileName = [fileName copy];
-        _contentType = ARC_RETAIN([headers objectForKey:@"Content-Type"]);
-      }
-      CFRelease(message);
-      if (_controlName) {
-        if (_fileName) {
-          NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]];
-          _tmpFile = open([path fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-          if (_tmpFile > 0) {
-            _tmpPath = [path copy];
-          } else {
-            DNOT_REACHED();
-            success = NO;
-          }
-        }
-      } else {
-        DNOT_REACHED();
-        success = NO;
-      }
-      
-      [_parserData replaceBytesInRange:NSMakeRange(0, range.location + range.length) withBytes:NULL length:0];
-      _parserState = kParserState_Content;
-    }
-  }
-  
-  if ((_parserState == kParserState_Start) || (_parserState == kParserState_Content)) {
-    NSRange range = [_parserData rangeOfData:_boundary options:0 range:NSMakeRange(0, _parserData.length)];
-    if (range.location != NSNotFound) {
-      NSRange subRange = NSMakeRange(range.location + range.length, _parserData.length - range.location - range.length);
-      NSRange subRange1 = [_parserData rangeOfData:_newlineData options:NSDataSearchAnchored range:subRange];
-      NSRange subRange2 = [_parserData rangeOfData:_dashNewlineData options:NSDataSearchAnchored range:subRange];
-      if ((subRange1.location != NSNotFound) || (subRange2.location != NSNotFound)) {
-        
-        if (_parserState == kParserState_Content) {
-          const void* dataBytes = _parserData.bytes;
-          NSUInteger dataLength = range.location - 2;
-          if (_tmpPath) {
-            ssize_t result = write(_tmpFile, dataBytes, dataLength);
-            if (result == (ssize_t)dataLength) {
-              if (close(_tmpFile) == 0) {
-                _tmpFile = 0;
-                GCDWebServerMultiPartFile* file = [[GCDWebServerMultiPartFile alloc] initWithContentType:_contentType fileName:_fileName temporaryPath:_tmpPath];
-                [_files setObject:file forKey:_controlName];
-                ARC_RELEASE(file);
-              } else {
-                DNOT_REACHED();
-                success = NO;
-              }
-            } else {
-              DNOT_REACHED();
-              success = NO;
-            }
-            ARC_RELEASE(_tmpPath);
-            _tmpPath = nil;
-          } else {
-            NSData* data = [[NSData alloc] initWithBytesNoCopy:(void*)dataBytes length:dataLength freeWhenDone:NO];
-            GCDWebServerMultiPartArgument* argument = [[GCDWebServerMultiPartArgument alloc] initWithContentType:_contentType data:data];
-            [_arguments setObject:argument forKey:_controlName];
-            ARC_RELEASE(argument);
-            ARC_RELEASE(data);
-          }
-        }
-        
-        if (subRange1.location != NSNotFound) {
-          [_parserData replaceBytesInRange:NSMakeRange(0, subRange1.location + subRange1.length) withBytes:NULL length:0];
-          _parserState = kParserState_Headers;
-          success = [self _parseData];
-        } else {
-          _parserState = kParserState_End;
-        }
-      }
-    } else {
-      NSUInteger margin = 2 * _boundary.length;
-      if (_tmpPath && (_parserData.length > margin)) {
-        NSUInteger length = _parserData.length - margin;
-        ssize_t result = write(_tmpFile, _parserData.bytes, length);
-        if (result == (ssize_t)length) {
-          [_parserData replaceBytesInRange:NSMakeRange(0, length) withBytes:NULL length:0];
-        } else {
-          DNOT_REACHED();
-          success = NO;
-        }
-      }
-    }
-  }
-  return success;
-}
-
-- (NSInteger)write:(const void*)buffer maxLength:(NSUInteger)length {
-  DCHECK(_parserData != nil);
-  [_parserData appendBytes:buffer length:length];
-  return ([self _parseData] ? length : -1);
-}
-
-- (BOOL)close {
-  DCHECK(_parserData != nil);
-  ARC_RELEASE(_parserData);
-  _parserData = nil;
-  ARC_RELEASE(_controlName);
-  _controlName = nil;
-  ARC_RELEASE(_fileName);
-  _fileName = nil;
-  ARC_RELEASE(_contentType);
-  _contentType = nil;
-  if (_tmpFile > 0) {
-    close(_tmpFile);
-    unlink([_tmpPath fileSystemRepresentation]);
-    _tmpFile = 0;
-  }
-  ARC_RELEASE(_tmpPath);
-  _tmpPath = nil;
-  return (_parserState == kParserState_End ? YES : NO);
-}
-
-- (void)dealloc {
-  DCHECK(_parserData == nil);
-  ARC_RELEASE(_arguments);
-  ARC_RELEASE(_files);
-  ARC_RELEASE(_boundary);
-  
-  ARC_DEALLOC(super);
+  return description;
 }
 
 @end

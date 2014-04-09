@@ -25,26 +25,22 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import "GCDWebServer.h"
+#import "GCDWebServerResponse.h"
 
-@class GCDWebServerHandler;
-
-@interface GCDWebServerConnection : NSObject
-@property(nonatomic, readonly) GCDWebServer* server;
-@property(nonatomic, readonly) NSData* localAddressData;  // struct sockaddr
-@property(nonatomic, readonly) NSString* localAddressString;
-@property(nonatomic, readonly) NSData* remoteAddressData;  // struct sockaddr
-@property(nonatomic, readonly) NSString* remoteAddressString;
-@property(nonatomic, readonly) NSUInteger totalBytesRead;
-@property(nonatomic, readonly) NSUInteger totalBytesWritten;
+@interface GCDWebServerDataResponse : GCDWebServerResponse
++ (instancetype)responseWithData:(NSData*)data contentType:(NSString*)type;
+- (instancetype)initWithData:(NSData*)data contentType:(NSString*)type;
 @end
 
-@interface GCDWebServerConnection (Subclassing)
-- (void)open;
-- (void)didUpdateBytesRead;  // Called from arbitrary thread after @totalBytesRead is updated - Default implementation does nothing
-- (void)didUpdateBytesWritten;  // Called from arbitrary thread after @totalBytesWritten is updated - Default implementation does nothing
-- (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block;  // Only called if the request can be processed
-- (GCDWebServerResponse*)replaceResponse:(GCDWebServerResponse*)response forRequest:(GCDWebServerRequest*)request;  // Default implementation replaces any response matching the "ETag" or "Last-Modified-Date" header of the request by a barebone "Not-Modified" (304) one
-- (void)abortRequest:(GCDWebServerRequest*)request withStatusCode:(NSInteger)statusCode;  // If request headers was malformed, "request" will be nil
-- (void)close;
+@interface GCDWebServerDataResponse (Extensions)
++ (instancetype)responseWithText:(NSString*)text;
++ (instancetype)responseWithHTML:(NSString*)html;
++ (instancetype)responseWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables;
++ (instancetype)responseWithJSONObject:(id)object;
++ (instancetype)responseWithJSONObject:(id)object contentType:(NSString*)type;
+- (instancetype)initWithText:(NSString*)text;  // Encodes using UTF-8
+- (instancetype)initWithHTML:(NSString*)html;  // Encodes using UTF-8
+- (instancetype)initWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables;  // Simple template system that replaces all occurences of "%variable%" with corresponding value (encodes using UTF-8)
+- (instancetype)initWithJSONObject:(id)object;
+- (instancetype)initWithJSONObject:(id)object contentType:(NSString*)type;
 @end

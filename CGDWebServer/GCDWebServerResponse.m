@@ -25,9 +25,130 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import <sys/stat.h>
+#import <zlib.h>
 
 #import "GCDWebServerPrivate.h"
+
+#define kZlibErrorDomain @"ZlibErrorDomain"
+#define kGZipInitialBufferSize (256 * 1024)
+
+@interface GCDWebServerBodyEncoder : NSObject <GCDWebServerBodyReader>
+- (id)initWithResponse:(GCDWebServerResponse*)response reader:(id<GCDWebServerBodyReader>)reader;
+@end
+
+@interface GCDWebServerGZipEncoder : GCDWebServerBodyEncoder
+@end
+
+@interface GCDWebServerBodyEncoder () {
+@private
+  GCDWebServerResponse* __unsafe_unretained _response;
+  id<GCDWebServerBodyReader> __unsafe_unretained _reader;
+}
+@end
+
+@implementation GCDWebServerBodyEncoder
+
+- (id)initWithResponse:(GCDWebServerResponse*)response reader:(id<GCDWebServerBodyReader>)reader {
+  if ((self = [super init])) {
+    _response = response;
+    _reader = reader;
+  }
+  return self;
+}
+
+- (BOOL)open:(NSError**)error {
+  return [_reader open:error];
+}
+
+- (NSData*)readData:(NSError**)error {
+  return [_reader readData:error];
+}
+
+- (void)close {
+  [_reader close];
+}
+
+@end
+
+@interface GCDWebServerGZipEncoder () {
+@private
+  z_stream _stream;
+  BOOL _finished;
+}
+@end
+
+@implementation GCDWebServerGZipEncoder
+
+- (id)initWithResponse:(GCDWebServerResponse*)response reader:(id<GCDWebServerBodyReader>)reader {
+  if ((self = [super initWithResponse:response reader:reader])) {
+    response.contentLength = NSNotFound;  // Make sure "Content-Length" header is not set since we don't know it (client will determine body length when connection is closed)
+    [response setValue:@"gzip" forAdditionalHeader:@"Content-Encoding"];
+  }
+  return self;
+}
+
+- (BOOL)open:(NSError**)error {
+  int result = deflateInit2(&_stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 15 + 16, 8, Z_DEFAULT_STRATEGY);
+  if (result != Z_OK) {
+    *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
+    return NO;
+  }
+  if (![super open:error]) {
+    deflateEnd(&_stream);
+    return NO;
+  }
+  return YES;
+}
+
+- (NSData*)readData:(NSError**)error {
+  NSMutableData* encodedData;
+  if (_finished) {
+    encodedData = [[NSMutableData alloc] init];
+  } else {
+    encodedData = [[NSMutableData alloc] initWithLength:kGZipInitialBufferSize];
+    if (encodedData == nil) {
+      DNOT_REACHED();
+      return nil;
+    }
+    NSUInteger length = 0;
+    do {
+      NSData* data = [super readData:error];
+      if (data == nil) {
+        return nil;
+      }
+      _stream.next_in = (Bytef*)data.bytes;
+      _stream.avail_in = (uInt)data.length;
+      while (1) {
+        NSUInteger maxLength = encodedData.length - length;
+        _stream.next_out = (Bytef*)((char*)encodedData.mutableBytes + length);
+        _stream.avail_out = (uInt)maxLength;
+        int result = deflate(&_stream, data.length ? Z_NO_FLUSH : Z_FINISH);
+        if (result == Z_STREAM_END) {
+          _finished = YES;
+        } else if (result != Z_OK) {
+          ARC_RELEASE(encodedData);
+          *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
+          return nil;
+        }
+        length += maxLength - _stream.avail_out;
+        if (_stream.avail_out > 0) {
+          break;
+        }
+        encodedData.length = 2 * encodedData.length;  // zlib has used all the output buffer so resize it and try again in case more data is available
+      }
+      DCHECK(_stream.avail_in == 0);
+    } while (length == 0);  // Make sure we don't return an empty NSData if not in finished state
+    encodedData.length = length;
+  }
+  return ARC_AUTORELEASE(encodedData);
+}
+
+- (void)close {
+  deflateEnd(&_stream);
+  [super close];
+}
+
+@end
 
 @interface GCDWebServerResponse () {
 @private
@@ -35,57 +156,45 @@
   NSUInteger _length;
   NSInteger _status;
   NSUInteger _maxAge;
+  NSDate* _lastModified;
+  NSString* _eTag;
   NSMutableDictionary* _headers;
-}
-@end
-
-@interface GCDWebServerDataResponse () {
-@private
-  NSData* _data;
-  NSInteger _offset;
-}
-@end
-
-@interface GCDWebServerFileResponse () {
-@private
-  NSString* _path;
-  NSUInteger _offset;
-  NSUInteger _size;
-  int _file;
-}
-@end
-
-@interface GCDWebServerChunkedResponse () {
-@private
-  GCDWebServerChunkBlock _block;
-  NSData* _chunk;
-  NSUInteger _offset;
-  BOOL _terminated;
+  BOOL _chunked;
+  BOOL _gzipped;
+  
+  BOOL _opened;
+  NSMutableArray* _encoders;
+  id<GCDWebServerBodyReader> __unsafe_unretained _reader;
 }
 @end
 
 @implementation GCDWebServerResponse
 
-@synthesize contentType=_type, contentLength=_length, statusCode=_status, cacheControlMaxAge=_maxAge, additionalHeaders=_headers;
+@synthesize contentType=_type, contentLength=_length, statusCode=_status, cacheControlMaxAge=_maxAge, lastModifiedDate=_lastModified, eTag=_eTag,
+            gzipContentEncodingEnabled=_gzipped, additionalHeaders=_headers;
 
-+ (GCDWebServerResponse*)response {
++ (instancetype)response {
   return ARC_AUTORELEASE([[[self class] alloc] init]);
 }
 
-- (id)init {
+- (instancetype)init {
   if ((self = [super init])) {
     _type = nil;
     _length = NSNotFound;
-    _status = 200;
+    _status = kGCDWebServerHTTPStatusCode_OK;
     _maxAge = 0;
     _headers = [[NSMutableDictionary alloc] init];
+    _encoders = [[NSMutableArray alloc] init];
   }
   return self;
 }
 
 - (void)dealloc {
   ARC_RELEASE(_type);
+  ARC_RELEASE(_lastModified);
+  ARC_RELEASE(_eTag);
   ARC_RELEASE(_headers);
+  ARC_RELEASE(_encoders);
   
   ARC_DEALLOC(super);
 }
@@ -98,363 +207,102 @@
   return _type ? YES : NO;
 }
 
-@end
-
-@implementation GCDWebServerResponse (Subclassing)
-
-- (BOOL)open {
-  [self doesNotRecognizeSelector:_cmd];
-  return NO;
+- (BOOL)usesChunkedTransferEncoding {
+  return (_type != nil) && (_length == NSNotFound);
 }
 
-- (NSInteger)read:(void*)buffer maxLength:(NSUInteger)length {
-  [self doesNotRecognizeSelector:_cmd];
-  return -1;
+- (BOOL)open:(NSError**)error {
+  return YES;
 }
 
-- (BOOL)close {
-  [self doesNotRecognizeSelector:_cmd];
-  return NO;
+- (NSData*)readData:(NSError**)error {
+  return [NSData data];
+}
+
+- (void)close {
+  ;
+}
+
+- (void)prepareForReading {
+  _reader = self;
+  if (_gzipped) {
+    GCDWebServerGZipEncoder* encoder = [[GCDWebServerGZipEncoder alloc] initWithResponse:self reader:_reader];
+    [_encoders addObject:encoder];
+    ARC_RELEASE(encoder);
+    _reader = encoder;
+  }
+}
+
+- (BOOL)performOpen:(NSError**)error {
+  DCHECK(_type);
+  DCHECK(_reader);
+  if (_opened) {
+    DNOT_REACHED();
+    return NO;
+  }
+  _opened = YES;
+  return [_reader open:error];
+}
+
+- (NSData*)performReadData:(NSError**)error {
+  DCHECK(_opened);
+  return [_reader readData:error];
+}
+
+- (void)performClose {
+  DCHECK(_opened);
+  [_reader close];
+}
+
+- (NSString*)description {
+  NSMutableString* description = [NSMutableString stringWithFormat:@"Status Code = %i", (int)_status];
+  if (_type) {
+    [description appendFormat:@"\nContent Type = %@", _type];
+  }
+  if (_length != NSNotFound) {
+    [description appendFormat:@"\nContent Length = %lu", (unsigned long)_length];
+  }
+  [description appendFormat:@"\nCache Control Max Age = %lu", (unsigned long)_maxAge];
+  if (_lastModified) {
+    [description appendFormat:@"\nLast Modified Date = %@", _lastModified];
+  }
+  if (_eTag) {
+    [description appendFormat:@"\nETag = %@", _eTag];
+  }
+  if (_headers.count) {
+    [description appendString:@"\n"];
+    for (NSString* header in [[_headers allKeys] sortedArrayUsingSelector:@selector(compare:)]) {
+      [description appendFormat:@"\n%@: %@", header, [_headers objectForKey:header]];
+    }
+  }
+  return description;
 }
 
 @end
 
 @implementation GCDWebServerResponse (Extensions)
 
-+ (GCDWebServerResponse*)responseWithStatusCode:(NSInteger)statusCode {
++ (instancetype)responseWithStatusCode:(NSInteger)statusCode {
   return ARC_AUTORELEASE([[self alloc] initWithStatusCode:statusCode]);
 }
 
-+ (GCDWebServerResponse*)responseWithRedirect:(NSURL*)location permanent:(BOOL)permanent {
++ (instancetype)responseWithRedirect:(NSURL*)location permanent:(BOOL)permanent {
   return ARC_AUTORELEASE([[self alloc] initWithRedirect:location permanent:permanent]);
 }
 
-- (id)initWithStatusCode:(NSInteger)statusCode {
+- (instancetype)initWithStatusCode:(NSInteger)statusCode {
   if ((self = [self init])) {
     self.statusCode = statusCode;
   }
   return self;
 }
 
-- (id)initWithRedirect:(NSURL*)location permanent:(BOOL)permanent {
+- (instancetype)initWithRedirect:(NSURL*)location permanent:(BOOL)permanent {
   if ((self = [self init])) {
-    self.statusCode = permanent ? 301 : 307;
+    self.statusCode = permanent ? kGCDWebServerHTTPStatusCode_MovedPermanently : kGCDWebServerHTTPStatusCode_TemporaryRedirect;
     [self setValue:[location absoluteString] forAdditionalHeader:@"Location"];
   }
   return self;
-}
-
-@end
-
-@implementation GCDWebServerDataResponse
-
-+ (GCDWebServerDataResponse*)responseWithData:(NSData*)data contentType:(NSString*)type {
-  return ARC_AUTORELEASE([[[self class] alloc] initWithData:data contentType:type]);
-}
-
-- (id)initWithData:(NSData*)data contentType:(NSString*)type {
-  if (data == nil) {
-    DNOT_REACHED();
-    ARC_RELEASE(self);
-    return nil;
-  }
-  
-  if ((self = [super init])) {
-    _data = ARC_RETAIN(data);
-    _offset = -1;
-    
-    self.contentType = type;
-    self.contentLength = data.length;
-  }
-  return self;
-}
-
-- (void)dealloc {
-  DCHECK(_offset < 0);
-  ARC_RELEASE(_data);
-  
-  ARC_DEALLOC(super);
-}
-
-- (BOOL)open {
-  DCHECK(_offset < 0);
-  _offset = 0;
-  return YES;
-}
-
-- (NSInteger)read:(void*)buffer maxLength:(NSUInteger)length {
-  DCHECK(_offset >= 0);
-  NSInteger size = 0;
-  if (_offset < (NSInteger)_data.length) {
-    size = MIN(_data.length - _offset, length);
-    bcopy((char*)_data.bytes + _offset, buffer, size);
-    _offset += size;
-  }
-  return size;
-}
-
-- (BOOL)close {
-  DCHECK(_offset >= 0);
-  _offset = -1;
-  return YES;
-}
-
-@end
-
-@implementation GCDWebServerDataResponse (Extensions)
-
-+ (GCDWebServerDataResponse*)responseWithText:(NSString*)text {
-  return ARC_AUTORELEASE([[self alloc] initWithText:text]);
-}
-
-+ (GCDWebServerDataResponse*)responseWithHTML:(NSString*)html {
-  return ARC_AUTORELEASE([[self alloc] initWithHTML:html]);
-}
-
-+ (GCDWebServerDataResponse*)responseWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables {
-  return ARC_AUTORELEASE([[self alloc] initWithHTMLTemplate:path variables:variables]);
-}
-
-+ (GCDWebServerDataResponse*)responseWithJSONObject:(id)object {
-  return ARC_AUTORELEASE([[self alloc] initWithJSONObject:object]);
-}
-
-+ (GCDWebServerDataResponse*)responseWithJSONObject:(id)object contentType:(NSString*)type {
-  return ARC_AUTORELEASE([[self alloc] initWithJSONObject:object contentType:type]);
-}
-
-- (id)initWithText:(NSString*)text {
-  NSData* data = [text dataUsingEncoding:NSUTF8StringEncoding];
-  if (data == nil) {
-    DNOT_REACHED();
-    ARC_RELEASE(self);
-    return nil;
-  }
-  return [self initWithData:data contentType:@"text/plain; charset=utf-8"];
-}
-
-- (id)initWithHTML:(NSString*)html {
-  NSData* data = [html dataUsingEncoding:NSUTF8StringEncoding];
-  if (data == nil) {
-    DNOT_REACHED();
-    ARC_RELEASE(self);
-    return nil;
-  }
-  return [self initWithData:data contentType:@"text/html; charset=utf-8"];
-}
-
-- (id)initWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables {
-  NSMutableString* html = [[NSMutableString alloc] initWithContentsOfFile:path encoding:NSUTF8StringEncoding error:NULL];
-  [variables enumerateKeysAndObjectsUsingBlock:^(NSString* key, NSString* value, BOOL* stop) {
-    [html replaceOccurrencesOfString:[NSString stringWithFormat:@"%%%@%%", key] withString:value options:0 range:NSMakeRange(0, html.length)];
-  }];
-  id response = [self initWithHTML:html];
-  ARC_RELEASE(html);
-  return response;
-}
-
-- (id)initWithJSONObject:(id)object {
-  return [self initWithJSONObject:object contentType:@"application/json"];
-}
-
-- (id)initWithJSONObject:(id)object contentType:(NSString*)type {
-  NSData* data = [NSJSONSerialization dataWithJSONObject:object options:0 error:NULL];
-  if (data == nil) {
-    ARC_RELEASE(self);
-    return nil;
-  }
-  return [self initWithData:data contentType:type];
-}
-
-@end
-
-@implementation GCDWebServerFileResponse
-
-+ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path {
-  return ARC_AUTORELEASE([[[self class] alloc] initWithFile:path]);
-}
-
-+ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path isAttachment:(BOOL)attachment {
-  return ARC_AUTORELEASE([[[self class] alloc] initWithFile:path isAttachment:attachment]);
-}
-
-+ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path byteRange:(NSRange)range {
-  return ARC_AUTORELEASE([[[self class] alloc] initWithFile:path byteRange:range]);
-}
-
-+ (GCDWebServerFileResponse*)responseWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment {
-  return ARC_AUTORELEASE([[[self class] alloc] initWithFile:path byteRange:range isAttachment:attachment]);
-}
-
-- (id)initWithFile:(NSString*)path {
-  return [self initWithFile:path byteRange:NSMakeRange(NSNotFound, 0) isAttachment:NO];
-}
-
-- (id)initWithFile:(NSString*)path isAttachment:(BOOL)attachment {
-  return [self initWithFile:path byteRange:NSMakeRange(NSNotFound, 0) isAttachment:attachment];
-}
-
-- (id)initWithFile:(NSString*)path byteRange:(NSRange)range {
-  return [self initWithFile:path byteRange:range isAttachment:NO];
-}
-
-- (id)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment {
-  struct stat info;
-  if (lstat([path fileSystemRepresentation], &info) || !(info.st_mode & S_IFREG)) {
-    DNOT_REACHED();
-    ARC_RELEASE(self);
-    return nil;
-  }
-  if ((range.location != NSNotFound) || (range.length > 0)) {
-    if (range.location != NSNotFound) {
-      range.location = MIN(range.location, (NSUInteger)info.st_size);
-      range.length = MIN(range.length, (NSUInteger)info.st_size - range.location);
-    } else {
-      range.length = MIN(range.length, (NSUInteger)info.st_size);
-      range.location = (NSUInteger)info.st_size - range.length;
-    }
-    if (range.length == 0) {
-      ARC_RELEASE(self);
-      return nil;  // TODO: Return 416 status code and "Content-Range: bytes */{file length}" header
-    }
-  }
-  
-  if ((self = [super init])) {
-    _path = [path copy];
-    if (range.location != NSNotFound) {
-      _offset = range.location;
-      _size = range.length;
-      [self setStatusCode:206];
-      [self setValue:[NSString stringWithFormat:@"bytes %i-%i/%i", (int)range.location, (int)(range.location + range.length - 1), (int)info.st_size] forAdditionalHeader:@"Content-Range"];
-      LOG_DEBUG(@"Using content bytes range [%i-%i] for file \"%@\"", (int)range.location, (int)(range.location + range.length - 1), path);
-    } else {
-      _offset = 0;
-      _size = (NSUInteger)info.st_size;
-    }
-    
-    if (attachment) {  // TODO: Use http://tools.ietf.org/html/rfc5987 to encode file names with special characters instead of using lossy conversion to ISO 8859-1
-      NSData* data = [[path lastPathComponent] dataUsingEncoding:NSISOLatin1StringEncoding allowLossyConversion:YES];
-      NSString* fileName = data ? [[NSString alloc] initWithData:data encoding:NSISOLatin1StringEncoding] : nil;
-      if (fileName) {
-        [self setValue:[NSString stringWithFormat:@"attachment; filename=\"%@\"", fileName] forAdditionalHeader:@"Content-Disposition"];
-        ARC_RELEASE(fileName);
-      } else {
-        DNOT_REACHED();
-      }
-    }
-    
-    self.contentType = GCDWebServerGetMimeTypeForExtension([path pathExtension]);
-    self.contentLength = (range.location != NSNotFound ? range.length : (NSUInteger)info.st_size);
-  }
-  return self;
-}
-
-- (void)dealloc {
-  DCHECK(_file <= 0);
-  ARC_RELEASE(_path);
-  
-  ARC_DEALLOC(super);
-}
-
-- (BOOL)open {
-  DCHECK(_file <= 0);
-  _file = open([_path fileSystemRepresentation], O_NOFOLLOW | O_RDONLY);
-  if (_file <= 0) {
-    return NO;
-  }
-  if (lseek(_file, _offset, SEEK_SET) != (off_t)_offset) {
-    close(_file);
-    _file = 0;
-    return NO;
-  }
-  return YES;
-}
-
-- (NSInteger)read:(void*)buffer maxLength:(NSUInteger)length {
-  DCHECK(_file > 0);
-  ssize_t result = read(_file, buffer, MIN(length, _size));
-  if (result > 0) {
-    _size -= result;
-  }
-  return result;
-}
-
-- (BOOL)close {
-  DCHECK(_file > 0);
-  int result = close(_file);
-  _file = 0;
-  return (result == 0 ? YES : NO);
-}
-
-@end
-
-@implementation GCDWebServerChunkedResponse
-
-+ (GCDWebServerChunkedResponse*)responseWithContentType:(NSString*)type chunkBlock:(GCDWebServerChunkBlock)block {
-  return ARC_AUTORELEASE([[[self class] alloc] initWithContentType:type chunkBlock:block]);
-}
-
-- (id)initWithContentType:(NSString*)type chunkBlock:(GCDWebServerChunkBlock)block {
-  if ((self = [super init])) {
-    _block = [block copy];
-    
-    self.contentType = type;
-    [self setValue:@"chunked" forAdditionalHeader:@"Transfer-Encoding"];
-  }
-  return self;
-}
-
-- (BOOL)open {
-  DCHECK(_chunk == nil);
-  return YES;
-}
-
-- (NSInteger)read:(void*)buffer maxLength:(NSUInteger)length {
-  if (_offset >= _chunk.length) {
-    ARC_RELEASE(_chunk);
-    _chunk = nil;
-  }
-  if (_chunk == nil) {
-    if (_terminated) {
-      return 0;
-    }
-    NSData* data = _block();
-    if (data.length > 0) {
-      const char* hexString = [[NSString stringWithFormat:@"%lx", (unsigned long)data.length] UTF8String];
-      size_t hexLength = strlen(hexString);
-      _chunk = [[NSMutableData alloc] initWithLength:(hexLength + 2 + data.length + 2)];
-      char* ptr = (char*)_chunk.bytes;
-      bcopy(hexString, ptr, hexLength);
-      ptr += hexLength;
-      *ptr++ = '\r';
-      *ptr++ = '\n';
-      bcopy(data.bytes, ptr, data.length);
-      ptr += data.length;
-      *ptr++ = '\r';
-      *ptr = '\n';
-    } else {
-      _chunk = [[NSData alloc] initWithBytes:"0\r\n\r\n" length:5];
-      _terminated = YES;
-    }
-    _offset = 0;
-  }
-  NSInteger size = MIN(_chunk.length - _offset, length);
-  bcopy((char*)_chunk.bytes + _offset, buffer, size);
-  _offset += size;
-  return size;
-}
-
-- (BOOL)close {
-  ARC_RELEASE(_chunk);
-  _chunk = nil;
-  return YES;
-}
-
-- (void)dealloc {
-  DCHECK(_chunk == nil);
-  ARC_RELEASE(_chunk);
-  
-  ARC_DEALLOC(super);
 }
 
 @end
