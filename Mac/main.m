@@ -97,12 +97,12 @@ int main(int argc, const char* argv[]) {
       }
       
       case 3: {
-        webServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:@"/tmp"];
+        webServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:[[NSFileManager defaultManager] currentDirectoryPath]];
         break;
       }
       
       case 4: {
-        webServer = [[GCDWebUploader alloc] initWithUploadDirectory:@"/tmp"];
+        webServer = [[GCDWebUploader alloc] initWithUploadDirectory:[[NSFileManager defaultManager] currentDirectoryPath]];
         break;
       }
       
