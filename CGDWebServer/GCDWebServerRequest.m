@@ -183,8 +183,13 @@
       if (_type == nil) {
         _type = kGCDWebServerDefaultMimeType;
       }
+    } else if (_chunked) {
+      if (_type == nil) {
+        _type = kGCDWebServerDefaultMimeType;
+      }
+      _length = NSNotFound;
     } else {
-      if (_type && !_chunked) {
+      if (_type) {
         DNOT_REACHED();
         ARC_RELEASE(self);
         return nil;
