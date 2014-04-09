@@ -74,6 +74,10 @@ static inline NSError* _MakePosixError(int code) {
   return [self initWithFile:path byteRange:range isAttachment:NO];
 }
 
+static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
+  return [NSDate dateWithTimeIntervalSince1970:((NSTimeInterval)t->tv_sec + (NSTimeInterval)t->tv_nsec / 1000000000.0)];
+}
+
 - (instancetype)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment {
   struct stat info;
   if (lstat([path fileSystemRepresentation], &info) || !(info.st_mode & S_IFREG)) {
@@ -121,6 +125,7 @@ static inline NSError* _MakePosixError(int code) {
     
     self.contentType = GCDWebServerGetMimeTypeForExtension([path pathExtension]);
     self.contentLength = (range.location != NSNotFound ? range.length : (NSUInteger)info.st_size);
+    self.lastModifiedDate = _NSDateFromTimeSpec(&info.st_mtimespec);
   }
   return self;
 }

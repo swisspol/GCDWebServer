@@ -37,7 +37,8 @@
 @property(nonatomic, copy) NSString* contentType;  // Default is nil i.e. no body (must be set if a body is present)
 @property(nonatomic) NSUInteger contentLength;  // Default is NSNotFound i.e. undefined (if a body is present but length is undefined, chunked transfer encoding will be enabled)
 @property(nonatomic) NSInteger statusCode;  // Default is 200
-@property(nonatomic) NSUInteger cacheControlMaxAge;  // Default is 0 seconds i.e. "no-cache"
+@property(nonatomic) NSUInteger cacheControlMaxAge;  // Default is 0 seconds i.e. "Cache-Control: no-cache"
+@property(nonatomic, retain) NSDate* lastModifiedDate;  // Default is nil i.e. no "Last-Modified" header
 @property(nonatomic, getter=isGZipContentEncodingEnabled) BOOL gzipContentEncodingEnabled;  // Default is disabled
 + (instancetype)response;
 - (instancetype)init;
