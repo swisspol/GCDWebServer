@@ -131,14 +131,12 @@ static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
 }
 
 - (void)dealloc {
-  DCHECK(_file <= 0);
   ARC_RELEASE(_path);
   
   ARC_DEALLOC(super);
 }
 
 - (BOOL)open:(NSError**)error {
-  DCHECK(_file <= 0);
   _file = open([_path fileSystemRepresentation], O_NOFOLLOW | O_RDONLY);
   if (_file <= 0) {
     *error = _MakePosixError(errno);
@@ -147,14 +145,12 @@ static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
   if (lseek(_file, _offset, SEEK_SET) != (off_t)_offset) {
     *error = _MakePosixError(errno);
     close(_file);
-    _file = 0;
     return NO;
   }
   return YES;
 }
 
 - (NSData*)readData:(NSError**)error {
-  DCHECK(_file > 0);
   size_t length = MIN((NSUInteger)kFileReadBufferSize, _size);
   NSMutableData* data = [[NSMutableData alloc] initWithLength:length];
   ssize_t result = read(_file, data.mutableBytes, length);
@@ -170,9 +166,7 @@ static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
 }
 
 - (void)close {
-  DCHECK(_file > 0);
   close(_file);
-  _file = 0;
 }
 
 @end

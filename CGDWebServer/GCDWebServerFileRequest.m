@@ -50,7 +50,6 @@ static inline NSError* _MakePosixError(int code) {
 }
 
 - (void)dealloc {
-  DCHECK(_file < 0);
   unlink([_filePath fileSystemRepresentation]);
   ARC_RELEASE(_filePath);
   
@@ -58,7 +57,6 @@ static inline NSError* _MakePosixError(int code) {
 }
 
 - (BOOL)open:(NSError**)error {
-  DCHECK(_file == 0);
   _file = open([_filePath fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
   if (_file <= 0) {
     *error = _MakePosixError(errno);
@@ -68,7 +66,6 @@ static inline NSError* _MakePosixError(int code) {
 }
 
 - (BOOL)writeData:(NSData*)data error:(NSError**)error {
-  DCHECK(_file > 0);
   if (write(_file, data.bytes, data.length) != (ssize_t)data.length) {
     *error = _MakePosixError(errno);
     return NO;
@@ -77,10 +74,7 @@ static inline NSError* _MakePosixError(int code) {
 }
 
 - (BOOL)close:(NSError**)error {
-  DCHECK(_file > 0);
-  int result = close(_file);
-  _file = -1;
-  if (result < 0) {
+  if (close(_file) < 0) {
     *error = _MakePosixError(errno);
     return NO;
   }

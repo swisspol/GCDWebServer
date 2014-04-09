@@ -49,7 +49,6 @@
 }
 
 - (BOOL)open:(NSError**)error {
-  DCHECK(_data == nil);
   if (self.contentLength != NSNotFound) {
     _data = [[NSMutableData alloc] initWithCapacity:self.contentLength];
   } else {
@@ -63,13 +62,11 @@
 }
 
 - (BOOL)writeData:(NSData*)data error:(NSError**)error {
-  DCHECK(_data != nil);
   [_data appendData:data];
   return YES;
 }
 
 - (BOOL)close:(NSError**)error {
-  DCHECK(_data != nil);
   return YES;
 }
 

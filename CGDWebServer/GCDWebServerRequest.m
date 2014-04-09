@@ -269,6 +269,7 @@
 }
 
 - (BOOL)performOpen:(NSError**)error {
+  DCHECK(_type);
   if (_opened) {
     DNOT_REACHED();
     return NO;
@@ -286,10 +287,12 @@
 }
 
 - (BOOL)performWriteData:(NSData*)data error:(NSError**)error {
+  DCHECK(_opened);
   return [_writer writeData:data error:error];
 }
 
 - (BOOL)performClose:(NSError**)error {
+  DCHECK(_opened);
   return [_writer close:error];
 }
 

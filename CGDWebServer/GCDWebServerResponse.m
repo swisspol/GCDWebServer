@@ -222,6 +222,7 @@
 }
 
 - (BOOL)performOpen:(NSError**)error {
+  DCHECK(_type);
   if (_opened) {
     DNOT_REACHED();
     return NO;
@@ -239,10 +240,12 @@
 }
 
 - (NSData*)performReadData:(NSError**)error {
+  DCHECK(_opened);
   return [_reader readData:error];
 }
 
 - (void)performClose {
+  DCHECK(_opened);
   [_reader close];
 }
 
