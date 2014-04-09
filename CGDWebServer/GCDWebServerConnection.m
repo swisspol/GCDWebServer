@@ -392,35 +392,14 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Date"), (ARC_BRIDGE CFStringRef)GCDWebServerFormatHTTPDate([NSDate date]));
 }
 
-// http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.26
-static inline BOOL _CompareResources(NSString* responseETag, NSString* requestETag, NSDate* responseLastModified, NSDate* requestLastModified) {
-  if ([requestETag isEqualToString:@"*"] && (!responseLastModified || !requestLastModified || ([responseLastModified compare:requestLastModified] != NSOrderedDescending))) {
-    return YES;
-  } else {
-    if ([responseETag isEqualToString:requestETag]) {
-      return YES;
-    }
-    if (responseLastModified && requestLastModified && ([responseLastModified compare:requestLastModified] != NSOrderedDescending)) {
-      return YES;
-    }
-  }
-  return NO;
-}
-
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
 - (void)_processRequest {
   DCHECK(_responseMessage == NULL);
   
   GCDWebServerResponse* response = [self processRequest:_request withBlock:_handler.processBlock];
   if (response) {
-    if ((response.statusCode >= 200) && (response.statusCode < 300) && _CompareResources(response.eTag, _request.ifNoneMatch, response.lastModifiedDate, _request.ifModifiedSince)) {
-      NSInteger code = [_request.method isEqualToString:@"HEAD"] || [_request.method isEqualToString:@"GET"] ? kGCDWebServerHTTPStatusCode_NotModified : kGCDWebServerHTTPStatusCode_PreconditionFailed;
-      _response = [[GCDWebServerResponse alloc] initWithStatusCode:code];
-      _response.cacheControlMaxAge = response.cacheControlMaxAge;
-      _response.lastModifiedDate = response.lastModifiedDate;
-      _response.eTag = response.eTag;
-      DCHECK(_response);
-    } else {
+    response = [self replaceResponse:response forRequest:_request];
+    if (response) {
       NSError* error = nil;
       if ([response hasBody] && ![response performOpen:&error]) {
         LOG_ERROR(@"Failed opening response body for socket %i: %@", _socket, error);
@@ -691,6 +670,34 @@ static NSString* _StringFromAddressData(NSData* data) {
   }
   @catch (NSException* exception) {
     LOG_EXCEPTION(exception);
+  }
+  return response;
+}
+
+// http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.26
+static inline BOOL _CompareResources(NSString* responseETag, NSString* requestETag, NSDate* responseLastModified, NSDate* requestLastModified) {
+  if ([requestETag isEqualToString:@"*"] && (!responseLastModified || !requestLastModified || ([responseLastModified compare:requestLastModified] != NSOrderedDescending))) {
+    return YES;
+  } else {
+    if ([responseETag isEqualToString:requestETag]) {
+      return YES;
+    }
+    if (responseLastModified && requestLastModified && ([responseLastModified compare:requestLastModified] != NSOrderedDescending)) {
+      return YES;
+    }
+  }
+  return NO;
+}
+
+- (GCDWebServerResponse*)replaceResponse:(GCDWebServerResponse*)response forRequest:(GCDWebServerRequest*)request {
+  if ((response.statusCode >= 200) && (response.statusCode < 300) && _CompareResources(response.eTag, request.ifNoneMatch, response.lastModifiedDate, request.ifModifiedSince)) {
+    NSInteger code = [request.method isEqualToString:@"HEAD"] || [request.method isEqualToString:@"GET"] ? kGCDWebServerHTTPStatusCode_NotModified : kGCDWebServerHTTPStatusCode_PreconditionFailed;
+    GCDWebServerResponse* newResponse = [GCDWebServerResponse responseWithStatusCode:code];
+    newResponse.cacheControlMaxAge = response.cacheControlMaxAge;
+    newResponse.lastModifiedDate = response.lastModifiedDate;
+    newResponse.eTag = response.eTag;
+    DCHECK(newResponse);
+    return newResponse;
   }
   return response;
 }

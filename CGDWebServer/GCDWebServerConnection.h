@@ -44,6 +44,7 @@
 - (void)didUpdateBytesRead;  // Called from arbitrary thread after @totalBytesRead is updated - Default implementation does nothing
 - (void)didUpdateBytesWritten;  // Called from arbitrary thread after @totalBytesWritten is updated - Default implementation does nothing
 - (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block;  // Only called if the request can be processed
+- (GCDWebServerResponse*)replaceResponse:(GCDWebServerResponse*)response forRequest:(GCDWebServerRequest*)request;  // Default implementation replaces any response matching the "ETag" or "Last-Modified-Date" header of the request by a barebone "Not-Modified" (304) one
 - (void)abortRequest:(GCDWebServerRequest*)request withStatusCode:(NSInteger)statusCode;  // If request headers was malformed, "request" will be nil
 - (void)close;
 @end
