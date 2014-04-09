@@ -54,6 +54,7 @@ static NSData* _lastChunkData = nil;
   CFSocketNativeHandle _socket;
   NSUInteger _bytesRead;
   NSUInteger _bytesWritten;
+  BOOL _virtualHEAD;
   
   CFHTTPMessageRef _requestMessage;
   GCDWebServerRequest* _request;
@@ -395,13 +396,18 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
 - (void)_processRequest {
   DCHECK(_responseMessage == NULL);
+  BOOL hasBody = NO;
   
   GCDWebServerResponse* response = [self processRequest:_request withBlock:_handler.processBlock];
   if (response) {
     response = [self replaceResponse:response forRequest:_request];
     if (response) {
+      if ([response hasBody]) {
+        [response prepareForReading];
+        hasBody = !_virtualHEAD;
+      }
       NSError* error = nil;
-      if ([response hasBody] && ![response performOpen:&error]) {
+      if (hasBody && ![response performOpen:&error]) {
         LOG_ERROR(@"Failed opening response body for socket %i: %@", _socket, error);
       } else {
         _response = ARC_RETAIN(response);
@@ -437,14 +443,14 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     [self _writeHeadersWithCompletionBlock:^(BOOL success) {
       
       if (success) {
-        if ([_response hasBody]) {
+        if (hasBody) {
           [self _writeBodyWithCompletionBlock:^(BOOL successInner) {
             
             [_response performClose];  // TODO: There's nothing we can do on failure as headers have already been sent
             
           }];
         }
-      } else if ([_response hasBody]) {
+      } else if (hasBody) {
         [_response performClose];
       }
       
@@ -527,6 +533,10 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     if (extraData) {
       NSString* requestMethod = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestMethod(_requestMessage));  // Method verbs are case-sensitive and uppercase
       DCHECK(requestMethod);
+      if ([[self class] shouldAutomaticallyMapHEADToGET] && [requestMethod isEqualToString:@"HEAD"]) {
+        requestMethod = @"GET";
+        _virtualHEAD = YES;
+      }
       NSURL* requestURL = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestURL(_requestMessage));
       DCHECK(requestURL);
       NSString* requestPath = GCDWebServerUnescapeURLString(ARC_BRIDGE_RELEASE(CFURLCopyPath((CFURLRef)requestURL)));  // Don't use -[NSURL path] which strips the ending slash
@@ -546,7 +556,8 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
         }
       }
       if (_request) {
-        if (_request.hasBody) {
+        if ([_request hasBody]) {
+          [_request prepareForWriting];
           if (_request.usesChunkedTransferEncoding || (extraData.length <= _request.contentLength)) {
             NSString* expectHeader = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyHeaderFieldValue(_requestMessage, CFSTR("Expect")));
             if (expectHeader) {
@@ -648,6 +659,10 @@ static NSString* _StringFromAddressData(NSData* data) {
 @end
 
 @implementation GCDWebServerConnection (Subclassing)
+
++ (BOOL)shouldAutomaticallyMapHEADToGET {
+  return YES;
+}
 
 - (void)open {
   LOG_DEBUG(@"Did open connection on socket %i", _socket);

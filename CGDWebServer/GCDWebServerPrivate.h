@@ -129,6 +129,7 @@ extern NSDate* GCDWebServerParseHTTPDate(NSString* string);
 
 @interface GCDWebServerRequest ()
 @property(nonatomic, readonly) BOOL usesChunkedTransferEncoding;
+- (void)prepareForWriting;
 - (BOOL)performOpen:(NSError**)error;
 - (BOOL)performWriteData:(NSData*)data error:(NSError**)error;
 - (BOOL)performClose:(NSError**)error;
@@ -137,6 +138,7 @@ extern NSDate* GCDWebServerParseHTTPDate(NSString* string);
 @interface GCDWebServerResponse ()
 @property(nonatomic, readonly) NSDictionary* additionalHeaders;
 @property(nonatomic, readonly) BOOL usesChunkedTransferEncoding;
+- (void)prepareForReading;
 - (BOOL)performOpen:(NSError**)error;
 - (NSData*)performReadData:(NSError**)error;
 - (void)performClose;

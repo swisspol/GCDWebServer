@@ -271,14 +271,7 @@
   return YES;
 }
 
-- (BOOL)performOpen:(NSError**)error {
-  DCHECK(_type);
-  if (_opened) {
-    DNOT_REACHED();
-    return NO;
-  }
-  _opened = YES;
-  
+- (void)prepareForWriting {
   _writer = self;
   if ([[[self.headers objectForKey:@"Content-Encoding"] lowercaseString] isEqualToString:@"gzip"]) {
     GCDWebServerGZipDecoder* decoder = [[GCDWebServerGZipDecoder alloc] initWithRequest:self writer:_writer];
@@ -286,6 +279,16 @@
     ARC_RELEASE(decoder);
     _writer = decoder;
   }
+}
+
+- (BOOL)performOpen:(NSError**)error {
+  DCHECK(_type);
+  DCHECK(_writer);
+  if (_opened) {
+    DNOT_REACHED();
+    return NO;
+  }
+  _opened = YES;
   return [_writer open:error];
 }
 
