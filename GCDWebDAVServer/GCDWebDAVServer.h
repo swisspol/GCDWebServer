@@ -47,6 +47,7 @@
 @property(nonatomic, copy) NSArray* allowedFileExtensions;  // Default is nil i.e. all file extensions are allowed
 @property(nonatomic) BOOL showHiddenFiles;  // Default is NO
 - (instancetype)initWithUploadDirectory:(NSString*)path;
+- (instancetype)initWithUploadDirectory:(NSString*)path macFinderMode:(BOOL)macFinderMode;  // If Mac Finder mode is ON, WebDAV server can be mounted read-write instead of read-only in OS X Finder
 @end
 
 @interface GCDWebDAVServer (Subclassing)

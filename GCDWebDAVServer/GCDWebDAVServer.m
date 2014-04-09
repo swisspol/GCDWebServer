@@ -51,6 +51,7 @@ typedef NS_ENUM(NSInteger, DAVProperties) {
 @interface GCDWebDAVServer () {
 @private
   NSString* _uploadDirectory;
+  BOOL _macMode;
   id<GCDWebDAVServerDelegate> __unsafe_unretained _delegate;
   NSArray* _allowedExtensions;
   BOOL _showHidden;
@@ -66,29 +67,17 @@ typedef NS_ENUM(NSInteger, DAVProperties) {
   return YES;
 }
 
-- (GCDWebServerResponse*)performOPTIONS:(GCDWebServerRequest*)request {
-  GCDWebServerResponse* response = [GCDWebServerResponse response];
-  [response setValue:@"1" forAdditionalHeader:@"DAV"];  // Class 1
-  return response;
+static inline BOOL _IsMacFinder(GCDWebServerRequest* request) {
+  NSString* userAgentHeader = [request.headers objectForKey:@"User-Agent"];
+  return ([userAgentHeader hasPrefix:@"WebDAVFS/"] || [userAgentHeader hasPrefix:@"WebDAVLib/"]);  // OS X WebDAV client
 }
 
-- (GCDWebServerResponse*)performHEAD:(GCDWebServerRequest*)request {
-  NSString* relativePath = request.path;
-  NSString* absolutePath = [_uploadDirectory stringByAppendingPathComponent:relativePath];
-  if (![absolutePath hasPrefix:_uploadDirectory] || ![[NSFileManager defaultManager] fileExistsAtPath:absolutePath]) {
-    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_NotFound message:@"\"%@\" does not exist", relativePath];
-  }
-  
-  NSError* error = nil;
-  NSDictionary* attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:absolutePath error:&error];
-  if (!attributes) {
-    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_NotFound underlyingError:error message:@"Failed retrieving attributes for \"%@\"", relativePath];
-  }
-  
+- (GCDWebServerResponse*)performOPTIONS:(GCDWebServerRequest*)request {
   GCDWebServerResponse* response = [GCDWebServerResponse response];
-  if ([[attributes fileType] isEqualToString:NSFileTypeRegular]) {
-    [response setValue:GCDWebServerGetMimeTypeForExtension([absolutePath pathExtension]) forAdditionalHeader:@"Content-Type"];
-    [response setValue:[NSString stringWithFormat:@"%llu", [attributes fileSize]] forAdditionalHeader:@"Content-Length"];
+  if (_macMode && _IsMacFinder(request)) {
+    [response setValue:@"1, 2" forAdditionalHeader:@"DAV"];  // Classes 1 and 2
+  } else {
+    [response setValue:@"1" forAdditionalHeader:@"DAV"];  // Class 1
   }
   return response;
 }
@@ -374,6 +363,7 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
   
   DAVProperties properties = 0;
   if (request.data.length) {
+    BOOL success = YES;
     xmlDocPtr document = xmlReadMemory(request.data.bytes, (int)request.data.length, NULL, NULL, kXMLParseOptions);
     if (document) {
       xmlNodePtr rootNode = _XMLChildWithName(document->children, (const xmlChar*)"propfind");
@@ -398,13 +388,18 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
           node = node->next;
         }
       } else {
-        NSString* string = [[NSString alloc] initWithData:request.data encoding:NSUTF8StringEncoding];
-        [self logError:@"Invalid DAV properties\n%@", string];
-#if !__has_feature(objc_arc)
-        [string release];
-#endif
+        success = NO;
       }
       xmlFreeDoc(document);
+    } else {
+      success = NO;
+    }
+    if (!success) {
+      NSString* string = [[NSString alloc] initWithData:request.data encoding:NSUTF8StringEncoding];
+      return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"Invalid DAV properties:\n%@", string];
+#if !__has_feature(objc_arc)
+      [string release];
+#endif
     }
   } else {
     properties = kDAVAllProperties;
@@ -412,14 +407,18 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
   
   NSString* relativePath = request.path;
   NSString* absolutePath = [_uploadDirectory stringByAppendingPathComponent:relativePath];
-  if (![absolutePath hasPrefix:_uploadDirectory] || ![[NSFileManager defaultManager] fileExistsAtPath:absolutePath]) {
+  BOOL isDirectory = NO;
+  if (![absolutePath hasPrefix:_uploadDirectory] || ![[NSFileManager defaultManager] fileExistsAtPath:absolutePath isDirectory:&isDirectory]) {
     return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_NotFound message:@"\"%@\" does not exist", relativePath];
   }
   
-  NSError* error = nil;
-  NSArray* items = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:absolutePath error:&error];
-  if (items == nil) {
-    return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed listing directory \"%@\"", relativePath];
+  NSArray* items = nil;
+  if (isDirectory) {
+    NSError* error = nil;
+    items = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:absolutePath error:&error];
+    if (items == nil) {
+      return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed listing directory \"%@\"", relativePath];
+    }
   }
   
   NSMutableString* xmlString = [NSMutableString stringWithString:@"<?xml version=\"1.0\" encoding=\"utf-8\" ?>"];
@@ -446,6 +445,114 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
   return response;
 }
 
+- (GCDWebServerResponse*)performLOCK:(GCDWebServerDataRequest*)request {
+  if (!_macMode || !_IsMacFinder(request)) {
+    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_MethodNotAllowed message:@"LOCK method only allowed for Mac Finder"];
+  }
+  
+  NSString* relativePath = request.path;
+  NSString* absolutePath = [_uploadDirectory stringByAppendingPathComponent:relativePath];
+  if (![absolutePath hasPrefix:_uploadDirectory] || ![[NSFileManager defaultManager] fileExistsAtPath:absolutePath]) {
+    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_NotFound message:@"\"%@\" does not exist", relativePath];
+  }
+  
+  NSString* depthHeader = [request.headers objectForKey:@"Depth"];
+  NSString* timeoutHeader = [request.headers objectForKey:@"Timeout"];
+  NSString* scope = nil;
+  NSString* type = nil;
+  NSString* owner = nil;
+  NSString* token = nil;
+  BOOL success = YES;
+  xmlDocPtr document = xmlReadMemory(request.data.bytes, (int)request.data.length, NULL, NULL, kXMLParseOptions);
+  if (document) {
+    xmlNodePtr node = _XMLChildWithName(document->children, (const xmlChar*)"lockinfo");
+    if (node) {
+      xmlNodePtr scopeNode = _XMLChildWithName(node->children, (const xmlChar*)"lockscope");
+      if (scopeNode && scopeNode->children && scopeNode->children->name) {
+        scope = [NSString stringWithUTF8String:(const char*)scopeNode->children->name];
+      }
+      xmlNodePtr typeNode = _XMLChildWithName(node->children, (const xmlChar*)"locktype");
+      if (typeNode && typeNode->children && typeNode->children->name) {
+        type = [NSString stringWithUTF8String:(const char*)typeNode->children->name];
+      }
+      xmlNodePtr ownerNode = _XMLChildWithName(node->children, (const xmlChar*)"owner");
+      if (ownerNode) {
+        ownerNode = _XMLChildWithName(ownerNode->children, (const xmlChar*)"href");
+        if (ownerNode && ownerNode->children && ownerNode->children->content) {
+          owner = [NSString stringWithUTF8String:(const char*)ownerNode->children->content];
+        }
+      }
+    } else {
+      success = NO;
+    }
+    xmlFreeDoc(document);
+  } else {
+    success = NO;
+  }
+  if (!success) {
+    NSString* string = [[NSString alloc] initWithData:request.data encoding:NSUTF8StringEncoding];
+    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"Invalid DAV properties:\n%@", string];
+#if !__has_feature(objc_arc)
+    [string release];
+#endif
+  }
+  
+  if (![scope isEqualToString:@"exclusive"] || ![type isEqualToString:@"write"] || ![depthHeader isEqualToString:@"0"]) {
+    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Locking request \"%@/%@/%@\" for \"%@\" is not allowed", scope, type, depthHeader, relativePath];
+  }
+  
+  if (!token) {
+    CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
+    CFStringRef string = CFUUIDCreateString(kCFAllocatorDefault, uuid);
+    token = [NSString stringWithFormat:@"urn:uuid:%@", (__bridge NSString*)string];
+    CFRelease(string);
+    CFRelease(uuid);
+  }
+  
+  NSMutableString* xmlString = [NSMutableString stringWithString:@"<?xml version=\"1.0\" encoding=\"utf-8\" ?>"];
+  [xmlString appendString:@"<D:prop xmlns:D=\"DAV:\">\n"];
+  [xmlString appendString:@"<D:lockdiscovery>\n<D:activelock>\n"];
+  [xmlString appendFormat:@"<D:locktype><D:%@/></D:locktype>\n", type];
+  [xmlString appendFormat:@"<D:lockscope><D:%@/></D:lockscope>\n", scope];
+  [xmlString appendFormat:@"<D:depth>%@</D:depth>\n", depthHeader];
+  if (owner) {
+    [xmlString appendFormat:@"<D:owner><D:href>%@</D:href></D:owner>\n", owner];
+  }
+  if (timeoutHeader) {
+    [xmlString appendFormat:@"<D:timeout>%@</D:timeout>\n", timeoutHeader];
+  }
+  [xmlString appendFormat:@"<D:locktoken><D:href>%@</D:href></D:locktoken>\n", token];
+  NSString* lockroot = [@"http://" stringByAppendingString:[[request.headers objectForKey:@"Host"] stringByAppendingString:[@"/" stringByAppendingString:relativePath]]];
+  [xmlString appendFormat:@"<D:lockroot><D:href>%@</D:href></D:lockroot>\n", lockroot];
+  [xmlString appendString:@"</D:activelock>\n</D:lockdiscovery>\n"];
+  [xmlString appendString:@"</D:prop>"];
+  
+  [self logVerbose:@"WebDAV pretending to lock \"%@\"", relativePath];
+  GCDWebServerDataResponse* response = [GCDWebServerDataResponse responseWithData:[xmlString dataUsingEncoding:NSUTF8StringEncoding]
+                                                                      contentType:@"application/xml; charset=\"utf-8\""];
+  return response;
+}
+
+- (GCDWebServerResponse*)performUNLOCK:(GCDWebServerRequest*)request {
+  if (!_macMode || !_IsMacFinder(request)) {
+    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_MethodNotAllowed message:@"UNLOCK method only allowed for Mac Finder"];
+  }
+  
+  NSString* relativePath = request.path;
+  NSString* absolutePath = [_uploadDirectory stringByAppendingPathComponent:relativePath];
+  if (![absolutePath hasPrefix:_uploadDirectory] || ![[NSFileManager defaultManager] fileExistsAtPath:absolutePath]) {
+    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_NotFound message:@"\"%@\" does not exist", relativePath];
+  }
+  
+  NSString* tokenHeader = [request.headers objectForKey:@"Lock-Token"];
+  if (!tokenHeader.length) {
+    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"Missing 'Lock-Token' header"];
+  }
+  
+  [self logVerbose:@"WebDAV pretending to unlock \"%@\"", relativePath];
+  return [GCDWebServerResponse responseWithStatusCode:kGCDWebServerHTTPStatusCode_NoContent];
+}
+
 @end
 
 @implementation GCDWebDAVServer
@@ -453,8 +560,13 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
 @synthesize uploadDirectory=_uploadDirectory, delegate=_delegate, allowedFileExtensions=_allowedExtensions, showHiddenFiles=_showHidden;
 
 - (instancetype)initWithUploadDirectory:(NSString*)path {
+  return [self initWithUploadDirectory:path macFinderMode:NO];
+}
+
+- (instancetype)initWithUploadDirectory:(NSString*)path macFinderMode:(BOOL)macFinderMode {
   if ((self = [super init])) {
     _uploadDirectory = [[path stringByStandardizingPath] copy];
+    _macMode = macFinderMode;
     GCDWebDAVServer* __unsafe_unretained server = self;
     
     // 9.1 PROPFIND method
@@ -467,12 +579,7 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
       return [server performMKCOL:(GCDWebServerDataRequest*)request];
     }];
     
-    // 9.4 HEAD method
-    [self addDefaultHandlerForMethod:@"HEAD" requestClass:[GCDWebServerRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-      return [server performHEAD:request];
-    }];
-    
-    // 9.4 GET method
+    // 9.4 GET & HEAD methods
     [self addDefaultHandlerForMethod:@"GET" requestClass:[GCDWebServerRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
       return [server performGET:request];
     }];
@@ -495,6 +602,16 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
     // 9.9 MOVE method
     [self addDefaultHandlerForMethod:@"MOVE" requestClass:[GCDWebServerRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
       return [server performCOPY:request isMove:YES];
+    }];
+    
+    // 9.10 LOCK method
+    [self addDefaultHandlerForMethod:@"LOCK" requestClass:[GCDWebServerDataRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+      return [server performLOCK:(GCDWebServerDataRequest*)request];
+    }];
+    
+    // 9.11 UNLOCK method
+    [self addDefaultHandlerForMethod:@"UNLOCK" requestClass:[GCDWebServerRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+      return [server performUNLOCK:request];
     }];
     
     // 10.1 OPTIONS method / DAV Header
