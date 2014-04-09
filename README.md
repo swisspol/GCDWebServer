@@ -5,12 +5,13 @@ GCDWebServer is a lightweight GCD based HTTP 1.1 server designed to be embedded 
 * Easy to use and understand architecture with only 4 core classes: server, connection, request and response
 * Well designed API for easy integration and customization
 * Entirely built with an event-driven design using [Grand Central Dispatch](http://en.wikipedia.org/wiki/Grand_Central_Dispatch) for maximum performance and concurrency
-* Support for streaming large HTTP bodies for requests and responses to minimize memory usage
-* Built-in parser for web forms submitted using "application/x-www-form-urlencoded" or "multipart/form-data" encodings (including file uploads)
 * No dependencies on third-party source code
 * Available under a friendly [New BSD License](LICENSE)
 
 Extra built-in features:
+* Support for streaming large HTTP bodies for requests and responses to minimize memory usage
+* Built-in parser for web forms submitted using "application/x-www-form-urlencoded" or "multipart/form-data" encodings (including file uploads)
+* JSON
 * [Chunked transfer encoding](https://en.wikipedia.org/wiki/Chunked_transfer_encoding) for both requests and responses
 * [HTTP compression](https://en.wikipedia.org/wiki/HTTP_compression) with gzip for both requests and responses
 
@@ -67,7 +68,7 @@ int main(int argc, const char* argv[]) {
 Web Based Uploads in iOS Apps
 =============================
 
-GCDWebUploader is a subclass of GCDWebServer that provides a ready-to-use HTML 5 file uploader & downloader. This lets users upload, download and delete files from a directory inside your iOS app's sandbox using a clean user interface in their web browser.
+GCDWebUploader is a subclass of GCDWebServer that provides a ready-to-use HTML 5 file uploader & downloader. This lets users upload, download, delete files and create directories from a directory inside your iOS app's sandbox using a clean user interface in their web browser.
 
 Simply instantiate and run a GCDWebUploader instance then visit http://{YOUR-IOS-DEVICE-IP-ADDRESS}/ from your web browser:
 
@@ -86,7 +87,7 @@ Simply instantiate and run a GCDWebUploader instance then visit http://{YOUR-IOS
 WebDAV Server in iOS Apps
 =========================
 
-GCDWebDAVServer is a subclass of GCDWebServer that provides a class 1 compliant [WebDAV](https://en.wikipedia.org/wiki/WebDAV) server. This lets users upload, download and delete files from a directory inside your iOS app's sandbox using any WebDAV client like [Transmit](https://panic.com/transmit/) (Mac), [ForkLift](http://binarynights.com/forklift/) (Mac) or [CyberDuck](http://cyberduck.io/) (Mac / Windows).
+GCDWebDAVServer is a subclass of GCDWebServer that provides a class 1 compliant [WebDAV](https://en.wikipedia.org/wiki/WebDAV) server. This lets users upload, download, delete files and create directories from a directory inside your iOS app's sandbox using any WebDAV client like [Transmit](https://panic.com/transmit/) (Mac), [ForkLift](http://binarynights.com/forklift/) (Mac) or [CyberDuck](http://cyberduck.io/) (Mac / Windows).
 
 Simply instantiate and run a GCDWebDAVServer instance then connect to http://{YOUR-IOS-DEVICE-IP-ADDRESS}/ using a WebDAV client:
 
@@ -248,6 +249,6 @@ NSString* websitePath = [[NSBundle mainBundle] pathForResource:@"Website" ofType
 Final Example: File Downloads and Uploads From iOS App
 ======================================================
 
-GCDWebServer was originally written for the [ComicFlow](http://itunes.apple.com/us/app/comicflow/id409290355?mt=8) comic reader app for iPad. It uses it to provide a web server for people to upload and download comic files directly over WiFi to and from the app.
+GCDWebServer was originally written for the [ComicFlow](http://itunes.apple.com/us/app/comicflow/id409290355?mt=8) comic reader app for iPad. It lets users upload, download and organize comic files inside the app using their web browser directly over WiFi.
 
 ComicFlow is [entirely open-source](https://github.com/swisspol/ComicFlow) and you can see how it uses GCDWebUploader in the [WebServer.m](https://github.com/swisspol/ComicFlow/blob/master/Classes/WebServer.m) file.
