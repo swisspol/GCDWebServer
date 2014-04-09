@@ -429,7 +429,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Cache-Control"), CFSTR("no-cache"));
     }
     if (_response.contentType != nil) {
-      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Type"), (ARC_BRIDGE CFStringRef)[_response.contentType lowercaseString]);
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Type"), (ARC_BRIDGE CFStringRef)GCDWebServerNormalizeHeaderValue(_response.contentType));
     }
     if (_response.contentLength != NSNotFound) {
       CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Length"), (ARC_BRIDGE CFStringRef)[NSString stringWithFormat:@"%lu", (unsigned long)_response.contentLength]);

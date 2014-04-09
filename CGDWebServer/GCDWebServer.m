@@ -90,22 +90,40 @@ void GCDLogMessage(long level, NSString* format, ...) {
 
 #endif
 
-NSString* GCDWebServerExtractHeaderParameter(NSString* header, NSString* attribute) {
-  NSString* value = nil;
-  if (header) {
-    NSScanner* scanner = [[NSScanner alloc] initWithString:header];
-    NSString* string = [NSString stringWithFormat:@"%@=", attribute];
-    if ([scanner scanUpToString:string intoString:NULL]) {
-      [scanner scanString:string intoString:NULL];
-      if ([scanner scanString:@"\"" intoString:NULL]) {
-        [scanner scanUpToString:@"\"" intoString:&value];
-      } else {
-        [scanner scanUpToCharactersFromSet:[NSCharacterSet whitespaceCharacterSet] intoString:&value];
-      }
+NSString* GCDWebServerNormalizeHeaderValue(NSString* value) {
+  if (value) {
+    NSRange range = [value rangeOfString:@";"];  // Assume part before ";" separator is case-insensitive
+    if (range.location != NSNotFound) {
+      value = [[[value substringToIndex:range.location] lowercaseString] stringByAppendingString:[value substringFromIndex:range.location]];
+    } else {
+      value = [value lowercaseString];
     }
-    ARC_RELEASE(scanner);
   }
   return value;
+}
+
+NSString* GCDWebServerTruncateHeaderValue(NSString* value) {
+  DCHECK([value isEqualToString:GCDWebServerNormalizeHeaderValue(value)]);
+  NSRange range = [value rangeOfString:@";"];
+  return range.location != NSNotFound ? [value substringToIndex:range.location] : value;
+}
+
+NSString* GCDWebServerExtractHeaderValueParameter(NSString* value, NSString* name) {
+  DCHECK([value isEqualToString:GCDWebServerNormalizeHeaderValue(value)]);
+  NSString* parameter = nil;
+  NSScanner* scanner = [[NSScanner alloc] initWithString:value];
+  [scanner setCaseSensitive:NO];  // Assume parameter names are case-insensitive
+  NSString* string = [NSString stringWithFormat:@"%@=", name];
+  if ([scanner scanUpToString:string intoString:NULL]) {
+    [scanner scanString:string intoString:NULL];
+    if ([scanner scanString:@"\"" intoString:NULL]) {
+      [scanner scanUpToString:@"\"" intoString:&parameter];
+    } else {
+      [scanner scanUpToCharactersFromSet:[NSCharacterSet whitespaceCharacterSet] intoString:&parameter];
+    }
+  }
+  ARC_RELEASE(scanner);
+  return parameter;
 }
 
 // http://www.w3schools.com/tags/ref_charactersets.asp
@@ -163,6 +181,7 @@ NSString* GCDWebServerUnescapeURLString(NSString* string) {
   return ARC_BRIDGE_RELEASE(CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault, (CFStringRef)string, CFSTR(""), kCFStringEncodingUTF8));
 }
 
+// http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4.1
 NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
   NSMutableDictionary* parameters = [NSMutableDictionary dictionary];
   NSScanner* scanner = [[NSScanner alloc] initWithString:form];

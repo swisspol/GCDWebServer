@@ -169,8 +169,8 @@
     _path = [path copy];
     _query = ARC_RETAIN(query);
     
-    _type = ARC_RETAIN([[_headers objectForKey:@"Content-Type"] lowercaseString]);
-    _chunked = [[[_headers objectForKey:@"Transfer-Encoding"] lowercaseString] isEqualToString:@"chunked"];
+    _type = ARC_RETAIN(GCDWebServerNormalizeHeaderValue([_headers objectForKey:@"Content-Type"]));
+    _chunked = [GCDWebServerNormalizeHeaderValue([_headers objectForKey:@"Transfer-Encoding"]) isEqualToString:@"chunked"];
     NSString* lengthHeader = [_headers objectForKey:@"Content-Length"];
     if (lengthHeader) {
       NSInteger length = [lengthHeader integerValue];
@@ -204,7 +204,7 @@
     _noneMatch = ARC_RETAIN([_headers objectForKey:@"If-None-Match"]);
     
     _range = NSMakeRange(NSNotFound, 0);
-    NSString* rangeHeader = [[_headers objectForKey:@"Range"] lowercaseString];
+    NSString* rangeHeader = GCDWebServerNormalizeHeaderValue([_headers objectForKey:@"Range"]);
     if (rangeHeader) {
       if ([rangeHeader hasPrefix:@"bytes="]) {
         NSArray* components = [[rangeHeader substringFromIndex:6] componentsSeparatedByString:@","];
@@ -278,7 +278,7 @@
 
 - (void)prepareForWriting {
   _writer = self;
-  if ([[[self.headers objectForKey:@"Content-Encoding"] lowercaseString] isEqualToString:@"gzip"]) {
+  if ([GCDWebServerNormalizeHeaderValue([self.headers objectForKey:@"Content-Encoding"]) isEqualToString:@"gzip"]) {
     GCDWebServerGZipDecoder* decoder = [[GCDWebServerGZipDecoder alloc] initWithRequest:self writer:_writer];
     [_decoders addObject:decoder];
     ARC_RELEASE(decoder);

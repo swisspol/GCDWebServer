@@ -55,13 +55,7 @@ static NSData* _dashNewlineData = nil;
 - (id)initWithContentType:(NSString*)contentType {
   if ((self = [super init])) {
     _contentType = [contentType copy];
-    NSArray* components = [_contentType componentsSeparatedByString:@";"];
-    if (components.count) {
-      _mimeType = ARC_RETAIN([[components objectAtIndex:0] lowercaseString]);
-    }
-    if (_mimeType == nil) {
-      _mimeType = @"text/plain";
-    }
+    _mimeType = ARC_RETAIN(GCDWebServerTruncateHeaderValue(_contentType));
   }
   return self;
 }
@@ -90,8 +84,8 @@ static NSData* _dashNewlineData = nil;
   if ((self = [super initWithContentType:contentType])) {
     _data = ARC_RETAIN(data);
     
-    if ([self.mimeType hasPrefix:@"text/"]) {
-      NSString* charset = GCDWebServerExtractHeaderParameter(self.contentType, @"charset");
+    if ([self.contentType hasPrefix:@"text/"]) {
+      NSString* charset = GCDWebServerExtractHeaderValueParameter(self.contentType, @"charset");
       _string = [[NSString alloc] initWithData:_data encoding:GCDWebServerStringEncodingFromCharset(charset)];
     }
   }
@@ -187,7 +181,7 @@ static NSData* _dashNewlineData = nil;
 
 - (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
   if ((self = [super initWithMethod:method url:url headers:headers path:path query:query])) {
-    NSString* boundary = GCDWebServerExtractHeaderParameter(self.contentType, @"boundary");
+    NSString* boundary = GCDWebServerExtractHeaderValueParameter(self.contentType, @"boundary");
     if (boundary) {
       NSData* data = [[NSString stringWithFormat:@"--%@", boundary] dataUsingEncoding:NSASCIIStringEncoding];
       _boundary = ARC_RETAIN(data);
@@ -210,7 +204,7 @@ static NSData* _dashNewlineData = nil;
   return YES;
 }
 
-// http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4
+// http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4.2
 - (BOOL)_parseData {
   BOOL success = YES;
   
@@ -234,14 +228,17 @@ static NSData* _dashNewlineData = nil;
         NSString* controlName = nil;
         NSString* fileName = nil;
         NSDictionary* headers = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyAllHeaderFields(message));
-        NSString* contentDisposition = [headers objectForKey:@"Content-Disposition"];
-        if ([[contentDisposition lowercaseString] hasPrefix:@"form-data;"]) {
-          controlName = GCDWebServerExtractHeaderParameter(contentDisposition, @"name");
-          fileName = GCDWebServerExtractHeaderParameter(contentDisposition, @"filename");
+        NSString* contentDisposition = GCDWebServerNormalizeHeaderValue([headers objectForKey:@"Content-Disposition"]);
+        if ([GCDWebServerTruncateHeaderValue(contentDisposition) isEqualToString:@"form-data"]) {
+          controlName = GCDWebServerExtractHeaderValueParameter(contentDisposition, @"name");
+          fileName = GCDWebServerExtractHeaderValueParameter(contentDisposition, @"filename");
         }
         _controlName = [controlName copy];
         _fileName = [fileName copy];
-        _contentType = ARC_RETAIN([headers objectForKey:@"Content-Type"]);
+        _contentType = ARC_RETAIN(GCDWebServerNormalizeHeaderValue([headers objectForKey:@"Content-Type"]));
+        if (_contentType == nil) {
+          _contentType = @"text/plain";
+        }
       }
       CFRelease(message);
       if (_controlName) {

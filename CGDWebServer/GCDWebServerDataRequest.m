@@ -77,7 +77,7 @@
 - (NSString*)text {
   if (_text == nil) {
     if ([self.contentType hasPrefix:@"text/"]) {
-      NSString* charset = GCDWebServerExtractHeaderParameter(self.contentType, @"charset");
+      NSString* charset = GCDWebServerExtractHeaderValueParameter(self.contentType, @"charset");
       _text = [[NSString alloc] initWithData:self.data encoding:GCDWebServerStringEncodingFromCharset(charset)];
     } else {
       DNOT_REACHED();

@@ -52,7 +52,7 @@
     return NO;
   }
   
-  NSString* charset = GCDWebServerExtractHeaderParameter(self.contentType, @"charset");
+  NSString* charset = GCDWebServerExtractHeaderValueParameter(self.contentType, @"charset");
   NSString* string = [[NSString alloc] initWithData:self.data encoding:GCDWebServerStringEncodingFromCharset(charset)];
   _arguments = ARC_RETAIN(GCDWebServerParseURLEncodedForm(string));
   DCHECK(_arguments);

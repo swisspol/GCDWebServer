@@ -28,8 +28,8 @@
 #import "GCDWebServerRequest.h"
 
 @interface GCDWebServerMultiPart : NSObject
-@property(nonatomic, readonly) NSString* contentType;  // May be nil
-@property(nonatomic, readonly) NSString* mimeType;  // Defaults to "text/plain" per specifications if undefined
+@property(nonatomic, readonly) NSString* contentType;  // Defaults to "text/plain" per specifications if undefined
+@property(nonatomic, readonly) NSString* mimeType;
 @end
 
 @interface GCDWebServerMultiPartArgument : GCDWebServerMultiPart

@@ -108,7 +108,9 @@ static inline BOOL GCDWebServerIsValidByteRange(NSRange range) {
   return ((range.location != NSNotFound) || (range.length > 0));
 }
 
-extern NSString* GCDWebServerExtractHeaderParameter(NSString* header, NSString* attribute);
+extern NSString* GCDWebServerNormalizeHeaderValue(NSString* value);
+extern NSString* GCDWebServerTruncateHeaderValue(NSString* value);
+extern NSString* GCDWebServerExtractHeaderValueParameter(NSString* header, NSString* attribute);
 extern NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset);
 extern NSString* GCDWebServerFormatHTTPDate(NSDate* date);
 extern NSDate* GCDWebServerParseHTTPDate(NSString* string);
