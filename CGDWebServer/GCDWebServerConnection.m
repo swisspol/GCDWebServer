@@ -535,7 +535,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     if (extraData) {
       NSString* requestMethod = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestMethod(_requestMessage));  // Method verbs are case-sensitive and uppercase
       DCHECK(requestMethod);
-      if ([[self class] shouldAutomaticallyMapHEADToGET] && [requestMethod isEqualToString:@"HEAD"]) {
+      if ([[_server class] shouldAutomaticallyMapHEADToGET] && [requestMethod isEqualToString:@"HEAD"]) {
         requestMethod = @"GET";
         _virtualHEAD = YES;
       }
@@ -661,10 +661,6 @@ static NSString* _StringFromAddressData(NSData* data) {
 @end
 
 @implementation GCDWebServerConnection (Subclassing)
-
-+ (BOOL)shouldAutomaticallyMapHEADToGET {
-  return YES;
-}
 
 - (void)open {
   LOG_DEBUG(@"Did open connection on socket %i", _socket);

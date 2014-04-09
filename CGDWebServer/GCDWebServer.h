@@ -63,6 +63,7 @@ NSString* GCDWebServerGetPrimaryIPv4Address();  // Returns IPv4 address of prima
 @interface GCDWebServer (Subclassing)
 + (Class)connectionClass;
 + (NSString*)serverName;  // Default is class name
++ (BOOL)shouldAutomaticallyMapHEADToGET;  // Default is YES which means HEAD requests are mapped to GET requests with the response body being discarded
 @end
 
 @interface GCDWebServer (Extensions)

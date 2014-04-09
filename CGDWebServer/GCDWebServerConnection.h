@@ -40,7 +40,6 @@
 @end
 
 @interface GCDWebServerConnection (Subclassing)
-+ (BOOL)shouldAutomaticallyMapHEADToGET;  // Default is YES which means HEAD requests are mapped to GET requests with the response body being discarded
 - (void)open;
 - (void)didUpdateBytesRead;  // Called from arbitrary thread after @totalBytesRead is updated - Default implementation does nothing
 - (void)didUpdateBytesWritten;  // Called from arbitrary thread after @totalBytesWritten is updated - Default implementation does nothing

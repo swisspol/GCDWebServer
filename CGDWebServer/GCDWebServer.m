@@ -510,6 +510,10 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
   return NSStringFromClass(self);
 }
 
++ (BOOL)shouldAutomaticallyMapHEADToGET {
+  return YES;
+}
+
 @end
 
 @implementation GCDWebServer (Extensions)
