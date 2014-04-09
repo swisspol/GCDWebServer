@@ -125,13 +125,13 @@ static inline BOOL _IsMacFinder(GCDWebServerRequest* request) {
     return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Uploaded file name \"%@\" is not allowed", fileName];
   }
   
-  if (![self shouldUploadFileAtPath:absolutePath withTemporaryFile:request.filePath]) {
-    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Uploading file to \"%@\" is not allowed", relativePath];
+  if (![self shouldUploadFileAtPath:absolutePath withTemporaryFile:request.temporaryPath]) {
+    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Uploading file to \"%@\" is not permitted", relativePath];
   }
   
   [[NSFileManager defaultManager] removeItemAtPath:absolutePath error:NULL];
   NSError* error = nil;
-  if (![[NSFileManager defaultManager] moveItemAtPath:request.filePath toPath:absolutePath error:&error]) {
+  if (![[NSFileManager defaultManager] moveItemAtPath:request.temporaryPath toPath:absolutePath error:&error]) {
     return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed moving uploaded file to \"%@\"", relativePath];
   }
   

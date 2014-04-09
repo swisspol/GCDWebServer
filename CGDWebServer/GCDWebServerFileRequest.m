@@ -29,7 +29,7 @@
 
 @interface GCDWebServerFileRequest () {
 @private
-  NSString* _filePath;
+  NSString* _temporaryPath;
   int _file;
 }
 @end
@@ -40,24 +40,24 @@ static inline NSError* _MakePosixError(int code) {
 
 @implementation GCDWebServerFileRequest
 
-@synthesize filePath=_filePath;
+@synthesize temporaryPath=_temporaryPath;
 
 - (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
   if ((self = [super initWithMethod:method url:url headers:headers path:path query:query])) {
-    _filePath = ARC_RETAIN([NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]]);
+    _temporaryPath = ARC_RETAIN([NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]]);
   }
   return self;
 }
 
 - (void)dealloc {
-  unlink([_filePath fileSystemRepresentation]);
-  ARC_RELEASE(_filePath);
+  unlink([_temporaryPath fileSystemRepresentation]);
+  ARC_RELEASE(_temporaryPath);
   
   ARC_DEALLOC(super);
 }
 
 - (BOOL)open:(NSError**)error {
-  _file = open([_filePath fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+  _file = open([_temporaryPath fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
   if (_file <= 0) {
     *error = _MakePosixError(errno);
     return NO;
@@ -79,6 +79,12 @@ static inline NSError* _MakePosixError(int code) {
     return NO;
   }
   return YES;
+}
+
+- (NSString*)description {
+  NSMutableString* description = [NSMutableString stringWithString:[super description]];
+  [description appendFormat:@"\n\n{%@}", _temporaryPath];
+  return description;
 }
 
 @end

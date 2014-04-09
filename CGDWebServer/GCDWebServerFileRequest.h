@@ -28,5 +28,5 @@
 #import "GCDWebServerRequest.h"
 
 @interface GCDWebServerFileRequest : GCDWebServerRequest
-@property(nonatomic, readonly) NSString* filePath;
+@property(nonatomic, readonly) NSString* temporaryPath;
 @end
