@@ -249,7 +249,7 @@
   ARC_RELEASE(_path);
   ARC_RELEASE(_query);
   ARC_RELEASE(_type);
-  ARC_RELEASE(_modifiedSinceDate);
+  ARC_RELEASE(_modifiedSince);
   ARC_RELEASE(_noneMatch);
   ARC_RELEASE(_decoders);
   
