@@ -58,4 +58,10 @@
   return _block(error);
 }
 
+- (NSString*)description {
+  NSMutableString* description = [NSMutableString stringWithString:[super description]];
+  [description appendString:@"\n\n<STREAM>"];
+  return description;
+}
+
 @end

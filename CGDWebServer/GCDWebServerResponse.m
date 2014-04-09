@@ -254,6 +254,30 @@
   [_reader close];
 }
 
+- (NSString*)description {
+  NSMutableString* description = [NSMutableString stringWithFormat:@"Status Code = %i", (int)_status];
+  if (_type) {
+    [description appendFormat:@"\nContent Type = %@", _type];
+  }
+  if (_length != NSNotFound) {
+    [description appendFormat:@"\nContent Length = %lu", (unsigned long)_length];
+  }
+  [description appendFormat:@"\nCache Control Max Age = %lu", (unsigned long)_maxAge];
+  if (_lastModified) {
+    [description appendFormat:@"\nLast Modified Date = %@", _lastModified];
+  }
+  if (_eTag) {
+    [description appendFormat:@"\nETag = %@", _eTag];
+  }
+  if (_headers.count) {
+    [description appendString:@"\n"];
+    for (NSString* header in [[_headers allKeys] sortedArrayUsingSelector:@selector(compare:)]) {
+      [description appendFormat:@"\n%@: %@", header, [_headers objectForKey:header]];
+    }
+  }
+  return description;
+}
+
 @end
 
 @implementation GCDWebServerResponse (Extensions)

@@ -70,6 +70,15 @@
   return YES;
 }
 
+- (NSString*)description {
+  NSMutableString* description = [NSMutableString stringWithString:[super description]];
+  if (_data) {
+    [description appendString:@"\n\n"];
+    [description appendString:GCDWebServerDescribeData(_data, self.contentType)];
+  }
+  return description;
+}
+
 @end
 
 @implementation GCDWebServerDataRequest (Extensions)

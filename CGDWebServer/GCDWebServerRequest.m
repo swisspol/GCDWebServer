@@ -307,4 +307,16 @@
   return [_writer close:error];
 }
 
+- (NSString*)description {
+  NSMutableString* description = [NSMutableString stringWithFormat:@"%@ %@", _method, _path];
+  for (NSString* argument in [[_query allKeys] sortedArrayUsingSelector:@selector(compare:)]) {
+    [description appendFormat:@"\n  %@ = %@", argument, [_query objectForKey:argument]];
+  }
+  [description appendString:@"\n"];
+  for (NSString* header in [[_headers allKeys] sortedArrayUsingSelector:@selector(compare:)]) {
+    [description appendFormat:@"\n%@: %@", header, [_headers objectForKey:header]];
+  }
+  return description;
+}
+
 @end

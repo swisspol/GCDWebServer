@@ -151,6 +151,17 @@ NSDate* GCDWebServerParseHTTPDate(NSString* string) {
   return date;
 }
 
+NSString* GCDWebServerDescribeData(NSData* data, NSString* contentType) {
+  if ([contentType hasPrefix:@"text/"] || [contentType isEqualToString:@"application/json"] || [contentType isEqualToString:@"application/xml"]) {
+    NSString* charset = GCDWebServerExtractHeaderValueParameter(contentType, @"charset");
+    NSString* string = [[NSString alloc] initWithData:data encoding:GCDWebServerStringEncodingFromCharset(charset)];
+    if (string) {
+      return ARC_AUTORELEASE(string);
+    }
+  }
+  return [NSString stringWithFormat:@"<%lu bytes>", (unsigned long)data.length];
+}
+
 NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
   static NSDictionary* _overrides = nil;
   if (_overrides == nil) {

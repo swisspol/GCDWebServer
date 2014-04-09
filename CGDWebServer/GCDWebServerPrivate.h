@@ -114,6 +114,7 @@ extern NSString* GCDWebServerExtractHeaderValueParameter(NSString* header, NSStr
 extern NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset);
 extern NSString* GCDWebServerFormatHTTPDate(NSDate* date);
 extern NSDate* GCDWebServerParseHTTPDate(NSString* string);
+extern NSString* GCDWebServerDescribeData(NSData* data, NSString* contentType);
 
 @interface GCDWebServerConnection ()
 - (id)initWithServer:(GCDWebServer*)server localAddress:(NSData*)localAddress remoteAddress:(NSData*)remoteAddress socket:(CFSocketNativeHandle)socket;

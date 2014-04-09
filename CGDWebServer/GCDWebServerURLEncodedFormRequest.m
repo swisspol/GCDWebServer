@@ -61,4 +61,13 @@
   return YES;
 }
 
+- (NSString*)description {
+  NSMutableString* description = [NSMutableString stringWithString:[super description]];
+  [description appendString:@"\n"];
+  for (NSString* argument in [[_arguments allKeys] sortedArrayUsingSelector:@selector(compare:)]) {
+    [description appendFormat:@"\n%@ = %@", argument, [_arguments objectForKey:argument]];
+  }
+  return description;
+}
+
 @end

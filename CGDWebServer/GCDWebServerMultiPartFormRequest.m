@@ -100,7 +100,7 @@ static NSData* _dashNewlineData = nil;
 }
 
 - (NSString*)description {
-  return [NSString stringWithFormat:@"<%@ | '%@' | %i bytes>", [self class], self.mimeType, (int)_data.length];
+  return [NSString stringWithFormat:@"<%@ | '%@' | %lu bytes>", [self class], self.mimeType, (unsigned long)_data.length];
 }
 
 @end
@@ -196,6 +196,14 @@ static NSData* _dashNewlineData = nil;
     _files = [[NSMutableDictionary alloc] init];
   }
   return self;
+}
+
+- (void)dealloc {
+  ARC_RELEASE(_arguments);
+  ARC_RELEASE(_files);
+  ARC_RELEASE(_boundary);
+  
+  ARC_DEALLOC(super);
 }
 
 - (BOOL)open:(NSError**)error {
@@ -357,12 +365,24 @@ static NSData* _dashNewlineData = nil;
   return YES;
 }
 
-- (void)dealloc {
-  ARC_RELEASE(_arguments);
-  ARC_RELEASE(_files);
-  ARC_RELEASE(_boundary);
-  
-  ARC_DEALLOC(super);
+- (NSString*)description {
+  NSMutableString* description = [NSMutableString stringWithString:[super description]];
+  if (_arguments.count) {
+    [description appendString:@"\n"];
+    for (NSString* key in [[_arguments allKeys] sortedArrayUsingSelector:@selector(compare:)]) {
+      GCDWebServerMultiPartArgument* argument = [_arguments objectForKey:key];
+      [description appendFormat:@"\n%@ (%@)\n", key, argument.contentType];
+      [description appendString:GCDWebServerDescribeData(argument.data, argument.contentType)];
+    }
+  }
+  if (_files.count) {
+    [description appendString:@"\n"];
+    for (NSString* key in [[_files allKeys] sortedArrayUsingSelector:@selector(compare:)]) {
+      GCDWebServerMultiPartFile* file = [_files objectForKey:key];
+      [description appendFormat:@"\n%@ (%@): %@\n{%@}", key, file.contentType, file.fileName, file.temporaryPath];
+    }
+  }
+  return description;
 }
 
 @end

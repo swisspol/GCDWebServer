@@ -170,4 +170,10 @@ static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
   close(_file);
 }
 
+- (NSString*)description {
+  NSMutableString* description = [NSMutableString stringWithString:[super description]];
+  [description appendFormat:@"\n\n{%@}", _path];
+  return description;
+}
+
 @end
