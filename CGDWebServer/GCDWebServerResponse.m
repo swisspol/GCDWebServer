@@ -157,6 +157,7 @@
   NSInteger _status;
   NSUInteger _maxAge;
   NSDate* _lastModified;
+  NSString* _eTag;
   NSMutableDictionary* _headers;
   BOOL _chunked;
   BOOL _gzipped;
@@ -169,7 +170,7 @@
 
 @implementation GCDWebServerResponse
 
-@synthesize contentType=_type, contentLength=_length, statusCode=_status, cacheControlMaxAge=_maxAge, lastModifiedDate=_lastModified,
+@synthesize contentType=_type, contentLength=_length, statusCode=_status, cacheControlMaxAge=_maxAge, lastModifiedDate=_lastModified, eTag=_eTag,
             gzipContentEncodingEnabled=_gzipped, additionalHeaders=_headers;
 
 + (instancetype)response {
@@ -191,6 +192,7 @@
 - (void)dealloc {
   ARC_RELEASE(_type);
   ARC_RELEASE(_lastModified);
+  ARC_RELEASE(_eTag);
   ARC_RELEASE(_headers);
   ARC_RELEASE(_encoders);
   

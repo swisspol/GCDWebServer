@@ -41,7 +41,8 @@
 @property(nonatomic, readonly) NSDictionary* query;  // May be nil
 @property(nonatomic, readonly) NSString* contentType;  // Automatically parsed from headers (nil if request has no body or set to "application/octet-stream" if a body is present without a "Content-Type" header)
 @property(nonatomic, readonly) NSUInteger contentLength;  // Automatically parsed from headers (NSNotFound if request has no "Content-Length" header)
-@property(nonatomic, readonly) NSDate* ifModifiedSinceDate;  // Automatically parsed from headers (nil if request has no "If-Modified-Since" header or it is malformatted)
+@property(nonatomic, readonly) NSDate* ifModifiedSince;  // Automatically parsed from headers (nil if request has no "If-Modified-Since" header or it is malformatted)
+@property(nonatomic, readonly) NSString* ifNoneMatch;  // Automatically parsed from headers (nil if request has no "If-None-Match" header)
 @property(nonatomic, readonly) NSRange byteRange;  // Automatically parsed from headers ([NSNotFound, 0] if request has no "Range" header, [offset, length] for byte range from beginning or [NSNotFound, -bytes] from end)
 @property(nonatomic, readonly) BOOL acceptsGzipContentEncoding;
 - (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query;

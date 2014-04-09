@@ -411,6 +411,9 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     if (_response.lastModifiedDate) {
       CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Last-Modified"), (ARC_BRIDGE CFStringRef)GCDWebServerFormatHTTPDate(_response.lastModifiedDate));
     }
+    if (_response.eTag) {
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("ETag"), (ARC_BRIDGE CFStringRef)_response.eTag);
+    }
     if (_response.cacheControlMaxAge > 0) {
       CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Cache-Control"), (ARC_BRIDGE CFStringRef)[NSString stringWithFormat:@"max-age=%i, public", (int)_response.cacheControlMaxAge]);
     } else {

@@ -39,6 +39,7 @@
 @property(nonatomic) NSInteger statusCode;  // Default is 200
 @property(nonatomic) NSUInteger cacheControlMaxAge;  // Default is 0 seconds i.e. "Cache-Control: no-cache"
 @property(nonatomic, retain) NSDate* lastModifiedDate;  // Default is nil i.e. no "Last-Modified" header
+@property(nonatomic, copy) NSString* eTag;  // Default is nil i.e. no "ETag" header
 @property(nonatomic, getter=isGZipContentEncodingEnabled) BOOL gzipContentEncodingEnabled;  // Default is disabled
 + (instancetype)response;
 - (instancetype)init;

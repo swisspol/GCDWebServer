@@ -145,7 +145,8 @@
   NSString* _type;
   BOOL _chunked;
   NSUInteger _length;
-  NSDate* _modifiedSinceDate;
+  NSDate* _modifiedSince;
+  NSString* _noneMatch;
   NSRange _range;
   BOOL _gzipAccepted;
   
@@ -157,7 +158,7 @@
 
 @implementation GCDWebServerRequest : NSObject
 
-@synthesize method=_method, URL=_url, headers=_headers, path=_path, query=_query, contentType=_type, contentLength=_length, ifModifiedSinceDate=_modifiedSinceDate,
+@synthesize method=_method, URL=_url, headers=_headers, path=_path, query=_query, contentType=_type, contentLength=_length, ifModifiedSince=_modifiedSince, ifNoneMatch=_noneMatch,
             byteRange=_range, acceptsGzipContentEncoding=_gzipAccepted, usesChunkedTransferEncoding=_chunked;
 
 - (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
@@ -191,10 +192,11 @@
       _length = NSNotFound;
     }
     
-    NSString* ifModifiedSinceHeader = [_headers objectForKey:@"If-Modified-Since"];
-    if (ifModifiedSinceHeader) {
-      _modifiedSinceDate = [GCDWebServerParseHTTPDate(ifModifiedSinceHeader) copy];
+    NSString* modifiedHeader = [_headers objectForKey:@"If-Modified-Since"];
+    if (modifiedHeader) {
+      _modifiedSince = [GCDWebServerParseHTTPDate(modifiedHeader) copy];
     }
+    _noneMatch = ARC_RETAIN([_headers objectForKey:@"If-None-Match"]);
     
     _range = NSMakeRange(NSNotFound, 0);
     NSString* rangeHeader = [[_headers objectForKey:@"Range"] lowercaseString];
@@ -243,6 +245,7 @@
   ARC_RELEASE(_query);
   ARC_RELEASE(_type);
   ARC_RELEASE(_modifiedSinceDate);
+  ARC_RELEASE(_noneMatch);
   ARC_RELEASE(_decoders);
   
   ARC_DEALLOC(super);
