@@ -30,3 +30,8 @@
 @interface GCDWebServerDataRequest : GCDWebServerRequest
 @property(nonatomic, readonly) NSData* data;
 @end
+
+@interface GCDWebServerDataRequest (Extensions)
+@property(nonatomic, readonly) NSString* text;  // Text encoding is extracted from Content-Type or defaults to UTF-8 - Returns nil on error
+@property(nonatomic, readonly) id jsonObject;  // Returns nil on error
+@end

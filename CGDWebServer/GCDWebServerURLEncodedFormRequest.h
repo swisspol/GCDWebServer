@@ -28,6 +28,6 @@
 #import "GCDWebServerDataRequest.h"
 
 @interface GCDWebServerURLEncodedFormRequest : GCDWebServerDataRequest
-@property(nonatomic, readonly) NSDictionary* arguments;
+@property(nonatomic, readonly) NSDictionary* arguments;  // Text encoding is extracted from Content-Type or defaults to UTF-8
 + (NSString*)mimeType;
 @end

@@ -30,6 +30,9 @@
 @interface GCDWebServerDataRequest () {
 @private
   NSMutableData* _data;
+  
+  NSString* _text;
+  id _jsonObject;
 }
 @end
 
@@ -39,6 +42,8 @@
 
 - (void)dealloc {
   ARC_RELEASE(_data);
+  ARC_RELEASE(_text);
+  ARC_RELEASE(_jsonObject);
   
   ARC_DEALLOC(super);
 }
@@ -66,6 +71,33 @@
 - (BOOL)close:(NSError**)error {
   DCHECK(_data != nil);
   return YES;
+}
+
+@end
+
+@implementation GCDWebServerDataRequest (Extensions)
+
+- (NSString*)text {
+  if (_text == nil) {
+    if ([self.contentType hasPrefix:@"text/"]) {
+      NSString* charset = GCDWebServerExtractHeaderParameter(self.contentType, @"charset");
+      _text = [[NSString alloc] initWithData:self.data encoding:GCDWebServerStringEncodingFromCharset(charset)];
+    } else {
+      DNOT_REACHED();
+    }
+  }
+  return _text;
+}
+
+- (id)jsonObject {
+  if (_jsonObject == nil) {
+    if ([self.contentType isEqualToString:@"application/json"] || [self.contentType isEqualToString:@"text/json"] || [self.contentType isEqualToString:@"text/javascript"]) {
+      _jsonObject = ARC_RETAIN([NSJSONSerialization JSONObjectWithData:_data options:0 error:NULL]);
+    } else {
+      DNOT_REACHED();
+    }
+  }
+  return _jsonObject;
 }
 
 @end
