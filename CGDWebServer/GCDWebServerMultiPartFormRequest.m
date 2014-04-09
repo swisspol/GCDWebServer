@@ -292,7 +292,7 @@ static NSData* _dashNewlineData = nil;
             ARC_RELEASE(_tmpPath);
             _tmpPath = nil;
           } else {
-            NSData* data = [[NSData alloc] initWithBytesNoCopy:(void*)dataBytes length:dataLength freeWhenDone:NO];
+            NSData* data = [[NSData alloc] initWithBytes:(void*)dataBytes length:dataLength];
             GCDWebServerMultiPartArgument* argument = [[GCDWebServerMultiPartArgument alloc] initWithContentType:_contentType data:data];
             [_arguments setObject:argument forKey:_controlName];
             ARC_RELEASE(argument);
