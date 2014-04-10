@@ -27,6 +27,7 @@
 
 // WebDAV specifications: http://webdav.org/specs/rfc4918.html
 
+// Requires "HEADER_SEARCH_PATHS = $(SDKROOT)/usr/include/libxml2" in Xcode build settings
 #import <libxml/parser.h>
 
 #import "GCDWebDAVServer.h"

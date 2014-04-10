@@ -25,8 +25,6 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Requires HEADER_SEARCH_PATHS = "$(SDKROOT)/usr/include/libxml2" in Xcode build settings
-
 #import "GCDWebServer.h"
 
 @class GCDWebDAVServer;
