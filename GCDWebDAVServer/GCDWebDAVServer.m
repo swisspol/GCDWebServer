@@ -409,10 +409,10 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
     }
     if (!success) {
       NSString* string = [[NSString alloc] initWithData:request.data encoding:NSUTF8StringEncoding];
-      return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"Invalid DAV properties:\n%@", string];
 #if !__has_feature(objc_arc)
-      [string release];
+      [string autorelease];
 #endif
+      return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"Invalid DAV properties:\n%@", string];
     }
   } else {
     properties = kDAVAllProperties;
@@ -510,10 +510,10 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
   }
   if (!success) {
     NSString* string = [[NSString alloc] initWithData:request.data encoding:NSUTF8StringEncoding];
-    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"Invalid DAV properties:\n%@", string];
 #if !__has_feature(objc_arc)
-    [string release];
+    [string autorelease];
 #endif
+    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"Invalid DAV properties:\n%@", string];
   }
   
   if (![scope isEqualToString:@"exclusive"] || ![type isEqualToString:@"write"] || ![depthHeader isEqualToString:@"0"]) {
