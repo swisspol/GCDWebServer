@@ -71,14 +71,14 @@
 
 #else
 
-extern long GCDLogMinLevel;
-extern void GCDLogMessage(long level, NSString* format, ...) NS_FORMAT_FUNCTION(2, 3);
+extern GCDWebServerLogLevel GCDLogLevel;
+extern void GCDLogMessage(GCDWebServerLogLevel level, NSString* format, ...) NS_FORMAT_FUNCTION(2, 3);
 
-#define LOG_VERBOSE(...) do { if (GCDLogMinLevel <= 1) GCDLogMessage(1, __VA_ARGS__); } while (0)
-#define LOG_INFO(...) do { if (GCDLogMinLevel <= 2) GCDLogMessage(2, __VA_ARGS__); } while (0)
-#define LOG_WARNING(...) do { if (GCDLogMinLevel <= 3) GCDLogMessage(3, __VA_ARGS__); } while (0)
-#define LOG_ERROR(...) do { if (GCDLogMinLevel <= 4) GCDLogMessage(4, __VA_ARGS__); } while (0)
-#define LOG_EXCEPTION(__EXCEPTION__) do { if (GCDLogMinLevel <= 5) GCDLogMessage(5, @"%@", __EXCEPTION__); } while (0)
+#define LOG_VERBOSE(...) do { if (GCDLogLevel <= kGCDWebServerLogLevel_Verbose) GCDLogMessage(kGCDWebServerLogLevel_Verbose, __VA_ARGS__); } while (0)
+#define LOG_INFO(...) do { if (GCDLogLevel <= kGCDWebServerLogLevel_Info) GCDLogMessage(kGCDWebServerLogLevel_Info, __VA_ARGS__); } while (0)
+#define LOG_WARNING(...) do { if (GCDLogLevel <= kGCDWebServerLogLevel_Warning) GCDLogMessage(kGCDWebServerLogLevel_Warning, __VA_ARGS__); } while (0)
+#define LOG_ERROR(...) do { if (GCDLogLevel <= kGCDWebServerLogLevel_Error) GCDLogMessage(kGCDWebServerLogLevel_Error, __VA_ARGS__); } while (0)
+#define LOG_EXCEPTION(__EXCEPTION__) do { if (GCDLogLevel <= kGCDWebServerLogLevel_Exception) GCDLogMessage(kGCDWebServerLogLevel_Exception, @"%@", __EXCEPTION__); } while (0)
 
 #ifdef NDEBUG
 
@@ -95,7 +95,7 @@ extern void GCDLogMessage(long level, NSString* format, ...) NS_FORMAT_FUNCTION(
     } \
   } while (0)
 #define DNOT_REACHED() abort()
-#define LOG_DEBUG(...) do { if (GCDLogMinLevel <= 0) GCDLogMessage(0, __VA_ARGS__); } while (0)
+#define LOG_DEBUG(...) do { if (GCDLogLevel <= kGCDWebServerLogLevel_Debug) GCDLogMessage(kGCDWebServerLogLevel_Debug, __VA_ARGS__); } while (0)
 
 #endif
 

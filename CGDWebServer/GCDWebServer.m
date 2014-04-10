@@ -65,9 +65,9 @@
 
 #ifndef __GCDWEBSERVER_LOGGING_HEADER__
 #ifdef NDEBUG
-long GCDLogMinLevel = 2;  // INFO level and higher
+GCDWebServerLogLevel GCDLogLevel = kGCDWebServerLogLevel_Info;
 #else
-long GCDLogMinLevel = 0;  // DEBUG level and higher
+GCDWebServerLogLevel GCDLogLevel = kGCDWebServerLogLevel_Debug;
 #endif
 #endif
 
@@ -79,7 +79,7 @@ static BOOL _run;
 
 #ifndef __GCDWEBSERVER_LOGGING_HEADER__
 
-void GCDLogMessage(long level, NSString* format, ...) {
+void GCDLogMessage(GCDWebServerLogLevel level, NSString* format, ...) {
   static const char* levelNames[] = {"DEBUG", "VERBOSE", "INFO", "WARNING", "ERROR", "EXCEPTION"};
   va_list arguments;
   va_start(arguments, format);
@@ -311,7 +311,7 @@ static void _SignalHandler(int signal) {
 + (void)load {
   const char* logLevel = getenv("logLevel");
   if (logLevel) {
-    GCDLogMinLevel = atoi(logLevel);
+    GCDLogLevel = atoi(logLevel);
   }
 }
 
@@ -376,7 +376,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
       LOG_ERROR(@"Bonjour error %i (domain %i)", (int)error->error, (int)error->domain);
     } else {
       GCDWebServer* server = (ARC_BRIDGE GCDWebServer*)info;
-      LOG_VERBOSE(@"%@ now reachable at %@", [server class], server.bonjourServerURL);
+      LOG_INFO(@"%@ now reachable at %@", [server class], server.bonjourServerURL);
     }
   }
 }
@@ -472,7 +472,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
         }
         
         dispatch_resume(_source);
-        LOG_VERBOSE(@"%@ started on port %i and reachable at %@", [self class], (int)_port, self.serverURL);
+        LOG_INFO(@"%@ started on port %i and reachable at %@", [self class], (int)_port, self.serverURL);
       } else {
         LOG_ERROR(@"Failed listening on socket (%i): %s", errno, strerror(errno));
         close(listeningSocket);
@@ -505,7 +505,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
     ARC_DISPATCH_RELEASE(_source);
     _source = NULL;
     
-    LOG_VERBOSE(@"%@ stopped", [self class]);
+    LOG_INFO(@"%@ stopped", [self class]);
   }
   _port = 0;
 }
@@ -744,6 +744,14 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 @end
 
 @implementation GCDWebServer (Logging)
+
+#ifndef __GCDWEBSERVER_LOGGING_HEADER__
+
++ (void)setLogLevel:(GCDWebServerLogLevel)level {
+  GCDLogLevel = level;
+}
+
+#endif
 
 - (void)logVerbose:(NSString*)format, ... {
   va_list arguments;

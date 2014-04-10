@@ -30,6 +30,15 @@
 #import "GCDWebServerRequest.h"
 #import "GCDWebServerResponse.h"
 
+typedef NS_ENUM(int, GCDWebServerLogLevel) {
+  kGCDWebServerLogLevel_Debug = 0,  // Only available if "NDEBUG" is not defined when building
+  kGCDWebServerLogLevel_Verbose,
+  kGCDWebServerLogLevel_Info,
+  kGCDWebServerLogLevel_Warning,
+  kGCDWebServerLogLevel_Error,
+  kGCDWebServerLogLevel_Exception,
+};
+
 typedef GCDWebServerRequest* (^GCDWebServerMatchBlock)(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery);
 typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* request);
 
@@ -87,6 +96,9 @@ NSString* GCDWebServerGetPrimaryIPv4Address();  // Returns IPv4 address of prima
 @end
 
 @interface GCDWebServer (Logging)
+#ifndef __GCDWEBSERVER_LOGGING_HEADER__
++ (void)setLogLevel:(GCDWebServerLogLevel)level;  // Default level is DEBUG or INFO if "NDEBUG" is defined when building (it can also be set at runtime with the "logLevel" environment variable)
+#endif
 - (void)logVerbose:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
 - (void)logInfo:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
 - (void)logWarning:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
