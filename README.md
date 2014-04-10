@@ -40,6 +40,14 @@ Alternatively, you can install GCDWebServer using [CocoaPods](http://cocoapods.o
 ```
 pod "GCDWebServer", "~> 2.0"
 ```
+If you want to use GCDWebUploader, use this line instead:
+```
+pod "GCDWebServer/WebUploader", "~> 2.0"
+```
+Or this line for GCDWebDAVServer:
+```
+pod "GCDWebServer/WebDAV", "~> 2.0"
+```
 
 Hello World
 ===========
