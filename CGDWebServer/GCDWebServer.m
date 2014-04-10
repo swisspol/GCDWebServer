@@ -63,6 +63,14 @@
 }
 @end
 
+#ifndef __GCDWEBSERVER_LOGGING_HEADER__
+#ifdef NDEBUG
+long GCDLogMinLevel = 2;  // INFO level and higher
+#else
+long GCDLogMinLevel = 0;  // DEBUG level and higher
+#endif
+#endif
+
 static NSDateFormatter* _dateFormatterRFC822 = nil;
 static dispatch_queue_t _dateFormatterQueue = NULL;
 #if !TARGET_OS_IPHONE
@@ -73,19 +81,12 @@ static BOOL _run;
 
 void GCDLogMessage(long level, NSString* format, ...) {
   static const char* levelNames[] = {"DEBUG", "VERBOSE", "INFO", "WARNING", "ERROR", "EXCEPTION"};
-  static long minLevel = -1;
-  if (minLevel < 0) {
-    const char* logLevel = getenv("logLevel");
-    minLevel = logLevel ? atoi(logLevel) : 0;
-  }
-  if (level >= minLevel) {
-    va_list arguments;
-    va_start(arguments, format);
-    NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
-    va_end(arguments);
-    fprintf(stderr, "[%s] %s\n", levelNames[level], [message UTF8String]);
-    ARC_RELEASE(message);
-  }
+  va_list arguments;
+  va_start(arguments, format);
+  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
+  va_end(arguments);
+  fprintf(stderr, "[%s] %s\n", levelNames[level], [message UTF8String]);
+  ARC_RELEASE(message);
 }
 
 #endif
@@ -304,6 +305,17 @@ static void _SignalHandler(int signal) {
 @implementation GCDWebServer
 
 @synthesize handlers=_handlers, port=_port;
+
+#ifndef __GCDWEBSERVER_LOGGING_HEADER__
+
++ (void)load {
+  const char* logLevel = getenv("logLevel");
+  if (logLevel) {
+    GCDLogMinLevel = atoi(logLevel);
+  }
+}
+
+#endif
 
 + (void)initialize {
   if (_dateFormatterRFC822 == nil) {

@@ -71,13 +71,14 @@
 
 #else
 
+extern long GCDLogMinLevel;
 extern void GCDLogMessage(long level, NSString* format, ...) NS_FORMAT_FUNCTION(2, 3);
 
-#define LOG_VERBOSE(...) GCDLogMessage(1, __VA_ARGS__)
-#define LOG_INFO(...) GCDLogMessage(2, __VA_ARGS__)
-#define LOG_WARNING(...) GCDLogMessage(3, __VA_ARGS__)
-#define LOG_ERROR(...) GCDLogMessage(4, __VA_ARGS__)
-#define LOG_EXCEPTION(__EXCEPTION__) GCDLogMessage(5, @"%@", __EXCEPTION__)
+#define LOG_VERBOSE(...) do { if (GCDLogMinLevel <= 1) GCDLogMessage(1, __VA_ARGS__); } while (0)
+#define LOG_INFO(...) do { if (GCDLogMinLevel <= 2) GCDLogMessage(2, __VA_ARGS__); } while (0)
+#define LOG_WARNING(...) do { if (GCDLogMinLevel <= 3) GCDLogMessage(3, __VA_ARGS__); } while (0)
+#define LOG_ERROR(...) do { if (GCDLogMinLevel <= 4) GCDLogMessage(4, __VA_ARGS__); } while (0)
+#define LOG_EXCEPTION(__EXCEPTION__) do { if (GCDLogMinLevel <= 5) GCDLogMessage(5, @"%@", __EXCEPTION__); } while (0)
 
 #ifdef NDEBUG
 
@@ -94,7 +95,7 @@ extern void GCDLogMessage(long level, NSString* format, ...) NS_FORMAT_FUNCTION(
     } \
   } while (0)
 #define DNOT_REACHED() abort()
-#define LOG_DEBUG(...) GCDLogMessage(0, __VA_ARGS__)
+#define LOG_DEBUG(...) do { if (GCDLogMinLevel <= 0) GCDLogMessage(0, __VA_ARGS__); } while (0)
 
 #endif
 
