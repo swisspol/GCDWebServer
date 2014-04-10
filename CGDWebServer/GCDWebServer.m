@@ -387,7 +387,6 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
   if (listeningSocket > 0) {
     int yes = 1;
     setsockopt(listeningSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
-    setsockopt(listeningSocket, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(yes));
     
     struct sockaddr_in addr4;
     bzero(&addr4, sizeof(addr4));
