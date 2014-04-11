@@ -239,7 +239,7 @@ NSString* GCDWebServerGetPrimaryIPv4Address() {
   if (store) {
     CFPropertyListRef info = SCDynamicStoreCopyValue(store, CFSTR("State:/Network/Global/IPv4"));
     if (info) {
-      primaryInterface = [[(ARC_BRIDGE NSDictionary*)info objectForKey:@"PrimaryInterface"] UTF8String];
+      primaryInterface = [[NSString stringWithString:[(ARC_BRIDGE NSDictionary*)info objectForKey:@"PrimaryInterface"]] UTF8String];
       CFRelease(info);
     }
     CFRelease(store);
