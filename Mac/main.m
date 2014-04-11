@@ -25,6 +25,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#import <libgen.h>
+
 #import "GCDWebServer.h"
 
 #import "GCDWebServerDataRequest.h"
@@ -37,22 +39,71 @@
 
 #import "GCDWebUploader.h"
 
+typedef enum {
+  kMode_WebServer = 0,
+  kMode_HTMLPage,
+  kMode_HTMLForm,
+  kMode_WebDAV,
+  kMode_WebUploader,
+  kMode_StreamingResponse
+} Mode;
+
 int main(int argc, const char* argv[]) {
-  BOOL success = NO;
-  int mode = (argc == 2 ? MIN(MAX(atoi(argv[1]), 0), 5) : 0);
+  int result = -1;
   @autoreleasepool {
+    Mode mode = kMode_WebServer;
+    BOOL recording = NO;
+    NSString* rootDirectory = NSHomeDirectory();
+    NSString* testDirectory = nil;
+    
+    if (argc == 1) {
+      fprintf(stdout, "Usage: %s [-mode webServer | htmlPage | htmlForm | webDAV | webUploader | streamingResponse] [-record] [-root directory] [-tests directory]\n\n", basename((char*)argv[0]));
+    } else {
+      for (int i = 1; i < argc; ++i) {
+        if (argv[i][0] != '-') {
+          continue;
+        }
+        if (!strcmp(argv[i], "-mode") && (i + 1 < argc)) {
+          ++i;
+          if (!strcmp(argv[i], "webServer")) {
+            mode = kMode_WebServer;
+          } else if (!strcmp(argv[i], "htmlPage")) {
+            mode = kMode_HTMLPage;
+          } else if (!strcmp(argv[i], "htmlForm")) {
+            mode = kMode_HTMLForm;
+          } else if (!strcmp(argv[i], "webDAV")) {
+            mode = kMode_WebDAV;
+          } else if (!strcmp(argv[i], "webUploader")) {
+            mode = kMode_WebUploader;
+          } else if (!strcmp(argv[i], "streamingResponse")) {
+            mode = kMode_StreamingResponse;
+          }
+        } else if (!strcmp(argv[i], "-record")) {
+          recording = YES;
+        } else if (!strcmp(argv[i], "-root") && (i + 1 < argc)) {
+          ++i;
+          rootDirectory = [[[NSFileManager defaultManager] stringWithFileSystemRepresentation:argv[i] length:strlen(argv[i])] stringByStandardizingPath];
+        } else if (!strcmp(argv[i], "-tests") && (i + 1 < argc)) {
+          ++i;
+          testDirectory = [[[NSFileManager defaultManager] stringWithFileSystemRepresentation:argv[i] length:strlen(argv[i])] stringByStandardizingPath];
+        }
+      }
+    }
+    
     GCDWebServer* webServer = nil;
     switch (mode) {
       
       // Simply serve contents of home directory
-      case 0: {
+      case kMode_WebServer: {
+        fprintf(stdout, "Running in Web Server mode from \"%s\"", [rootDirectory UTF8String]);
         webServer = [[GCDWebServer alloc] init];
-        [webServer addGETHandlerForBasePath:@"/" directoryPath:NSHomeDirectory() indexFilename:nil cacheAge:0 allowRangeRequests:YES];
+        [webServer addGETHandlerForBasePath:@"/" directoryPath:rootDirectory indexFilename:nil cacheAge:0 allowRangeRequests:YES];
         break;
       }
       
       // Renders a HTML page
-      case 1: {
+      case kMode_HTMLPage: {
+        fprintf(stdout, "Running in HTML Page mode");
         webServer = [[GCDWebServer alloc] init];
         [webServer addDefaultHandlerForMethod:@"GET"
                                  requestClass:[GCDWebServerRequest class]
@@ -65,7 +116,8 @@ int main(int argc, const char* argv[]) {
       }
       
       // Implements an HTML form
-      case 2: {
+      case kMode_HTMLForm: {
+        fprintf(stdout, "Running in HTML Form mode");
         webServer = [[GCDWebServer alloc] init];
         [webServer addHandlerForMethod:@"GET"
                                   path:@"/"
@@ -96,17 +148,23 @@ int main(int argc, const char* argv[]) {
         break;
       }
       
-      case 3: {
-        webServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:[[NSFileManager defaultManager] currentDirectoryPath]];
+      // Serve home directory through WebDAV
+      case kMode_WebDAV: {
+        fprintf(stdout, "Running in WebDAV mode from \"%s\"", [rootDirectory UTF8String]);
+        webServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:rootDirectory];
         break;
       }
       
-      case 4: {
-        webServer = [[GCDWebUploader alloc] initWithUploadDirectory:[[NSFileManager defaultManager] currentDirectoryPath]];
+      // Serve home directory through web uploader
+      case kMode_WebUploader: {
+        fprintf(stdout, "Running in Web Uploader mode from \"%s\"", [rootDirectory UTF8String]);
+        webServer = [[GCDWebUploader alloc] initWithUploadDirectory:rootDirectory];
         break;
       }
       
-      case 5: {
+      // Test streaming responses
+      case kMode_StreamingResponse: {
+        fprintf(stdout, "Running in Streaming Response mode");
         webServer = [[GCDWebServer alloc] init];
         [webServer addHandlerForMethod:@"GET"
                                   path:@"/"
@@ -130,10 +188,30 @@ int main(int argc, const char* argv[]) {
       }
       
     }
-    success = [webServer runWithPort:8080];
-#if !__has_feature(objc_arc)
-    [webServer release];
+#if __has_feature(objc_arc)
+    fprintf(stdout, " (ARC is ON)\n");
+#else
+    fprintf(stdout, " (ARC is OFF)\n");
 #endif
+    
+    if (webServer) {
+      if (testDirectory) {
+        fprintf(stdout, "<RUNNING TESTS FROM \"%s\">\n\n", [testDirectory UTF8String]);
+        result = (int)[webServer runTestsInDirectory:testDirectory withPort:8080];
+      } else {
+        if (recording) {
+          fprintf(stdout, "<RECORDING ENABLED>\n");
+          webServer.recordingEnabled = YES;
+        }
+        fprintf(stdout, "\n");
+        if ([webServer runWithPort:8080]) {
+          result = 0;
+        }
+      }
+#if !__has_feature(objc_arc)
+      [webServer release];
+#endif
+    }
   }
-  return success ? 0 : -1;
+  return result;
 }

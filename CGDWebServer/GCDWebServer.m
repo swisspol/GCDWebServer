@@ -53,6 +53,9 @@
   NSUInteger _port;
   dispatch_source_t _source;
   CFNetServiceRef _service;
+#if !TARGET_OS_IPHONE
+  BOOL _recording;
+#endif
 }
 @end
 
@@ -152,9 +155,13 @@ NSDate* GCDWebServerParseHTTPDate(NSString* string) {
   return date;
 }
 
-NSString* GCDWebServerDescribeData(NSData* data, NSString* contentType) {
-  if ([contentType hasPrefix:@"text/"] || [contentType isEqualToString:@"application/json"] || [contentType isEqualToString:@"application/xml"]) {
-    NSString* charset = GCDWebServerExtractHeaderValueParameter(contentType, @"charset");
+static inline BOOL _IsTextContentType(NSString* type) {
+  return ([type hasPrefix:@"text/"] || [type hasPrefix:@"application/json"] || [type hasPrefix:@"application/xml"]);
+}
+
+NSString* GCDWebServerDescribeData(NSData* data, NSString* type) {
+  if (_IsTextContentType(type)) {
+    NSString* charset = GCDWebServerExtractHeaderValueParameter(type, @"charset");
     NSString* string = [[NSString alloc] initWithData:data encoding:GCDWebServerStringEncodingFromCharset(charset)];
     if (string) {
       return ARC_AUTORELEASE(string);
@@ -529,6 +536,18 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 
 @implementation GCDWebServer (Extensions)
 
+#if !TARGET_OS_IPHONE
+
+- (void)setRecordingEnabled:(BOOL)flag {
+  _recording = flag;
+}
+
+- (BOOL)isRecordingEnabled {
+  return _recording;
+}
+
+#endif
+
 - (NSURL*)serverURL {
   if (_source) {
     NSString* ipAddress = GCDWebServerGetPrimaryIPv4Address();
@@ -574,6 +593,150 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
     signal(SIGINT, handler);
   }
   return success;
+}
+
+static CFHTTPMessageRef _CreateHTTPMessageFromFileDump(NSString* path, BOOL isRequest) {
+  NSData* data = [NSData dataWithContentsOfFile:path];
+  if (data) {
+    CFHTTPMessageRef message = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, isRequest);
+    if (CFHTTPMessageAppendBytes(message, data.bytes, data.length)) {
+      return message;
+    }
+    CFRelease(message);
+  }
+  return NULL;
+}
+
+static CFHTTPMessageRef _CreateHTTPMessageFromHTTPRequestResponse(CFHTTPMessageRef request) {
+  CFHTTPMessageRef response = NULL;
+  CFReadStreamRef stream = CFReadStreamCreateForHTTPRequest(kCFAllocatorDefault, request);
+  if (CFReadStreamOpen(stream)) {
+    CFMutableDataRef data = CFDataCreateMutable(kCFAllocatorDefault, 0);
+    CFDataSetLength(data, 256 * 1024);
+    CFIndex length = 0;
+    while (1) {
+      CFIndex result = CFReadStreamRead(stream, CFDataGetMutableBytePtr(data) + length, CFDataGetLength(data) - length);
+      if (result <= 0) {
+        break;
+      }
+      length += result;
+      if (length >= CFDataGetLength(data)) {
+        CFDataSetLength(data, 2 * CFDataGetLength(data));
+      }
+    }
+    if (CFReadStreamGetStatus(stream) == kCFStreamStatusAtEnd) {
+      response = (CFHTTPMessageRef)CFReadStreamCopyProperty(stream, kCFStreamPropertyHTTPResponseHeader);
+      if (response) {
+        CFDataSetLength(data, length);
+        CFHTTPMessageSetBody(response, data);
+      }
+    }
+    CFRelease(data);
+    CFReadStreamClose(stream);
+    CFRelease(stream);
+  }
+  return response;
+}
+
+static void _LogResult(NSString* format, ...) {
+  va_list arguments;
+  va_start(arguments, format);
+  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
+  va_end(arguments);
+  fprintf(stdout, "%s\n", [message UTF8String]);
+  ARC_RELEASE(message);
+}
+
+- (NSInteger)runTestsInDirectory:(NSString*)path withPort:(NSUInteger)port {
+  NSInteger result = -1;
+  if ([self startWithPort:port bonjourName:nil]) {
+    
+    result = 0;
+    NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:path error:NULL];
+    for (NSString* requestFile in files) {
+      if (![requestFile hasSuffix:@".request"]) {
+        continue;
+      }
+      @autoreleasepool {
+        NSString* index = [[requestFile componentsSeparatedByString:@"-"] firstObject];
+        BOOL success = NO;
+        CFHTTPMessageRef request = _CreateHTTPMessageFromFileDump([path stringByAppendingPathComponent:requestFile], YES);
+        if (request) {
+          _LogResult(@"[%i] %@ %@", (int)[index integerValue], ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestMethod(request)), [ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestURL(request)) path]);
+          NSString* prefix = [index stringByAppendingString:@"-"];
+          for (NSString* responseFile in files) {
+            if ([responseFile hasPrefix:prefix] && [responseFile hasSuffix:@".response"]) {
+              CFHTTPMessageRef expectedResponse = _CreateHTTPMessageFromFileDump([path stringByAppendingPathComponent:responseFile], NO);
+              if (expectedResponse) {
+                CFHTTPMessageRef actualResponse = _CreateHTTPMessageFromHTTPRequestResponse(request);
+                if (actualResponse) {
+                  success = YES;
+                  
+                  CFIndex expectedStatusCode = CFHTTPMessageGetResponseStatusCode(expectedResponse);
+                  CFIndex actualStatusCode = CFHTTPMessageGetResponseStatusCode(actualResponse);
+                  if (actualStatusCode != expectedStatusCode) {
+                    _LogResult(@"  Status code not matching:\n    Expected: %i\n      Actual: %i", (int)expectedStatusCode, (int)actualStatusCode);
+                    success = NO;
+                  }
+                  
+                  NSDictionary* expectedHeaders = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyAllHeaderFields(expectedResponse));
+                  NSDictionary* actualHeaders = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyAllHeaderFields(actualResponse));
+                  for (NSString* expectedHeader in expectedHeaders) {
+                    if ([expectedHeader isEqualToString:@"Date"]) {
+                      continue;
+                    }
+                    NSString* expectedValue = [expectedHeaders objectForKey:expectedHeader];
+                    NSString* actualValue = [actualHeaders objectForKey:expectedHeader];
+                    if (![actualValue isEqualToString:expectedValue]) {
+                      _LogResult(@"  Header '%@' not matching:\n    Expected: \"%@\"\n      Actual: \"%@\"", expectedHeader, expectedValue, actualValue);
+                      success = NO;
+                    }
+                  }
+                  for (NSString* actualHeader in actualHeaders) {
+                    if (![expectedHeaders objectForKey:actualHeader]) {
+                      _LogResult(@"  Header '%@' not matching:\n    Expected: \"%@\"\n      Actual: \"%@\"", actualHeader, nil, [actualHeaders objectForKey:actualHeader]);
+                      success = NO;
+                    }
+                  }
+                  
+                  NSData* expectedBody = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyBody(expectedResponse));
+                  NSData* actualBody = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyBody(actualResponse));
+                  if (![actualBody isEqualToData:expectedBody]) {
+                    _LogResult(@"  Bodies not matching:\n    Expected: %lu bytes\n      Actual: %lu bytes", (unsigned long)expectedBody.length, (unsigned long)actualBody.length);
+                    success = NO;
+                    
+                    if (_IsTextContentType([expectedHeaders objectForKey:@"Content-Type"])) {
+                      NSString* expectedPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[[NSProcessInfo processInfo] globallyUniqueString] stringByAppendingPathExtension:@"txt"]];
+                      NSString* actualPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[[NSProcessInfo processInfo] globallyUniqueString] stringByAppendingPathExtension:@"txt"]];
+                      if ([expectedBody writeToFile:expectedPath atomically:YES] && [actualBody writeToFile:actualPath atomically:YES]) {
+                        NSTask* task = [[NSTask alloc] init];
+                        [task setLaunchPath:@"/usr/bin/opendiff"];
+                        [task setArguments:@[expectedPath, actualPath]];
+                        [task launch];
+                        ARC_RELEASE(task);
+                      }
+                    }
+                  }
+                  
+                  CFRelease(actualResponse);
+                }
+                CFRelease(expectedResponse);
+              }
+              break;
+            }
+          }
+          CFRelease(request);
+        }
+        _LogResult(@"");
+        if (!success) {
+          ++result;
+        }
+      }
+    }
+    
+    [self stop];
+  }
+  return result;
 }
 
 #endif

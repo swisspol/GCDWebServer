@@ -25,7 +25,11 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#import <TargetConditionals.h>
 #import <netdb.h>
+#if !TARGET_OS_IPHONE
+#import <libkern/OSAtomic.h>
+#endif
 
 #import "GCDWebServerPrivate.h"
 
@@ -45,6 +49,9 @@ static NSData* _CRLFData = nil;
 static NSData* _CRLFCRLFData = nil;
 static NSData* _continueData = nil;
 static NSData* _lastChunkData = nil;
+#if !TARGET_OS_IPHONE
+static int32_t _connectionCounter = 0;
+#endif
 
 @interface GCDWebServerConnection () {
 @private
@@ -62,6 +69,14 @@ static NSData* _lastChunkData = nil;
   CFHTTPMessageRef _responseMessage;
   GCDWebServerResponse* _response;
   NSInteger _statusCode;
+  
+#if !TARGET_OS_IPHONE
+  NSUInteger _connectionIndex;
+  NSString* _requestPath;
+  int _requestFD;
+  NSString* _responsePath;
+  int _responseFD;
+#endif
 }
 @end
 
@@ -77,6 +92,18 @@ static NSData* _lastChunkData = nil;
           LOG_DEBUG(@"Connection received %zu bytes on socket %i", size, _socket);
           _bytesRead += size;
           [self didUpdateBytesRead];
+#if !TARGET_OS_IPHONE
+          if (_requestFD > 0) {
+            bool success = dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t chunkOffset, const void* chunkBytes, size_t chunkSize) {
+              return (write(_requestFD, chunkBytes, chunkSize) == (ssize_t)chunkSize);
+            });
+            if (!success) {
+              LOG_ERROR(@"Failed recording request data: %s (%i)", strerror(errno), errno);
+              close(_requestFD);
+              _requestFD = 0;
+            }
+          }
+#endif
           block(buffer);
         } else {
           if (_bytesRead > 0) {
@@ -100,8 +127,8 @@ static NSData* _lastChunkData = nil;
     
     if (buffer) {
       NSMutableData* data = [[NSMutableData alloc] initWithCapacity:dispatch_data_get_size(buffer)];
-      dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t offset, const void* bufferChunk, size_t size) {
-        [data appendBytes:bufferChunk length:size];
+      dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t chunkOffset, const void* chunkBytes, size_t chunkSize) {
+        [data appendBytes:chunkBytes length:chunkSize];
         return true;
       });
       block(data);
@@ -119,8 +146,8 @@ static NSData* _lastChunkData = nil;
     
     if (buffer) {
       NSMutableData* data = [NSMutableData dataWithCapacity:kHeadersReadBuffer];
-      dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t offset, const void* bufferChunk, size_t size) {
-        [data appendBytes:bufferChunk length:size];
+      dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t chunkOffset, const void* chunkBytes, size_t chunkSize) {
+        [data appendBytes:chunkBytes length:chunkSize];
         return true;
       });
       NSRange range = [data rangeOfData:_CRLFCRLFData options:0 range:NSMakeRange(0, data.length)];
@@ -158,7 +185,7 @@ static NSData* _lastChunkData = nil;
     
     if (buffer) {
       if (dispatch_data_get_size(buffer) <= length) {
-        bool success = dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t offset, const void* chunkBytes, size_t chunkSize) {
+        bool success = dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t chunkOffset, const void* chunkBytes, size_t chunkSize) {
           NSData* data = [NSData dataWithBytesNoCopy:(void*)chunkBytes length:chunkSize freeWhenDone:NO];
           NSError* error = nil;
           if (![_request performWriteData:data error:&error]) {
@@ -245,7 +272,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   [self _readBufferWithLength:SIZE_T_MAX completionBlock:^(dispatch_data_t buffer) {
     
     if (buffer) {
-      dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t offset, const void* chunkBytes, size_t chunkSize) {
+      dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t chunkOffset, const void* chunkBytes, size_t chunkSize) {
         [chunkData appendBytes:chunkBytes length:chunkSize];
         return true;
       });
@@ -263,6 +290,9 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 
 - (void)_writeBuffer:(dispatch_data_t)buffer withCompletionBlock:(WriteBufferCompletionBlock)block {
   size_t size = dispatch_data_get_size(buffer);
+#if !TARGET_OS_IPHONE
+  ARC_DISPATCH_RETAIN(buffer);
+#endif
   dispatch_write(_socket, buffer, kGCDWebServerGCDQueue, ^(dispatch_data_t data, int error) {
     
     @autoreleasepool {
@@ -271,12 +301,27 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
         LOG_DEBUG(@"Connection sent %zu bytes on socket %i", size, _socket);
         _bytesWritten += size;
         [self didUpdateBytesWritten];
+#if !TARGET_OS_IPHONE
+        if (_responseFD > 0) {
+          bool success = dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t chunkOffset, const void* chunkBytes, size_t chunkSize) {
+            return (write(_responseFD, chunkBytes, chunkSize) == (ssize_t)chunkSize);
+          });
+          if (!success) {
+            LOG_ERROR(@"Failed recording response data: %s (%i)", strerror(errno), errno);
+            close(_responseFD);
+            _responseFD = 0;
+          }
+        }
+#endif
         block(YES);
       } else {
         LOG_ERROR(@"Error while writing to socket %i: %s (%i)", _socket, strerror(error), error);
         block(NO);
       }
     }
+#if !TARGET_OS_IPHONE
+    ARC_DISPATCH_RELEASE(buffer);
+#endif
     
   });
 }
@@ -285,7 +330,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 #if !__has_feature(objc_arc)
   [data retain];
 #endif
-  dispatch_data_t buffer = dispatch_data_create(data.bytes, data.length, dispatch_get_main_queue(), ^{
+  dispatch_data_t buffer = dispatch_data_create(data.bytes, data.length, kGCDWebServerGCDQueue, ^{
 #if __has_feature(objc_arc)
     [data self];  // Keeps ARC from releasing data too early
 #else
@@ -655,6 +700,11 @@ static NSString* _StringFromAddressData(NSData* data) {
   }
   ARC_RELEASE(_response);
   
+#if !TARGET_OS_IPHONE
+  ARC_RELEASE(_requestPath);
+  ARC_RELEASE(_responsePath);
+#endif
+  
   ARC_DEALLOC(super);
 }
 
@@ -664,6 +714,21 @@ static NSString* _StringFromAddressData(NSData* data) {
 
 - (void)open {
   LOG_DEBUG(@"Did open connection on socket %i", _socket);
+  
+#if !TARGET_OS_IPHONE
+  if (_server.recordingEnabled) {
+    _connectionIndex = OSAtomicIncrement32(&_connectionCounter);
+    
+    _requestPath = ARC_RETAIN([NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]]);
+    _requestFD = open([_requestPath fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY);
+    DCHECK(_requestFD > 0);
+    
+    _responsePath = ARC_RETAIN([NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]]);
+    _responseFD = open([_responsePath fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY);
+    DCHECK(_responseFD > 0);
+  }
+#endif
+  
   [self _readRequestHeaders];
 }
 
@@ -732,6 +797,38 @@ static inline BOOL _CompareResources(NSString* responseETag, NSString* requestET
   } else {
     LOG_DEBUG(@"Did close connection on socket %i", _socket);
   }
+  
+#if !TARGET_OS_IPHONE
+  if (_requestPath) {
+    BOOL success = NO;
+    NSError* error = nil;
+    if (_requestFD > 0) {
+      close(_requestFD);
+      NSString* name = [NSString stringWithFormat:@"%03lu-%@.request", (unsigned long)_connectionIndex, _virtualHEAD ? @"HEAD" : _request.method];
+      success = [[NSFileManager defaultManager] moveItemAtPath:_requestPath toPath:[[[NSFileManager defaultManager] currentDirectoryPath] stringByAppendingPathComponent:name] error:&error];
+    }
+    if (!success) {
+      LOG_ERROR(@"Failed saving recorded request: %@", error);
+      DNOT_REACHED();
+    }
+    unlink([_requestPath fileSystemRepresentation]);
+  }
+  
+  if (_responsePath) {
+    BOOL success = NO;
+    NSError* error = nil;
+    if (_responseFD > 0) {
+      close(_responseFD);
+      NSString* name = [NSString stringWithFormat:@"%03lu-%i.response", (unsigned long)_connectionIndex, (int)_statusCode];
+      success = [[NSFileManager defaultManager] moveItemAtPath:_responsePath toPath:[[[NSFileManager defaultManager] currentDirectoryPath] stringByAppendingPathComponent:name] error:&error];
+    }
+    if (!success) {
+      LOG_ERROR(@"Failed saving recorded response: %@", error);
+      DNOT_REACHED();
+    }
+    unlink([_responsePath fileSystemRepresentation]);
+  }
+#endif
   if (_request) {
     LOG_VERBOSE(@"[%@] %@ %i \"%@ %@\" (%lu | %lu)", self.localAddressString, self.remoteAddressString, (int)_statusCode, _virtualHEAD ? @"HEAD" : _request.method, _request.path, (unsigned long)_bytesRead, (unsigned long)_bytesWritten);
   } else {
