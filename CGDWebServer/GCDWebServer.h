@@ -51,6 +51,10 @@ NSString* GCDWebServerEscapeURLString(NSString* string);
 NSString* GCDWebServerUnescapeURLString(NSString* string);
 NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form);
 NSString* GCDWebServerGetPrimaryIPv4Address();  // Returns IPv4 address of primary connected service on OS X or of WiFi interface on iOS if connected
+NSString* GCDWebServerFormatRFC822(NSDate* date);
+NSDate* GCDWebServerParseRFC822(NSString* string);
+NSString* GCDWebServerFormatISO8601(NSDate* date);
+NSDate* GCDWebServerParseISO8601(NSString* string);
 
 #ifdef __cplusplus
 }

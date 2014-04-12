@@ -116,8 +116,6 @@ extern NSString* GCDWebServerNormalizeHeaderValue(NSString* value);
 extern NSString* GCDWebServerTruncateHeaderValue(NSString* value);
 extern NSString* GCDWebServerExtractHeaderValueParameter(NSString* header, NSString* attribute);
 extern NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset);
-extern NSString* GCDWebServerFormatHTTPDate(NSDate* date);
-extern NSDate* GCDWebServerParseHTTPDate(NSString* string);
 extern NSString* GCDWebServerDescribeData(NSData* data, NSString* contentType);
 
 @interface GCDWebServerConnection ()

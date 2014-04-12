@@ -435,7 +435,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   _responseMessage = CFHTTPMessageCreateResponse(kCFAllocatorDefault, statusCode, NULL, kCFHTTPVersion1_1);
   CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Connection"), CFSTR("Close"));
   CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Server"), (ARC_BRIDGE CFStringRef)[[_server class] serverName]);
-  CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Date"), (ARC_BRIDGE CFStringRef)GCDWebServerFormatHTTPDate([NSDate date]));
+  CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Date"), (ARC_BRIDGE CFStringRef)GCDWebServerFormatRFC822([NSDate date]));
 }
 
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
@@ -463,7 +463,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   if (_response) {
     [self _initializeResponseHeadersWithStatusCode:_response.statusCode];
     if (_response.lastModifiedDate) {
-      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Last-Modified"), (ARC_BRIDGE CFStringRef)GCDWebServerFormatHTTPDate(_response.lastModifiedDate));
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Last-Modified"), (ARC_BRIDGE CFStringRef)GCDWebServerFormatRFC822(_response.lastModifiedDate));
     }
     if (_response.eTag) {
       CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("ETag"), (ARC_BRIDGE CFStringRef)_response.eTag);

@@ -75,6 +75,7 @@ GCDWebServerLogLevel GCDLogLevel = kGCDWebServerLogLevel_Debug;
 #endif
 
 static NSDateFormatter* _dateFormatterRFC822 = nil;
+static NSDateFormatter* _dateFormatterISO8601 = nil;
 static dispatch_queue_t _dateFormatterQueue = NULL;
 #if !TARGET_OS_IPHONE
 static BOOL _run;
@@ -139,18 +140,34 @@ NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset) {
   return (encoding != kCFStringEncodingInvalidId ? encoding : NSUTF8StringEncoding);
 }
 
-NSString* GCDWebServerFormatHTTPDate(NSDate* date) {
+NSString* GCDWebServerFormatRFC822(NSDate* date) {
   __block NSString* string;
   dispatch_sync(_dateFormatterQueue, ^{
-    string = [_dateFormatterRFC822 stringFromDate:date];  // HTTP/1.1 server must use RFC822
+    string = [_dateFormatterRFC822 stringFromDate:date];
   });
   return string;
 }
 
-NSDate* GCDWebServerParseHTTPDate(NSString* string) {
+NSDate* GCDWebServerParseRFC822(NSString* string) {
   __block NSDate* date;
   dispatch_sync(_dateFormatterQueue, ^{
-    date = [_dateFormatterRFC822 dateFromString:string];  // TODO: Handle RFC 850 and ANSI C's asctime() format (http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3)
+    date = [_dateFormatterRFC822 dateFromString:string];
+  });
+  return date;
+}
+
+NSString* GCDWebServerFormatISO8601(NSDate* date) {
+  __block NSString* string;
+  dispatch_sync(_dateFormatterQueue, ^{
+    string = [_dateFormatterISO8601 stringFromDate:date];
+  });
+  return string;
+}
+
+NSDate* GCDWebServerParseISO8601(NSString* string) {
+  __block NSDate* date;
+  dispatch_sync(_dateFormatterQueue, ^{
+    date = [_dateFormatterISO8601 dateFromString:string];
   });
   return date;
 }
@@ -324,6 +341,8 @@ static void _SignalHandler(int signal) {
 
 #endif
 
+// HTTP/1.1 server must use RFC822
+// TODO: Handle RFC 850 and ANSI C's asctime() format (http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3)
 + (void)initialize {
   if (_dateFormatterRFC822 == nil) {
     DCHECK([NSThread isMainThread]);  // NSDateFormatter should be initialized on main thread
@@ -332,6 +351,14 @@ static void _SignalHandler(int signal) {
     _dateFormatterRFC822.dateFormat = @"EEE',' dd MMM yyyy HH':'mm':'ss 'GMT'";
     _dateFormatterRFC822.locale = ARC_AUTORELEASE([[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]);
     DCHECK(_dateFormatterRFC822);
+  }
+  if (_dateFormatterISO8601 == nil) {
+    DCHECK([NSThread isMainThread]);  // NSDateFormatter should be initialized on main thread
+    _dateFormatterISO8601 = [[NSDateFormatter alloc] init];
+    _dateFormatterISO8601.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
+    _dateFormatterISO8601.dateFormat = @"yyyy-MM-dd'T'HH:mm:ss'+00:00'";
+    _dateFormatterISO8601.locale = ARC_AUTORELEASE([[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]);
+    DCHECK(_dateFormatterISO8601);
   }
   if (_dateFormatterQueue == NULL) {
     _dateFormatterQueue = dispatch_queue_create(NULL, DISPATCH_QUEUE_SERIAL);

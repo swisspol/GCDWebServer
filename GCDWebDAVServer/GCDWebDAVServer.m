@@ -335,19 +335,11 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
       }
       
       if ((properties & kDAVProperty_CreationDate) && [attributes objectForKey:NSFileCreationDate]) {
-        NSDateFormatter* formatter = [[NSDateFormatter alloc] init];
-        formatter.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
-        formatter.timeZone = [NSTimeZone timeZoneWithName:@"GMT"];
-        formatter.dateFormat = @"yyyy-MM-dd'T'HH:mm:ss'+00:00'";
-        [xmlString appendFormat:@"<D:creationdate>%@</D:creationdate>", [formatter stringFromDate:[attributes fileCreationDate]]];
+        [xmlString appendFormat:@"<D:creationdate>%@</D:creationdate>", GCDWebServerFormatISO8601([attributes fileCreationDate])];
       }
       
-      if ((properties & kDAVProperty_LastModified) && [attributes objectForKey:NSFileModificationDate]) {
-        NSDateFormatter* formatter = [[NSDateFormatter alloc] init];
-        formatter.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
-        formatter.timeZone = [NSTimeZone timeZoneWithName:@"GMT"];
-        formatter.dateFormat = @"EEE', 'd' 'MMM' 'yyyy' 'HH:mm:ss' GMT'";
-        [xmlString appendFormat:@"<D:getlastmodified>%@</D:getlastmodified>", [formatter stringFromDate:[attributes fileModificationDate]]];
+      if ((properties & kDAVProperty_LastModified) && isFile && [attributes objectForKey:NSFileModificationDate]) {  // Last modification date is not useful for directories as it changes implicitely and 'Last-Modified' header is not provided for directories anyway
+        [xmlString appendFormat:@"<D:getlastmodified>%@</D:getlastmodified>", GCDWebServerFormatRFC822([attributes fileModificationDate])];
       }
       
       if ((properties & kDAVProperty_ContentLength) && !isDirectory && [attributes objectForKey:NSFileSize]) {
@@ -360,6 +352,8 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
       [xmlString appendString:@"</D:response>\n"];
     }
     CFRelease(escapedPath);
+  } else {
+    [self logError:@"Failed escaping path: %@", itemPath];
   }
 }
 

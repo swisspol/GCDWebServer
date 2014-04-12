@@ -199,7 +199,7 @@
     
     NSString* modifiedHeader = [_headers objectForKey:@"If-Modified-Since"];
     if (modifiedHeader) {
-      _modifiedSince = [GCDWebServerParseHTTPDate(modifiedHeader) copy];
+      _modifiedSince = [GCDWebServerParseRFC822(modifiedHeader) copy];
     }
     _noneMatch = ARC_RETAIN([_headers objectForKey:@"If-None-Match"]);
     
