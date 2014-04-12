@@ -1,6 +1,8 @@
 Overview
 ========
 
+[![Build Status](https://travis-ci.org/swisspol/GCDWebServer.svg?branch=master)](https://travis-ci.org/swisspol/GCDWebServer)
+
 GCDWebServer is a lightweight GCD based HTTP 1.1 server designed to be embedded in Mac & iOS apps. It was written from scratch with the following goals in mind:
 * Easy to use and understand architecture with only 4 core classes: server, connection, request and response
 * Well designed API for easy integration and customization
