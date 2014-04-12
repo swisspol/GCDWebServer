@@ -54,7 +54,9 @@
 #endif
 
 #import "GCDWebServerHTTPStatusCodes.h"
+#import "GCDWebServerFunctions.h"
 
+#import "GCDWebServer.h"
 #import "GCDWebServerConnection.h"
 
 #import "GCDWebServerDataRequest.h"
@@ -112,10 +114,12 @@ static inline BOOL GCDWebServerIsValidByteRange(NSRange range) {
   return ((range.location != NSNotFound) || (range.length > 0));
 }
 
+extern void GCDWebServerInitializeFunctions();
 extern NSString* GCDWebServerNormalizeHeaderValue(NSString* value);
 extern NSString* GCDWebServerTruncateHeaderValue(NSString* value);
 extern NSString* GCDWebServerExtractHeaderValueParameter(NSString* header, NSString* attribute);
 extern NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset);
+extern BOOL GCDWebServerIsTextContentType(NSString* type);
 extern NSString* GCDWebServerDescribeData(NSData* data, NSString* contentType);
 
 @interface GCDWebServerConnection ()

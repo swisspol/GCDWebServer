@@ -1,0 +1,268 @@
+/*
+ Copyright (c) 2012-2014, Pierre-Olivier Latour
+ All rights reserved.
+ 
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
+ * Redistributions of source code must retain the above copyright
+ notice, this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright
+ notice, this list of conditions and the following disclaimer in the
+ documentation and/or other materials provided with the distribution.
+ * The name of Pierre-Olivier Latour may not be used to endorse
+ or promote products derived from this software without specific
+ prior written permission.
+ 
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL PIERRE-OLIVIER LATOUR BE LIABLE FOR ANY
+ DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#import <TargetConditionals.h>
+#if TARGET_OS_IPHONE
+#import <MobileCoreServices/MobileCoreServices.h>
+#else
+#import <SystemConfiguration/SystemConfiguration.h>
+#endif
+
+#import <ifaddrs.h>
+#import <net/if.h>
+#import <netdb.h>
+
+#import "GCDWebServerPrivate.h"
+
+static NSDateFormatter* _dateFormatterRFC822 = nil;
+static NSDateFormatter* _dateFormatterISO8601 = nil;
+static dispatch_queue_t _dateFormatterQueue = NULL;
+
+// HTTP/1.1 server must use RFC822
+// TODO: Handle RFC 850 and ANSI C's asctime() format (http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3)
+void GCDWebServerInitializeFunctions() {
+  DCHECK([NSThread isMainThread]);  // NSDateFormatter should be initialized on main thread
+  if (_dateFormatterRFC822 == nil) {
+    _dateFormatterRFC822 = [[NSDateFormatter alloc] init];
+    _dateFormatterRFC822.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
+    _dateFormatterRFC822.dateFormat = @"EEE',' dd MMM yyyy HH':'mm':'ss 'GMT'";
+    _dateFormatterRFC822.locale = ARC_AUTORELEASE([[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]);
+    DCHECK(_dateFormatterRFC822);
+  }
+  if (_dateFormatterISO8601 == nil) {
+    _dateFormatterISO8601 = [[NSDateFormatter alloc] init];
+    _dateFormatterISO8601.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
+    _dateFormatterISO8601.dateFormat = @"yyyy-MM-dd'T'HH:mm:ss'+00:00'";
+    _dateFormatterISO8601.locale = ARC_AUTORELEASE([[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]);
+    DCHECK(_dateFormatterISO8601);
+  }
+  if (_dateFormatterQueue == NULL) {
+    _dateFormatterQueue = dispatch_queue_create(NULL, DISPATCH_QUEUE_SERIAL);
+    DCHECK(_dateFormatterQueue);
+  }
+}
+
+NSString* GCDWebServerNormalizeHeaderValue(NSString* value) {
+  if (value) {
+    NSRange range = [value rangeOfString:@";"];  // Assume part before ";" separator is case-insensitive
+    if (range.location != NSNotFound) {
+      value = [[[value substringToIndex:range.location] lowercaseString] stringByAppendingString:[value substringFromIndex:range.location]];
+    } else {
+      value = [value lowercaseString];
+    }
+  }
+  return value;
+}
+
+NSString* GCDWebServerTruncateHeaderValue(NSString* value) {
+  DCHECK([value isEqualToString:GCDWebServerNormalizeHeaderValue(value)]);
+  NSRange range = [value rangeOfString:@";"];
+  return range.location != NSNotFound ? [value substringToIndex:range.location] : value;
+}
+
+NSString* GCDWebServerExtractHeaderValueParameter(NSString* value, NSString* name) {
+  DCHECK([value isEqualToString:GCDWebServerNormalizeHeaderValue(value)]);
+  NSString* parameter = nil;
+  NSScanner* scanner = [[NSScanner alloc] initWithString:value];
+  [scanner setCaseSensitive:NO];  // Assume parameter names are case-insensitive
+  NSString* string = [NSString stringWithFormat:@"%@=", name];
+  if ([scanner scanUpToString:string intoString:NULL]) {
+    [scanner scanString:string intoString:NULL];
+    if ([scanner scanString:@"\"" intoString:NULL]) {
+      [scanner scanUpToString:@"\"" intoString:&parameter];
+    } else {
+      [scanner scanUpToCharactersFromSet:[NSCharacterSet whitespaceCharacterSet] intoString:&parameter];
+    }
+  }
+  ARC_RELEASE(scanner);
+  return parameter;
+}
+
+// http://www.w3schools.com/tags/ref_charactersets.asp
+NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset) {
+  NSStringEncoding encoding = kCFStringEncodingInvalidId;
+  if (charset) {
+    encoding = CFStringConvertEncodingToNSStringEncoding(CFStringConvertIANACharSetNameToEncoding((CFStringRef)charset));
+  }
+  return (encoding != kCFStringEncodingInvalidId ? encoding : NSUTF8StringEncoding);
+}
+
+NSString* GCDWebServerFormatRFC822(NSDate* date) {
+  __block NSString* string;
+  dispatch_sync(_dateFormatterQueue, ^{
+    string = [_dateFormatterRFC822 stringFromDate:date];
+  });
+  return string;
+}
+
+NSDate* GCDWebServerParseRFC822(NSString* string) {
+  __block NSDate* date;
+  dispatch_sync(_dateFormatterQueue, ^{
+    date = [_dateFormatterRFC822 dateFromString:string];
+  });
+  return date;
+}
+
+NSString* GCDWebServerFormatISO8601(NSDate* date) {
+  __block NSString* string;
+  dispatch_sync(_dateFormatterQueue, ^{
+    string = [_dateFormatterISO8601 stringFromDate:date];
+  });
+  return string;
+}
+
+NSDate* GCDWebServerParseISO8601(NSString* string) {
+  __block NSDate* date;
+  dispatch_sync(_dateFormatterQueue, ^{
+    date = [_dateFormatterISO8601 dateFromString:string];
+  });
+  return date;
+}
+
+BOOL GCDWebServerIsTextContentType(NSString* type) {
+  return ([type hasPrefix:@"text/"] || [type hasPrefix:@"application/json"] || [type hasPrefix:@"application/xml"]);
+}
+
+NSString* GCDWebServerDescribeData(NSData* data, NSString* type) {
+  if (GCDWebServerIsTextContentType(type)) {
+    NSString* charset = GCDWebServerExtractHeaderValueParameter(type, @"charset");
+    NSString* string = [[NSString alloc] initWithData:data encoding:GCDWebServerStringEncodingFromCharset(charset)];
+    if (string) {
+      return ARC_AUTORELEASE(string);
+    }
+  }
+  return [NSString stringWithFormat:@"<%lu bytes>", (unsigned long)data.length];
+}
+
+NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
+  static NSDictionary* _overrides = nil;
+  if (_overrides == nil) {
+    _overrides = [[NSDictionary alloc] initWithObjectsAndKeys:
+                  @"text/css", @"css",
+                  nil];
+  }
+  NSString* mimeType = nil;
+  extension = [extension lowercaseString];
+  if (extension.length) {
+    mimeType = [_overrides objectForKey:extension];
+    if (mimeType == nil) {
+      CFStringRef uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (ARC_BRIDGE CFStringRef)extension, NULL);
+      if (uti) {
+        mimeType = ARC_BRIDGE_RELEASE(UTTypeCopyPreferredTagWithClass(uti, kUTTagClassMIMEType));
+        CFRelease(uti);
+      }
+    }
+  }
+  return mimeType ? mimeType : kGCDWebServerDefaultMimeType;
+}
+
+NSString* GCDWebServerEscapeURLString(NSString* string) {
+  return ARC_BRIDGE_RELEASE(CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)string, NULL, CFSTR(":@/?&=+"), kCFStringEncodingUTF8));
+}
+
+NSString* GCDWebServerUnescapeURLString(NSString* string) {
+  return ARC_BRIDGE_RELEASE(CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault, (CFStringRef)string, CFSTR(""), kCFStringEncodingUTF8));
+}
+
+// http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4.1
+NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
+  NSMutableDictionary* parameters = [NSMutableDictionary dictionary];
+  NSScanner* scanner = [[NSScanner alloc] initWithString:form];
+  [scanner setCharactersToBeSkipped:nil];
+  while (1) {
+    NSString* key = nil;
+    if (![scanner scanUpToString:@"=" intoString:&key] || [scanner isAtEnd]) {
+      break;
+    }
+    [scanner setScanLocation:([scanner scanLocation] + 1)];
+    
+    NSString* value = nil;
+    if (![scanner scanUpToString:@"&" intoString:&value]) {
+      break;
+    }
+    
+    key = [key stringByReplacingOccurrencesOfString:@"+" withString:@" "];
+    value = [value stringByReplacingOccurrencesOfString:@"+" withString:@" "];
+    if (key && value) {
+      [parameters setObject:GCDWebServerUnescapeURLString(value) forKey:GCDWebServerUnescapeURLString(key)];
+    } else {
+      DNOT_REACHED();
+    }
+    
+    if ([scanner isAtEnd]) {
+      break;
+    }
+    [scanner setScanLocation:([scanner scanLocation] + 1)];
+  }
+  ARC_RELEASE(scanner);
+  return parameters;
+}
+
+NSString* GCDWebServerGetPrimaryIPv4Address() {
+  NSString* address = nil;
+#if TARGET_OS_IPHONE
+#if !TARGET_IPHONE_SIMULATOR
+  const char* primaryInterface = "en0";  // WiFi interface on iOS
+#endif
+#else
+  const char* primaryInterface = NULL;
+  SCDynamicStoreRef store = SCDynamicStoreCreate(kCFAllocatorDefault, CFSTR("GCDWebServer"), NULL, NULL);
+  if (store) {
+    CFPropertyListRef info = SCDynamicStoreCopyValue(store, CFSTR("State:/Network/Global/IPv4"));
+    if (info) {
+      primaryInterface = [[NSString stringWithString:[(ARC_BRIDGE NSDictionary*)info objectForKey:@"PrimaryInterface"]] UTF8String];
+      CFRelease(info);
+    }
+    CFRelease(store);
+  }
+  if (primaryInterface == NULL) {
+    primaryInterface = "lo0";
+  }
+#endif
+  struct ifaddrs* list;
+  if (getifaddrs(&list) >= 0) {
+    for (struct ifaddrs* ifap = list; ifap; ifap = ifap->ifa_next) {
+#if TARGET_IPHONE_SIMULATOR
+      if (strcmp(ifap->ifa_name, "en0") && strcmp(ifap->ifa_name, "en1"))  // Assume en0 is Ethernet and en1 is WiFi since there is no way to use SystemConfiguration framework in iOS Simulator
+#else
+      if (strcmp(ifap->ifa_name, primaryInterface))
+#endif
+      {
+        continue;
+      }
+      if ((ifap->ifa_flags & IFF_UP) && (ifap->ifa_addr->sa_family == AF_INET)) {
+        char buffer[NI_MAXHOST];
+        if (getnameinfo(ifap->ifa_addr, ifap->ifa_addr->sa_len, buffer, sizeof(buffer), NULL, 0, NI_NUMERICHOST | NI_NOFQDN) >= 0) {
+          address = [NSString stringWithUTF8String:buffer];
+        }
+        break;
+      }
+    }
+    freeifaddrs(list);
+  }
+  return address;
+}

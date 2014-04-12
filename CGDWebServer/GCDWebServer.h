@@ -42,24 +42,6 @@ typedef NS_ENUM(int, GCDWebServerLogLevel) {
 typedef GCDWebServerRequest* (^GCDWebServerMatchBlock)(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery);
 typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* request);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension);
-NSString* GCDWebServerEscapeURLString(NSString* string);
-NSString* GCDWebServerUnescapeURLString(NSString* string);
-NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form);
-NSString* GCDWebServerGetPrimaryIPv4Address();  // Returns IPv4 address of primary connected service on OS X or of WiFi interface on iOS if connected
-NSString* GCDWebServerFormatRFC822(NSDate* date);
-NSDate* GCDWebServerParseRFC822(NSString* string);
-NSString* GCDWebServerFormatISO8601(NSDate* date);
-NSDate* GCDWebServerParseISO8601(NSString* string);
-
-#ifdef __cplusplus
-}
-#endif
-
 @interface GCDWebServer : NSObject
 @property(nonatomic, readonly, getter=isRunning) BOOL running;
 @property(nonatomic, readonly) NSUInteger port;

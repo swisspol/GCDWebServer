@@ -32,6 +32,8 @@
 
 #import "GCDWebDAVServer.h"
 
+#import "GCDWebServerFunctions.h"
+
 #import "GCDWebServerDataRequest.h"
 #import "GCDWebServerFileRequest.h"
 
