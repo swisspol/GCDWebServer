@@ -21,7 +21,7 @@ Pod::Spec.new do |s|
   s.default_subspec = 'Core'
   
   s.subspec 'Core' do |cs|
-    cs.source_files = 'CGDWebServer/*.{h,m}'
+    cs.source_files = 'CGDWebServer/**/*.{h,m}'
     cs.requires_arc = true
     cs.ios.library = 'z'
     cs.osx.library = 'z'
