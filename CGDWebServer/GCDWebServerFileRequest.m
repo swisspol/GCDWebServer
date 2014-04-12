@@ -78,6 +78,22 @@ static inline NSError* _MakePosixError(int code) {
     *error = _MakePosixError(errno);
     return NO;
   }
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
+  NSString* creationDateHeader = [self.headers objectForKey:@"X-GCDWebServer-CreationDate"];
+  if (creationDateHeader) {
+    NSDate* date = GCDWebServerParseISO8601(creationDateHeader);
+    if (!date || ![[NSFileManager defaultManager] setAttributes:@{NSFileCreationDate: date} ofItemAtPath:_temporaryPath error:error]) {
+      return NO;
+    }
+  }
+  NSString* modifiedDateHeader = [self.headers objectForKey:@"X-GCDWebServer-ModifiedDate"];
+  if (modifiedDateHeader) {
+    NSDate* date = GCDWebServerParseRFC822(modifiedDateHeader);
+    if (!date || ![[NSFileManager defaultManager] setAttributes:@{NSFileModificationDate: date} ofItemAtPath:_temporaryPath error:error]) {
+      return NO;
+    }
+  }
+#endif
   return YES;
 }
 

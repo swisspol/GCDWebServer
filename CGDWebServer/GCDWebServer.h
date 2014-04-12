@@ -85,6 +85,8 @@ NSDate* GCDWebServerParseISO8601(NSString* string);
 #if !TARGET_OS_IPHONE
 @property(nonatomic, getter=isRecordingEnabled) BOOL recordingEnabled;  // Creates files in the current directory containing the raw data for all requests and responses (directory most NOT contain prior recordings)
 - (BOOL)runWithPort:(NSUInteger)port;  // Starts then automatically stops on SIGINT i.e. Ctrl-C (use on main thread only)
+#endif
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
 - (NSInteger)runTestsInDirectory:(NSString*)path withPort:(NSUInteger)port;  // Returns number of failed tests or -1 if server failed to start
 #endif
 @end

@@ -214,6 +214,15 @@ static inline BOOL _IsMacFinder(GCDWebServerRequest* request) {
   if (![[NSFileManager defaultManager] createDirectoryAtPath:absolutePath withIntermediateDirectories:NO attributes:nil error:&error]) {
     return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed creating directory \"%@\"", relativePath];
   }
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
+  NSString* creationDateHeader = [request.headers objectForKey:@"X-GCDWebServer-CreationDate"];
+  if (creationDateHeader) {
+    NSDate* date = GCDWebServerParseISO8601(creationDateHeader);
+    if (!date || ![[NSFileManager defaultManager] setAttributes:@{NSFileCreationDate: date} ofItemAtPath:absolutePath error:&error]) {
+      return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed setting creation date for directory \"%@\"", relativePath];
+    }
+  }
+#endif
   
   if ([_delegate respondsToSelector:@selector(davServer:didCreateDirectoryAtPath:)]) {
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -519,6 +528,12 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
     return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Locking item name \"%@\" is not allowed", itemName];
   }
   
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
+  NSString* lockTokenHeader = [request.headers objectForKey:@"X-GCDWebServer-LockToken"];
+  if (lockTokenHeader) {
+    token = lockTokenHeader;
+  }
+#endif
   if (!token) {
     CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
     CFStringRef string = CFUUIDCreateString(kCFAllocatorDefault, uuid);
