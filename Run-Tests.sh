@@ -35,6 +35,8 @@ runTests $MRC_PRODUCT "webDAV" "Tests/WebDAV-Cyberduck"
 runTests $ARC_PRODUCT "webDAV" "Tests/WebDAV-Cyberduck"
 runTests $MRC_PRODUCT "webDAV" "Tests/WebDAV-Finder"
 runTests $ARC_PRODUCT "webDAV" "Tests/WebDAV-Finder"
+runTests $MRC_PRODUCT "webUploader" "Tests/WebUploader"
+runTests $ARC_PRODUCT "webUploader" "Tests/WebUploader"
 
 # Done
 echo "\nAll tests completed successfully!"
