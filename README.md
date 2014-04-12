@@ -158,10 +158,10 @@ Understanding GCDWebServer Architecture
 =======================================
 
 GCDWebServer is made of only 4 core classes:
-* 'GCDWebServer' manages the socket that listens for new HTTP connections and the list of handlers used by the server.
-* 'GCDWebServerConnection' is instantiated by 'GCDWebServer' to handle each new HTTP connection. Each instance stays alive until the connection is closed. You cannot use this class directly, but it is exposed so you can subclass it to override some hooks.
-* 'GCDWebServerRequest' is created by the 'GCDWebServerConnection' instance after HTTP headers have been received. It wraps the request and handles the HTTP body if any. GCDWebServer comes with several subclasses of 'GCDWebServerRequest' to handle common cases like storing the body in memory or stream it to a file on disk. See [GCDWebServerRequest.h](CGDWebServer/GCDWebServerRequest.h) for the full list.
-* 'GCDWebServerResponse' is created by the request handler and wraps the response HTTP headers and optional body. GCDWebServer provides several subclasses of 'GCDWebServerResponse' to handle common cases like HTML text in memory or streaming a file from disk. See [GCDWebServerResponse.h](CGDWebServer/GCDWebServerResponse.h) for the full list.
+* [GCDWebServer](CGDWebServer/GCDWebServer.h) manages the socket that listens for new HTTP connections and the list of handlers used by the server.
+* [GCDWebServerConnection](CGDWebServer/GCDWebServerConnection.h) is instantiated by 'GCDWebServer' to handle each new HTTP connection. Each instance stays alive until the connection is closed. You cannot use this class directly, but it is exposed so you can subclass it to override some hooks.
+* [GCDWebServerRequest](CGDWebServer/GCDWebServerRequest.h) is created by the 'GCDWebServerConnection' instance after HTTP headers have been received. It wraps the request and handles the HTTP body if any. GCDWebServer comes with several subclasses of 'GCDWebServerRequest' to handle common cases like storing the body in memory or stream it to a file on disk.
+* [GCDWebServerResponse](CGDWebServer/GCDWebServerResponse.h) is created by the request handler and wraps the response HTTP headers and optional body. GCDWebServer comes with several subclasses of 'GCDWebServerResponse' to handle common cases like HTML text in memory or streaming a file from disk.
 
 Implementing Handlers
 =====================
