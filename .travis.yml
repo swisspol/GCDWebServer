@@ -1,2 +1,2 @@
-language: c
+language: objective-c
 script: ./Run-Tests.sh
