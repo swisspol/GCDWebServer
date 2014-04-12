@@ -1,4 +1,4 @@
-#!/bin/sh -ex
+#!/bin/bash -ex
 
 TARGET="GCDWebServer (Mac)"
 CONFIGURATION="Release"
