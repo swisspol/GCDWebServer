@@ -44,7 +44,7 @@
 @property(nonatomic, readonly) NSDate* ifModifiedSince;  // Automatically parsed from headers (nil if request has no "If-Modified-Since" header or it is malformatted)
 @property(nonatomic, readonly) NSString* ifNoneMatch;  // Automatically parsed from headers (nil if request has no "If-None-Match" header)
 @property(nonatomic, readonly) NSRange byteRange;  // Automatically parsed from headers ([NSNotFound, 0] if request has no "Range" header, [offset, length] for byte range from beginning or [NSNotFound, -bytes] from end)
-@property(nonatomic, readonly) BOOL acceptsGzipContentEncoding;
+@property(nonatomic, readonly) BOOL acceptsGzipContentEncoding;  // Automatically parsed from headers
 - (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query;
 - (BOOL)hasBody;  // Convenience method that checks if "contentType" is not nil
 - (BOOL)hasByteRange;  // Convenience method that checks "byteRange"
