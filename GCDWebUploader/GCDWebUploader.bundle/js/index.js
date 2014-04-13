@@ -215,7 +215,7 @@ $(document).ready(function() {
   $("#create-modal").on("shown.bs.modal", function(event) {
     $("#create-input").focus();
     $("#create-input").select();
-  })
+  });
   
   $("#create-folder").click(function(event) {
     $("#create-input").val("Untitled folder");
