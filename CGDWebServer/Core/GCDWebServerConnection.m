@@ -579,69 +579,66 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     
     if (extraData) {
       NSString* requestMethod = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestMethod(_requestMessage));  // Method verbs are case-sensitive and uppercase
-      DCHECK(requestMethod);
       if ([[_server class] shouldAutomaticallyMapHEADToGET] && [requestMethod isEqualToString:@"HEAD"]) {
         requestMethod = @"GET";
         _virtualHEAD = YES;
       }
       NSURL* requestURL = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestURL(_requestMessage));
-      DCHECK(requestURL);
-      NSString* requestPath = GCDWebServerUnescapeURLString(ARC_BRIDGE_RELEASE(CFURLCopyPath((CFURLRef)requestURL)));  // Don't use -[NSURL path] which strips the ending slash
-      DCHECK(requestPath);
-      NSDictionary* requestQuery = nil;
-      NSString* queryString = ARC_BRIDGE_RELEASE(CFURLCopyQueryString((CFURLRef)requestURL, NULL));  // Don't use -[NSURL query] to make sure query is not unescaped;
-      if (queryString.length) {
-        requestQuery = GCDWebServerParseURLEncodedForm(queryString);
-        DCHECK(requestQuery);
-      }
+      NSString* requestPath = requestURL ? GCDWebServerUnescapeURLString(ARC_BRIDGE_RELEASE(CFURLCopyPath((CFURLRef)requestURL))) : nil;  // Don't use -[NSURL path] which strips the ending slash
+      NSString* queryString = requestURL ? ARC_BRIDGE_RELEASE(CFURLCopyQueryString((CFURLRef)requestURL, NULL)) : nil;  // Don't use -[NSURL query] to make sure query is not unescaped;
+      NSDictionary* requestQuery = queryString ? GCDWebServerParseURLEncodedForm(queryString) : @{};
       NSDictionary* requestHeaders = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyAllHeaderFields(_requestMessage));  // Header names are case-insensitive but CFHTTPMessageCopyAllHeaderFields() will standardize the common ones
-      DCHECK(requestHeaders);
-      for (_handler in _server.handlers) {
-        _request = ARC_RETAIN(_handler.matchBlock(requestMethod, requestURL, requestHeaders, requestPath, requestQuery));
-        if (_request) {
-          break;
+      if (requestMethod && requestURL && requestHeaders && requestPath && requestQuery) {
+        for (_handler in _server.handlers) {
+          _request = ARC_RETAIN(_handler.matchBlock(requestMethod, requestURL, requestHeaders, requestPath, requestQuery));
+          if (_request) {
+            break;
+          }
         }
-      }
-      if (_request) {
-        if ([_request hasBody]) {
-          [_request prepareForWriting];
-          if (_request.usesChunkedTransferEncoding || (extraData.length <= _request.contentLength)) {
-            NSString* expectHeader = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyHeaderFieldValue(_requestMessage, CFSTR("Expect")));
-            if (expectHeader) {
-              if ([expectHeader caseInsensitiveCompare:@"100-continue"] == NSOrderedSame) {
-                [self _writeData:_continueData withCompletionBlock:^(BOOL success) {
-                  
-                  if (success) {
-                    if (_request.usesChunkedTransferEncoding) {
-                      [self _readChunkedBodyWithInitialData:extraData];
-                    } else {
-                      [self _readBodyWithLength:_request.contentLength initialData:extraData];
+        if (_request) {
+          if ([_request hasBody]) {
+            [_request prepareForWriting];
+            if (_request.usesChunkedTransferEncoding || (extraData.length <= _request.contentLength)) {
+              NSString* expectHeader = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyHeaderFieldValue(_requestMessage, CFSTR("Expect")));
+              if (expectHeader) {
+                if ([expectHeader caseInsensitiveCompare:@"100-continue"] == NSOrderedSame) {
+                  [self _writeData:_continueData withCompletionBlock:^(BOOL success) {
+                    
+                    if (success) {
+                      if (_request.usesChunkedTransferEncoding) {
+                        [self _readChunkedBodyWithInitialData:extraData];
+                      } else {
+                        [self _readBodyWithLength:_request.contentLength initialData:extraData];
+                      }
                     }
-                  }
-                  
-                }];
+                    
+                  }];
+                } else {
+                  LOG_ERROR(@"Unsupported 'Expect' / 'Content-Length' header combination on socket %i", _socket);
+                  [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_ExpectationFailed];
+                }
               } else {
-                LOG_ERROR(@"Unsupported 'Expect' / 'Content-Length' header combination on socket %i", _socket);
-                [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_ExpectationFailed];
+                if (_request.usesChunkedTransferEncoding) {
+                  [self _readChunkedBodyWithInitialData:extraData];
+                } else {
+                  [self _readBodyWithLength:_request.contentLength initialData:extraData];
+                }
               }
             } else {
-              if (_request.usesChunkedTransferEncoding) {
-                [self _readChunkedBodyWithInitialData:extraData];
-              } else {
-                [self _readBodyWithLength:_request.contentLength initialData:extraData];
-              }
+              LOG_ERROR(@"Unexpected 'Content-Length' header value on socket %i", _socket);
+              [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_BadRequest];
             }
           } else {
-            LOG_ERROR(@"Unexpected 'Content-Length' header value on socket %i", _socket);
-            [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_BadRequest];
+            [self _processRequest];
           }
         } else {
-          [self _processRequest];
+          _request = [[GCDWebServerRequest alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:requestPath query:requestQuery];
+          DCHECK(_request);
+          [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_MethodNotAllowed];
         }
       } else {
-        _request = [[GCDWebServerRequest alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:requestPath query:requestQuery];
-        DCHECK(_request);
-        [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_MethodNotAllowed];
+        [self abortRequest:nil withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
+        DNOT_REACHED();
       }
     } else {
       [self abortRequest:nil withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
