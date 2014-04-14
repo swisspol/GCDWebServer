@@ -78,6 +78,7 @@ function _reload(path) {
   }).fail(function(jqXHR, textStatus, errorThrown) {
     _showError("Failed retrieving contents of \"" + path + "\"", textStatus, errorThrown);
   }).done(function(data, textStatus, jqXHR) {
+    var scrollPosition = $(document).scrollTop();
     
     if (path != _path) {
       $("#path").empty();
@@ -169,6 +170,7 @@ function _reload(path) {
       });
     });
     
+    $(document).scrollTop(scrollPosition);
   }).always(function() {
     _enableReloads();
   });
