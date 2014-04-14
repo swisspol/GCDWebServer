@@ -79,7 +79,7 @@ function _reload(path) {
           $("#path").append('<li data-path="' + subpath + '"><a>' + components[i] + '</a></li>');
         }
         $("#path > li").click(function(event) {
-          _reload($(this).attr("data-path"));
+          _reload($(this).data("path"));
           event.preventDefault();
         });
         $("#path").append('<li class="active">' + components[components.length - 1] + '</li>');
@@ -89,13 +89,13 @@ function _reload(path) {
     
     $("#listing").empty();
     for (var i = 0, file; file = data[i]; ++i) {
-      $("#listing").append(tmpl("template-listing", file));
+      $(tmpl("template-listing", file)).data(file).appendTo("#listing");
     }
     
     $(".edit").editable(function(value, settings) { 
-      var name = $(this).parent().parent().attr("data-name");
+      var name = $(this).parent().parent().data("name");
       if (value != name) {
-        var path = $(this).parent().parent().attr("data-path");
+        var path = $(this).parent().parent().data("path");
         $.ajax({
           url: 'move',
           type: 'POST',
@@ -113,29 +113,29 @@ function _reload(path) {
     });
     
     $(".button-download").click(function(event) {
-      var path = $(this).parent().parent().attr("data-path");
+      var path = $(this).parent().parent().data("path");
       setTimeout(function() {
         window.location = "download?path=" + encodeURIComponent(path);
       }, 0);
     });
     
     $(".button-open").click(function(event) {
-      var path = $(this).parent().parent().attr("data-path");
+      var path = $(this).parent().parent().data("path");
       _reload(path);
     });
     
     $(".button-move").click(function(event) {
-      var path = $(this).parent().parent().attr("data-path");
+      var path = $(this).parent().parent().data("path");
       if (path[path.length - 1] == "/") {
         path = path.slice(0, path.length - 1);
       }
-      $("#move-input").attr("data-path", path);
+      $("#move-input").data("path", path);
       $("#move-input").val(path);
       $("#move-modal").modal("show");
     });
     
     $(".button-delete").click(function(event) {
-      var path = $(this).parent().parent().attr("data-path");
+      var path = $(this).parent().parent().data("path");
       $.ajax({
         url: 'delete',
         type: 'POST',
@@ -260,7 +260,7 @@ $(document).ready(function() {
   
   $("#move-confirm").click(function(event) {
     $("#move-modal").modal("hide");
-    var oldPath = $("#move-input").attr("data-path");
+    var oldPath = $("#move-input").data("path");
     var newPath = $("#move-input").val();
     if ((newPath != "") && (newPath[0] == "/") && (newPath != oldPath)) {
       $.ajax({
