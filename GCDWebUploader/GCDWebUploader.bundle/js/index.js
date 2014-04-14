@@ -28,8 +28,8 @@
 var ENTER_KEYCODE = 13;
 
 var _path = null;
-var _reloading = false;
 var _pendingReloads = [];
+var _reloadingDisabled = 0;
 
 function formatFileSize(bytes) {
   if (bytes >= 1000000000) {
@@ -49,15 +49,27 @@ function _showError(message, textStatus, errorThrown) {
   }));
 }
 
+function _disableReloads() {
+  _reloadingDisabled += 1;
+}
+
+function _enableReloads() {
+  _reloadingDisabled -= 1;
+  
+  if (_pendingReloads.length > 0) {
+    _reload(_pendingReloads.shift());
+  }
+}
+
 function _reload(path) {
-  if (_reloading) {
+  if (_reloadingDisabled) {
     if ($.inArray(path, _pendingReloads) < 0) {
       _pendingReloads.push(path);
     }
     return;
   }
   
-  _reloading = true;
+  _disableReloads();
   $.ajax({
     url: 'list',
     type: 'GET',
@@ -109,6 +121,15 @@ function _reload(path) {
       }
       return value;
     }, {
+      onedit: function(settings, original) {
+        _disableReloads();
+      },
+      onsubmit: function(settings, original) {
+        _enableReloads();
+      },
+      onreset: function(settings, original) {
+        _enableReloads();
+      },
       tooltip: 'Click to rename...'
     });
     
@@ -149,10 +170,7 @@ function _reload(path) {
     });
     
   }).always(function() {
-    _reloading = false;
-    if (_pendingReloads.length > 0) {
-      _reload(_pendingReloads.shift());
-    }
+    _enableReloads();
   });
 }
 
