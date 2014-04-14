@@ -25,6 +25,8 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+var ENTER_KEYCODE = 13;
+
 var _path = null;
 var _reloading = false;
 var _pendingReloads = [];
@@ -212,6 +214,12 @@ $(document).ready(function() {
     
   });
   
+  $("#create-input").keypress(function(event) {
+    if (event.keyCode == ENTER_KEYCODE) {
+      $("#create-confirm").click();
+    };
+  });
+  
   $("#create-modal").on("shown.bs.modal", function(event) {
     $("#create-input").focus();
     $("#create-input").select();
@@ -237,6 +245,12 @@ $(document).ready(function() {
         _reload(_path);
       });
     }
+  });
+  
+  $("#move-input").keypress(function(event) {
+    if (event.keyCode == ENTER_KEYCODE) {
+      $("#move-confirm").click();
+    };
   });
   
   $("#move-modal").on("shown.bs.modal", function(event) {
