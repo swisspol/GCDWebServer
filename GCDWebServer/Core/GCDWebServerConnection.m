@@ -70,6 +70,7 @@ static int32_t _connectionCounter = 0;
   GCDWebServerResponse* _response;
   NSInteger _statusCode;
   
+  BOOL _opened;
 #if !TARGET_OS_IPHONE
   NSUInteger _connectionIndex;
   NSString* _requestPath;
@@ -654,7 +655,15 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     _remoteAddress = ARC_RETAIN(remoteAddress);
     _socket = socket;
     
-    [self open];
+    if (![self open]) {
+      close(_socket);
+      ARC_RELEASE(self);
+      return nil;
+    }
+    _opened = YES;
+    
+    LOG_DEBUG(@"Did open connection on socket %i", _socket);
+    [self _readRequestHeaders];
   }
   return self;
 }
@@ -681,7 +690,16 @@ static NSString* _StringFromAddressData(NSData* data) {
 }
 
 - (void)dealloc {
-  [self close];
+  if (_opened) {
+    [self close];
+  }
+  
+  int result = close(_socket);
+  if (result != 0) {
+    LOG_ERROR(@"Failed closing socket %i for connection (%i): %s", _socket, errno, strerror(errno));
+  } else {
+    LOG_DEBUG(@"Did close connection on socket %i", _socket);
+  }
   
   ARC_RELEASE(_server);
   ARC_RELEASE(_localAddress);
@@ -709,9 +727,7 @@ static NSString* _StringFromAddressData(NSData* data) {
 
 @implementation GCDWebServerConnection (Subclassing)
 
-- (void)open {
-  LOG_DEBUG(@"Did open connection on socket %i", _socket);
-  
+- (BOOL)open {
 #if !TARGET_OS_IPHONE
   if (_server.recordingEnabled) {
     _connectionIndex = OSAtomicIncrement32(&_connectionCounter);
@@ -726,7 +742,7 @@ static NSString* _StringFromAddressData(NSData* data) {
   }
 #endif
   
-  [self _readRequestHeaders];
+  return YES;
 }
 
 - (void)didUpdateBytesRead {
@@ -788,13 +804,6 @@ static inline BOOL _CompareResources(NSString* responseETag, NSString* requestET
 }
 
 - (void)close {
-  int result = close(_socket);
-  if (result != 0) {
-    LOG_ERROR(@"Failed closing socket %i for connection (%i): %s", _socket, errno, strerror(errno));
-  } else {
-    LOG_DEBUG(@"Did close connection on socket %i", _socket);
-  }
-  
 #if !TARGET_OS_IPHONE
   if (_requestPath) {
     BOOL success = NO;

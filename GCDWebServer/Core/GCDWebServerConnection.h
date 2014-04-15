@@ -40,7 +40,7 @@
 @end
 
 @interface GCDWebServerConnection (Subclassing)
-- (void)open;
+- (BOOL)open;  // Return NO to reject connection e.g. after validating local or remote addresses
 - (void)didUpdateBytesRead;  // Called from arbitrary thread after @totalBytesRead is updated - Default implementation does nothing
 - (void)didUpdateBytesWritten;  // Called from arbitrary thread after @totalBytesWritten is updated - Default implementation does nothing
 - (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block;  // Only called if the request can be processed
