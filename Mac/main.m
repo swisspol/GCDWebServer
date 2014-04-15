@@ -39,6 +39,10 @@
 
 #import "GCDWebUploader.h"
 
+#ifndef __GCDWEBSERVER_ENABLE_TESTING__
+#error __GCDWEBSERVER_ENABLE_TESTING__ must be defined
+#endif
+
 typedef enum {
   kMode_WebServer = 0,
   kMode_HTMLPage,

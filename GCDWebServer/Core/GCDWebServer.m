@@ -49,7 +49,7 @@
   NSUInteger _port;
   dispatch_source_t _source;
   CFNetServiceRef _service;
-#if !TARGET_OS_IPHONE
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
   BOOL _recording;
 #endif
 }
@@ -334,18 +334,6 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 
 @implementation GCDWebServer (Extensions)
 
-#if !TARGET_OS_IPHONE
-
-- (void)setRecordingEnabled:(BOOL)flag {
-  _recording = flag;
-}
-
-- (BOOL)isRecordingEnabled {
-  return _recording;
-}
-
-#endif
-
 - (NSURL*)serverURL {
   if (_source) {
     NSString* ipAddress = GCDWebServerGetPrimaryIPv4Address();
@@ -391,177 +379,6 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
     signal(SIGINT, handler);
   }
   return success;
-}
-
-#endif
-
-#ifdef __GCDWEBSERVER_ENABLE_TESTING__
-
-static CFHTTPMessageRef _CreateHTTPMessageFromData(NSData* data, BOOL isRequest) {
-  CFHTTPMessageRef message = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, isRequest);
-  if (CFHTTPMessageAppendBytes(message, data.bytes, data.length)) {
-    return message;
-  }
-  CFRelease(message);
-  return NULL;
-}
-
-static CFHTTPMessageRef _CreateHTTPMessageFromPerformingRequest(NSData* inData, NSUInteger port) {
-  CFHTTPMessageRef response = NULL;
-  int httpSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if (httpSocket > 0) {
-    struct sockaddr_in addr4;
-    bzero(&addr4, sizeof(addr4));
-    addr4.sin_len = sizeof(port);
-    addr4.sin_family = AF_INET;
-    addr4.sin_port = htons(8080);
-    addr4.sin_addr.s_addr = htonl(INADDR_ANY);
-    if (connect(httpSocket, (void*)&addr4, sizeof(addr4)) == 0) {
-      if (write(httpSocket, inData.bytes, inData.length) == (ssize_t)inData.length) {
-        NSMutableData* outData = [[NSMutableData alloc] initWithLength:(256 * 1024)];
-        NSUInteger length = 0;
-        while (1) {
-          ssize_t result = read(httpSocket, (char*)outData.mutableBytes + length, outData.length - length);
-          if (result < 0) {
-            length = NSNotFound;
-            break;
-          } else if (result == 0) {
-            break;
-          }
-          length += result;
-          if (length >= outData.length) {
-            outData.length = 2 * outData.length;
-          }
-        }
-        if (length != NSNotFound) {
-          outData.length = length;
-          response = _CreateHTTPMessageFromData(outData, NO);
-        } else {
-          DNOT_REACHED();
-        }
-        ARC_RELEASE(outData);
-      }
-    }
-    close(httpSocket);
-  }
-  return response;
-}
-
-static void _LogResult(NSString* format, ...) {
-  va_list arguments;
-  va_start(arguments, format);
-  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
-  va_end(arguments);
-  fprintf(stdout, "%s\n", [message UTF8String]);
-  ARC_RELEASE(message);
-}
-
-- (NSInteger)runTestsInDirectory:(NSString*)path withPort:(NSUInteger)port {
-  NSArray* ignoredHeaders = @[@"Date", @"Etag"];  // Dates are always different by definition and ETags depend on file system node IDs
-  NSInteger result = -1;
-  if ([self startWithPort:port bonjourName:nil]) {
-    
-    result = 0;
-    NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:path error:NULL];
-    for (NSString* requestFile in files) {
-      if (![requestFile hasSuffix:@".request"]) {
-        continue;
-      }
-      @autoreleasepool {
-        NSString* index = [[requestFile componentsSeparatedByString:@"-"] firstObject];
-        BOOL success = NO;
-        NSData* requestData = [NSData dataWithContentsOfFile:[path stringByAppendingPathComponent:requestFile]];
-        if (requestData) {
-          CFHTTPMessageRef request = _CreateHTTPMessageFromData(requestData, YES);
-          if (request) {
-            NSString* requestMethod = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestMethod(request));
-            NSURL* requestURL = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestURL(request));
-            _LogResult(@"[%i] %@ %@", (int)[index integerValue], requestMethod, requestURL.path);
-            NSString* prefix = [index stringByAppendingString:@"-"];
-            for (NSString* responseFile in files) {
-              if ([responseFile hasPrefix:prefix] && [responseFile hasSuffix:@".response"]) {
-                NSData* responseData = [NSData dataWithContentsOfFile:[path stringByAppendingPathComponent:responseFile]];
-                if (responseData) {
-                CFHTTPMessageRef expectedResponse = _CreateHTTPMessageFromData(responseData, NO);
-                  if (expectedResponse) {
-                    CFHTTPMessageRef actualResponse = _CreateHTTPMessageFromPerformingRequest(requestData, port);
-                    if (actualResponse) {
-                      success = YES;
-                      
-                      CFIndex expectedStatusCode = CFHTTPMessageGetResponseStatusCode(expectedResponse);
-                      CFIndex actualStatusCode = CFHTTPMessageGetResponseStatusCode(actualResponse);
-                      if (actualStatusCode != expectedStatusCode) {
-                        _LogResult(@"  Status code not matching:\n    Expected: %i\n      Actual: %i", (int)expectedStatusCode, (int)actualStatusCode);
-                        success = NO;
-                      }
-                      
-                      NSDictionary* expectedHeaders = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyAllHeaderFields(expectedResponse));
-                      NSDictionary* actualHeaders = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyAllHeaderFields(actualResponse));
-                      for (NSString* expectedHeader in expectedHeaders) {
-                        if ([ignoredHeaders containsObject:expectedHeader]) {
-                          continue;
-                        }
-                        NSString* expectedValue = [expectedHeaders objectForKey:expectedHeader];
-                        NSString* actualValue = [actualHeaders objectForKey:expectedHeader];
-                        if (![actualValue isEqualToString:expectedValue]) {
-                          _LogResult(@"  Header '%@' not matching:\n    Expected: \"%@\"\n      Actual: \"%@\"", expectedHeader, expectedValue, actualValue);
-                          success = NO;
-                        }
-                      }
-                      for (NSString* actualHeader in actualHeaders) {
-                        if (![expectedHeaders objectForKey:actualHeader]) {
-                          _LogResult(@"  Header '%@' not matching:\n    Expected: \"%@\"\n      Actual: \"%@\"", actualHeader, nil, [actualHeaders objectForKey:actualHeader]);
-                          success = NO;
-                        }
-                      }
-                      
-                      NSData* expectedBody = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyBody(expectedResponse));
-                      NSData* actualBody = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyBody(actualResponse));
-                      if (![actualBody isEqualToData:expectedBody]) {
-                        _LogResult(@"  Bodies not matching:\n    Expected: %lu bytes\n      Actual: %lu bytes", (unsigned long)expectedBody.length, (unsigned long)actualBody.length);
-                        success = NO;
-#if !TARGET_OS_IPHONE
-#ifndef NDEBUG
-                        if (GCDWebServerIsTextContentType([expectedHeaders objectForKey:@"Content-Type"])) {
-                          NSString* expectedPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[[NSProcessInfo processInfo] globallyUniqueString] stringByAppendingPathExtension:@"txt"]];
-                          NSString* actualPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[[NSProcessInfo processInfo] globallyUniqueString] stringByAppendingPathExtension:@"txt"]];
-                          if ([expectedBody writeToFile:expectedPath atomically:YES] && [actualBody writeToFile:actualPath atomically:YES]) {
-                            NSTask* task = [[NSTask alloc] init];
-                            [task setLaunchPath:@"/usr/bin/opendiff"];
-                            [task setArguments:@[expectedPath, actualPath]];
-                            [task launch];
-                            ARC_RELEASE(task);
-                          }
-                        }
-#endif
-#endif
-                      }
-                      
-                      CFRelease(actualResponse);
-                    }
-                    CFRelease(expectedResponse);
-                  }
-                } else {
-                  DNOT_REACHED();
-                }
-                break;
-              }
-            }
-            CFRelease(request);
-          }
-        } else {
-          DNOT_REACHED();
-        }
-        _LogResult(@"");
-        if (!success) {
-          ++result;
-        }
-      }
-    }
-    
-    [self stop];
-  }
-  return result;
 }
 
 #endif
@@ -777,3 +594,186 @@ static void _LogResult(NSString* format, ...) {
 }
 
 @end
+
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
+
+@implementation GCDWebServer (Testing)
+
+- (void)setRecordingEnabled:(BOOL)flag {
+  _recording = flag;
+}
+
+- (BOOL)isRecordingEnabled {
+  return _recording;
+}
+
+static CFHTTPMessageRef _CreateHTTPMessageFromData(NSData* data, BOOL isRequest) {
+  CFHTTPMessageRef message = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, isRequest);
+  if (CFHTTPMessageAppendBytes(message, data.bytes, data.length)) {
+    return message;
+  }
+  CFRelease(message);
+  return NULL;
+}
+
+static CFHTTPMessageRef _CreateHTTPMessageFromPerformingRequest(NSData* inData, NSUInteger port) {
+  CFHTTPMessageRef response = NULL;
+  int httpSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+  if (httpSocket > 0) {
+    struct sockaddr_in addr4;
+    bzero(&addr4, sizeof(addr4));
+    addr4.sin_len = sizeof(port);
+    addr4.sin_family = AF_INET;
+    addr4.sin_port = htons(8080);
+    addr4.sin_addr.s_addr = htonl(INADDR_ANY);
+    if (connect(httpSocket, (void*)&addr4, sizeof(addr4)) == 0) {
+      if (write(httpSocket, inData.bytes, inData.length) == (ssize_t)inData.length) {
+        NSMutableData* outData = [[NSMutableData alloc] initWithLength:(256 * 1024)];
+        NSUInteger length = 0;
+        while (1) {
+          ssize_t result = read(httpSocket, (char*)outData.mutableBytes + length, outData.length - length);
+          if (result < 0) {
+            length = NSNotFound;
+            break;
+          } else if (result == 0) {
+            break;
+          }
+          length += result;
+          if (length >= outData.length) {
+            outData.length = 2 * outData.length;
+          }
+        }
+        if (length != NSNotFound) {
+          outData.length = length;
+          response = _CreateHTTPMessageFromData(outData, NO);
+        } else {
+          DNOT_REACHED();
+        }
+        ARC_RELEASE(outData);
+      }
+    }
+    close(httpSocket);
+  }
+  return response;
+}
+
+static void _LogResult(NSString* format, ...) {
+  va_list arguments;
+  va_start(arguments, format);
+  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
+  va_end(arguments);
+  fprintf(stdout, "%s\n", [message UTF8String]);
+  ARC_RELEASE(message);
+}
+
+- (NSInteger)runTestsInDirectory:(NSString*)path withPort:(NSUInteger)port {
+  NSArray* ignoredHeaders = @[@"Date", @"Etag"];  // Dates are always different by definition and ETags depend on file system node IDs
+  NSInteger result = -1;
+  if ([self startWithPort:port bonjourName:nil]) {
+    
+    result = 0;
+    NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:path error:NULL];
+    for (NSString* requestFile in files) {
+      if (![requestFile hasSuffix:@".request"]) {
+        continue;
+      }
+      @autoreleasepool {
+        NSString* index = [[requestFile componentsSeparatedByString:@"-"] firstObject];
+        BOOL success = NO;
+        NSData* requestData = [NSData dataWithContentsOfFile:[path stringByAppendingPathComponent:requestFile]];
+        if (requestData) {
+          CFHTTPMessageRef request = _CreateHTTPMessageFromData(requestData, YES);
+          if (request) {
+            NSString* requestMethod = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestMethod(request));
+            NSURL* requestURL = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestURL(request));
+            _LogResult(@"[%i] %@ %@", (int)[index integerValue], requestMethod, requestURL.path);
+            NSString* prefix = [index stringByAppendingString:@"-"];
+            for (NSString* responseFile in files) {
+              if ([responseFile hasPrefix:prefix] && [responseFile hasSuffix:@".response"]) {
+                NSData* responseData = [NSData dataWithContentsOfFile:[path stringByAppendingPathComponent:responseFile]];
+                if (responseData) {
+                CFHTTPMessageRef expectedResponse = _CreateHTTPMessageFromData(responseData, NO);
+                  if (expectedResponse) {
+                    CFHTTPMessageRef actualResponse = _CreateHTTPMessageFromPerformingRequest(requestData, port);
+                    if (actualResponse) {
+                      success = YES;
+                      
+                      CFIndex expectedStatusCode = CFHTTPMessageGetResponseStatusCode(expectedResponse);
+                      CFIndex actualStatusCode = CFHTTPMessageGetResponseStatusCode(actualResponse);
+                      if (actualStatusCode != expectedStatusCode) {
+                        _LogResult(@"  Status code not matching:\n    Expected: %i\n      Actual: %i", (int)expectedStatusCode, (int)actualStatusCode);
+                        success = NO;
+                      }
+                      
+                      NSDictionary* expectedHeaders = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyAllHeaderFields(expectedResponse));
+                      NSDictionary* actualHeaders = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyAllHeaderFields(actualResponse));
+                      for (NSString* expectedHeader in expectedHeaders) {
+                        if ([ignoredHeaders containsObject:expectedHeader]) {
+                          continue;
+                        }
+                        NSString* expectedValue = [expectedHeaders objectForKey:expectedHeader];
+                        NSString* actualValue = [actualHeaders objectForKey:expectedHeader];
+                        if (![actualValue isEqualToString:expectedValue]) {
+                          _LogResult(@"  Header '%@' not matching:\n    Expected: \"%@\"\n      Actual: \"%@\"", expectedHeader, expectedValue, actualValue);
+                          success = NO;
+                        }
+                      }
+                      for (NSString* actualHeader in actualHeaders) {
+                        if (![expectedHeaders objectForKey:actualHeader]) {
+                          _LogResult(@"  Header '%@' not matching:\n    Expected: \"%@\"\n      Actual: \"%@\"", actualHeader, nil, [actualHeaders objectForKey:actualHeader]);
+                          success = NO;
+                        }
+                      }
+                      
+                      NSData* expectedBody = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyBody(expectedResponse));
+                      NSData* actualBody = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyBody(actualResponse));
+                      if (![actualBody isEqualToData:expectedBody]) {
+                        _LogResult(@"  Bodies not matching:\n    Expected: %lu bytes\n      Actual: %lu bytes", (unsigned long)expectedBody.length, (unsigned long)actualBody.length);
+                        success = NO;
+#if !TARGET_OS_IPHONE
+#ifndef NDEBUG
+                        if (GCDWebServerIsTextContentType([expectedHeaders objectForKey:@"Content-Type"])) {
+                          NSString* expectedPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[[NSProcessInfo processInfo] globallyUniqueString] stringByAppendingPathExtension:@"txt"]];
+                          NSString* actualPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[[NSProcessInfo processInfo] globallyUniqueString] stringByAppendingPathExtension:@"txt"]];
+                          if ([expectedBody writeToFile:expectedPath atomically:YES] && [actualBody writeToFile:actualPath atomically:YES]) {
+                            NSTask* task = [[NSTask alloc] init];
+                            [task setLaunchPath:@"/usr/bin/opendiff"];
+                            [task setArguments:@[expectedPath, actualPath]];
+                            [task launch];
+                            ARC_RELEASE(task);
+                          }
+                        }
+#endif
+#endif
+                      }
+                      
+                      CFRelease(actualResponse);
+                    }
+                    CFRelease(expectedResponse);
+                  }
+                } else {
+                  DNOT_REACHED();
+                }
+                break;
+              }
+            }
+            CFRelease(request);
+          }
+        } else {
+          DNOT_REACHED();
+        }
+        _LogResult(@"");
+        if (!success) {
+          ++result;
+        }
+      }
+    }
+    
+    [self stop];
+  }
+  return result;
+}
+
+@end
+
+#endif

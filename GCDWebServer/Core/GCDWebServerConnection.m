@@ -27,7 +27,7 @@
 
 #import <TargetConditionals.h>
 #import <netdb.h>
-#if !TARGET_OS_IPHONE
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
 #import <libkern/OSAtomic.h>
 #endif
 
@@ -49,7 +49,7 @@ static NSData* _CRLFData = nil;
 static NSData* _CRLFCRLFData = nil;
 static NSData* _continueData = nil;
 static NSData* _lastChunkData = nil;
-#if !TARGET_OS_IPHONE
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
 static int32_t _connectionCounter = 0;
 #endif
 
@@ -71,7 +71,7 @@ static int32_t _connectionCounter = 0;
   NSInteger _statusCode;
   
   BOOL _opened;
-#if !TARGET_OS_IPHONE
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
   NSUInteger _connectionIndex;
   NSString* _requestPath;
   int _requestFD;
@@ -93,7 +93,7 @@ static int32_t _connectionCounter = 0;
           LOG_DEBUG(@"Connection received %zu bytes on socket %i", size, _socket);
           _bytesRead += size;
           [self didUpdateBytesRead];
-#if !TARGET_OS_IPHONE
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
           if (_requestFD > 0) {
             bool success = dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t chunkOffset, const void* chunkBytes, size_t chunkSize) {
               return (write(_requestFD, chunkBytes, chunkSize) == (ssize_t)chunkSize);
@@ -291,7 +291,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 
 - (void)_writeBuffer:(dispatch_data_t)buffer withCompletionBlock:(WriteBufferCompletionBlock)block {
   size_t size = dispatch_data_get_size(buffer);
-#if !TARGET_OS_IPHONE
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
   ARC_DISPATCH_RETAIN(buffer);
 #endif
   dispatch_write(_socket, buffer, kGCDWebServerGCDQueue, ^(dispatch_data_t data, int error) {
@@ -302,7 +302,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
         LOG_DEBUG(@"Connection sent %zu bytes on socket %i", size, _socket);
         _bytesWritten += size;
         [self didUpdateBytesWritten];
-#if !TARGET_OS_IPHONE
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
         if (_responseFD > 0) {
           bool success = dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t chunkOffset, const void* chunkBytes, size_t chunkSize) {
             return (write(_responseFD, chunkBytes, chunkSize) == (ssize_t)chunkSize);
@@ -320,7 +320,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
         block(NO);
       }
     }
-#if !TARGET_OS_IPHONE
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
     ARC_DISPATCH_RELEASE(buffer);
 #endif
     
@@ -715,7 +715,7 @@ static NSString* _StringFromAddressData(NSData* data) {
   }
   ARC_RELEASE(_response);
   
-#if !TARGET_OS_IPHONE
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
   ARC_RELEASE(_requestPath);
   ARC_RELEASE(_responsePath);
 #endif
@@ -728,7 +728,7 @@ static NSString* _StringFromAddressData(NSData* data) {
 @implementation GCDWebServerConnection (Subclassing)
 
 - (BOOL)open {
-#if !TARGET_OS_IPHONE
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
   if (_server.recordingEnabled) {
     _connectionIndex = OSAtomicIncrement32(&_connectionCounter);
     
@@ -804,7 +804,7 @@ static inline BOOL _CompareResources(NSString* responseETag, NSString* requestET
 }
 
 - (void)close {
-#if !TARGET_OS_IPHONE
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
   if (_requestPath) {
     BOOL success = NO;
     NSError* error = nil;
