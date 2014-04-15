@@ -75,7 +75,7 @@ int main(int argc, const char* argv[]) {
       
     }];
     
-    // Use convenience method that runs server on port 8080 until SIGINT received
+    // Use convenience method that runs server on port 8080 until SIGINT received (Ctrl-C in Terminal)
     [webServer runWithPort:8080];
     
     // Destroy server
