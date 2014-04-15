@@ -183,7 +183,7 @@
 		08FB7794FE84155DC02AAC07 /* LittleCMS */ = {
 			isa = PBXGroup;
 			children = (
-				E28BAE1418F99C810095C089 /* CGDWebServer */,
+				E28BAE1418F99C810095C089 /* GCDWebServer */,
 				E2A0E80718F3432600C580B1 /* GCDWebDAVServer */,
 				E2BE850618E77ECA0061360B /* GCDWebUploader */,
 				E221128D1690B6470048D2B2 /* Mac */,
@@ -247,14 +247,14 @@
 			name = "Mac Frameworks and Libraries";
 			sourceTree = "<group>";
 		};
-		E28BAE1418F99C810095C089 /* CGDWebServer */ = {
+		E28BAE1418F99C810095C089 /* GCDWebServer */ = {
 			isa = PBXGroup;
 			children = (
 				E28BAE1518F99C810095C089 /* Core */,
 				E28BAE2218F99C810095C089 /* Requests */,
 				E28BAE2B18F99C810095C089 /* Responses */,
 			);
-			path = CGDWebServer;
+			path = GCDWebServer;
 			sourceTree = "<group>";
 		};
 		E28BAE1518F99C810095C089 /* Core */ = {
