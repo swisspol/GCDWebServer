@@ -1,6 +1,7 @@
 #!/bin/bash -ex
 
-TARGET="GCDWebServer (Mac)"
+OSX_TARGET="GCDWebServer (Mac)"
+IOS_TARGET="GCDWebServer (iOS)"
 CONFIGURATION="Release"
 
 MRC_BUILD_DIR="/tmp/GCDWebServer-MRC"
@@ -18,13 +19,21 @@ function runTests {
   logLevel=2 $1 -mode "$2" -root "$PAYLOAD_DIR/Payload" -tests "$3"
 }
 
-# Build in manual memory management mode
+# Build for iOS in manual memory management mode (TODO: run tests on iOS)
 rm -rf "MRC_BUILD_DIR"
-xcodebuild -target "$TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$MRC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=NO" > /dev/null
+xcodebuild -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$MRC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=NO" > /dev/null
 
-# Build in ARC mode
+# Build for iOS in ARC mode (TODO: run tests on iOS)
 rm -rf "ARC_BUILD_DIR"
-xcodebuild -target "$TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$ARC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=YES" > /dev/null
+xcodebuild -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$ARC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=YES" > /dev/null
+
+# Build for OS X in manual memory management mode
+rm -rf "MRC_BUILD_DIR"
+xcodebuild -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$MRC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=NO" > /dev/null
+
+# Build for OS X in ARC mode
+rm -rf "ARC_BUILD_DIR"
+xcodebuild -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$ARC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=YES" > /dev/null
 
 # Run tests
 runTests $MRC_PRODUCT "webServer" "Tests/WebServer"
