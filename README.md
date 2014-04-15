@@ -3,7 +3,7 @@ Overview
 
 [![Build Status](https://travis-ci.org/swisspol/GCDWebServer.svg?branch=master)](https://travis-ci.org/swisspol/GCDWebServer)
 
-GCDWebServer is a modern and lightweight GCD based HTTP 1.1 server designed to be embedded in Mac & iOS apps. It was written from scratch with the following goals in mind:
+GCDWebServer is a modern and lightweight GCD based HTTP 1.1 server designed to be embedded in OS X & iOS apps. It was written from scratch with the following goals in mind:
 * Easy to use and understand architecture with only 4 core classes: server, connection, request and response (see "Understanding GCDWebServer's Architecture" below)
 * Well designed API for easy integration and customization
 * Entirely built with an event-driven design using [Grand Central Dispatch](http://en.wikipedia.org/wiki/Grand_Central_Dispatch) for maximal performance and concurrency
@@ -55,8 +55,9 @@ pod "GCDWebServer/WebDAV", "~> 2.0"
 Hello World
 ===========
 
-This code snippet shows how to implement a custom HTTP server that runs on port 8080 and returns a "Hello World" HTML page to any request &mdash; since GCDWebServer uses GCD blocks to handle requests, no subclassing or delegates are needed, which results in very clean code:
+These codes snippets show how to implement a custom HTTP server that runs on port 8080 and returns a "Hello World" HTML page to any request. Since GCDWebServer uses GCD blocks to handle requests, no subclassing or delegates are needed, which results in very clean code.
 
+**OS X version (command line tool):**
 ```objectivec
 #import "GCDWebServer.h"
 
@@ -75,7 +76,7 @@ int main(int argc, const char* argv[]) {
       
     }];
     
-    // Use convenience method that runs server on port 8080 until SIGINT received (Ctrl-C in Terminal)
+    // Use convenience method that runs server on port 8080 until SIGINT received (i.e. Ctrl-C in Terminal)
     [webServer runWithPort:8080];
     
     // Destroy server
@@ -83,6 +84,33 @@ int main(int argc, const char* argv[]) {
     
   }
   return 0;
+}
+```
+
+**iOS Version:**
+```objectivec
+#import "GCDWebServer.h"
+
+static GCDWebServer* _webServer = nil;  // This should be an ivar of your application delegate class instead
+
+- (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
+  
+  // Create server
+  _webServer = [[GCDWebServer alloc] init];
+  
+  // Add a handler to respond to GET requests on any URL
+  [_webServer addDefaultHandlerForMethod:@"GET"
+                            requestClass:[GCDWebServerRequest class]
+                            processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+    
+    return [GCDWebServerDataResponse responseWithHTML:@"<html><body><p>Hello World</p></body></html>"];
+    
+  }];
+  
+  // Start server on port 8080
+  [_webServer startWithPort:8080 bonjourName:nil];
+  
+  return YES;
 }
 ```
 
