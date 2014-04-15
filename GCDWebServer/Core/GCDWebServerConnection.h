@@ -41,8 +41,8 @@
 
 @interface GCDWebServerConnection (Subclassing)
 - (BOOL)open;  // Return NO to reject connection e.g. after validating local or remote addresses
-- (void)didUpdateBytesRead;  // Called from arbitrary thread after @totalBytesRead is updated - Default implementation does nothing
-- (void)didUpdateBytesWritten;  // Called from arbitrary thread after @totalBytesWritten is updated - Default implementation does nothing
+- (void)didReadBytes:(const void*)bytes length:(NSUInteger)length;  // Called after data has been read from the connection
+- (void)didWriteBytes:(const void*)bytes length:(NSUInteger)length;  // Called after data has been written to the connection
 - (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block;  // Only called if the request can be processed
 - (GCDWebServerResponse*)replaceResponse:(GCDWebServerResponse*)response forRequest:(GCDWebServerRequest*)request;  // Default implementation replaces any response matching the "ETag" or "Last-Modified-Date" header of the request by a barebone "Not-Modified" (304) one
 - (void)abortRequest:(GCDWebServerRequest*)request withStatusCode:(NSInteger)statusCode;  // If request headers was malformed, "request" will be nil

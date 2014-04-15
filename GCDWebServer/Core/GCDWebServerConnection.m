@@ -33,14 +33,13 @@
 
 #import "GCDWebServerPrivate.h"
 
-#define kHeadersReadBuffer 1024
+#define kHeadersReadCapacity (1 * 1024)
+#define kBodyReadCapacity (256 * 1024)
 
-typedef void (^ReadBufferCompletionBlock)(dispatch_data_t buffer);
-typedef void (^ReadDataCompletionBlock)(NSData* data);
+typedef void (^ReadDataCompletionBlock)(BOOL success);
 typedef void (^ReadHeadersCompletionBlock)(NSData* extraData);
 typedef void (^ReadBodyCompletionBlock)(BOOL success);
 
-typedef void (^WriteBufferCompletionBlock)(BOOL success);
 typedef void (^WriteDataCompletionBlock)(BOOL success);
 typedef void (^WriteHeadersCompletionBlock)(BOOL success);
 typedef void (^WriteBodyCompletionBlock)(BOOL success);
@@ -83,87 +82,50 @@ static int32_t _connectionCounter = 0;
 
 @implementation GCDWebServerConnection (Read)
 
-- (void)_readBufferWithLength:(NSUInteger)length completionBlock:(ReadBufferCompletionBlock)block {
+- (void)_readData:(NSMutableData*)data withLength:(NSUInteger)length completionBlock:(ReadDataCompletionBlock)block {
   dispatch_read(_socket, length, kGCDWebServerGCDQueue, ^(dispatch_data_t buffer, int error) {
     
     @autoreleasepool {
       if (error == 0) {
         size_t size = dispatch_data_get_size(buffer);
         if (size > 0) {
-          LOG_DEBUG(@"Connection received %zu bytes on socket %i", size, _socket);
-          _bytesRead += size;
-          [self didUpdateBytesRead];
-#ifdef __GCDWEBSERVER_ENABLE_TESTING__
-          if (_requestFD > 0) {
-            bool success = dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t chunkOffset, const void* chunkBytes, size_t chunkSize) {
-              return (write(_requestFD, chunkBytes, chunkSize) == (ssize_t)chunkSize);
-            });
-            if (!success) {
-              LOG_ERROR(@"Failed recording request data: %s (%i)", strerror(errno), errno);
-              close(_requestFD);
-              _requestFD = 0;
-            }
-          }
-#endif
-          block(buffer);
+          NSUInteger originalLength = data.length;
+          dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t chunkOffset, const void* chunkBytes, size_t chunkSize) {
+            [data appendBytes:chunkBytes length:chunkSize];
+            return true;
+          });
+          [self didReadBytes:((char*)data.bytes + originalLength) length:(data.length - originalLength)];
+          block(YES);
         } else {
           if (_bytesRead > 0) {
             LOG_ERROR(@"No more data available on socket %i", _socket);
           } else {
             LOG_WARNING(@"No data received from socket %i", _socket);
           }
-          block(NULL);
+          block(NO);
         }
       } else {
         LOG_ERROR(@"Error while reading from socket %i: %s (%i)", _socket, strerror(error), error);
-        block(NULL);
+        block(NO);
       }
     }
     
   });
 }
 
-- (void)_readDataWithCompletionBlock:(ReadDataCompletionBlock)block {
-  [self _readBufferWithLength:SIZE_T_MAX completionBlock:^(dispatch_data_t buffer) {
-    
-    if (buffer) {
-      NSMutableData* data = [[NSMutableData alloc] initWithCapacity:dispatch_data_get_size(buffer)];
-      dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t chunkOffset, const void* chunkBytes, size_t chunkSize) {
-        [data appendBytes:chunkBytes length:chunkSize];
-        return true;
-      });
-      block(data);
-      ARC_RELEASE(data);
-    } else {
-      block(nil);
-    }
-    
-  }];
-}
-
-- (void)_readHeadersWithCompletionBlock:(ReadHeadersCompletionBlock)block {
+- (void)_readHeaders:(NSMutableData*)headersData withCompletionBlock:(ReadHeadersCompletionBlock)block {
   DCHECK(_requestMessage);
-  [self _readBufferWithLength:SIZE_T_MAX completionBlock:^(dispatch_data_t buffer) {
+  [self _readData:headersData withLength:NSUIntegerMax completionBlock:^(BOOL success) {
     
-    if (buffer) {
-      NSMutableData* data = [NSMutableData dataWithCapacity:kHeadersReadBuffer];
-      dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t chunkOffset, const void* chunkBytes, size_t chunkSize) {
-        [data appendBytes:chunkBytes length:chunkSize];
-        return true;
-      });
-      NSRange range = [data rangeOfData:_CRLFCRLFData options:0 range:NSMakeRange(0, data.length)];
+    if (success) {
+      NSRange range = [headersData rangeOfData:_CRLFCRLFData options:0 range:NSMakeRange(0, headersData.length)];
       if (range.location == NSNotFound) {
-        if (CFHTTPMessageAppendBytes(_requestMessage, data.bytes, data.length)) {
-          [self _readHeadersWithCompletionBlock:block];
-        } else {
-          LOG_ERROR(@"Failed appending request headers data from socket %i", _socket);
-          block(nil);
-        }
+        [self _readHeaders:headersData withCompletionBlock:block];
       } else {
         NSUInteger length = range.location + range.length;
-        if (CFHTTPMessageAppendBytes(_requestMessage, data.bytes, length)) {
+        if (CFHTTPMessageAppendBytes(_requestMessage, headersData.bytes, length)) {
           if (CFHTTPMessageIsHeaderComplete(_requestMessage)) {
-            block([data subdataWithRange:NSMakeRange(length, data.length - length)]);
+            block([headersData subdataWithRange:NSMakeRange(length, headersData.length - length)]);
           } else {
             LOG_ERROR(@"Failed parsing request headers from socket %i", _socket);
             block(nil);
@@ -182,27 +144,21 @@ static int32_t _connectionCounter = 0;
 
 - (void)_readBodyWithRemainingLength:(NSUInteger)length completionBlock:(ReadBodyCompletionBlock)block {
   DCHECK([_request hasBody] && ![_request usesChunkedTransferEncoding]);
-  [self _readBufferWithLength:length completionBlock:^(dispatch_data_t buffer) {
+  NSMutableData* bodyData = [[NSMutableData alloc] initWithCapacity:kBodyReadCapacity];
+  [self _readData:bodyData withLength:length completionBlock:^(BOOL success) {
     
-    if (buffer) {
-      if (dispatch_data_get_size(buffer) <= length) {
-        bool success = dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t chunkOffset, const void* chunkBytes, size_t chunkSize) {
-          NSData* data = [NSData dataWithBytesNoCopy:(void*)chunkBytes length:chunkSize freeWhenDone:NO];
-          NSError* error = nil;
-          if (![_request performWriteData:data error:&error]) {
-            LOG_ERROR(@"Failed writing request body on socket %i: %@", _socket, error);
-            return false;
-          }
-          return true;
-        });
-        if (success) {
-          NSUInteger remainingLength = length - dispatch_data_get_size(buffer);
+    if (success) {
+      if (bodyData.length <= length) {
+        NSError* error = nil;
+        if ([_request performWriteData:bodyData error:&error]) {
+          NSUInteger remainingLength = length - bodyData.length;
           if (remainingLength) {
             [self _readBodyWithRemainingLength:remainingLength completionBlock:block];
           } else {
             block(YES);
           }
         } else {
+          LOG_ERROR(@"Failed writing request body on socket %i: %@", _socket, error);
           block(NO);
         }
       } else {
@@ -215,6 +171,7 @@ static int32_t _connectionCounter = 0;
     }
     
   }];
+  ARC_RELEASE(bodyData);
 }
 
 static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
@@ -270,13 +227,9 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     }
   }
   
-  [self _readBufferWithLength:SIZE_T_MAX completionBlock:^(dispatch_data_t buffer) {
+  [self _readData:chunkData withLength:NSUIntegerMax completionBlock:^(BOOL success) {
     
-    if (buffer) {
-      dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t chunkOffset, const void* chunkBytes, size_t chunkSize) {
-        [chunkData appendBytes:chunkBytes length:chunkSize];
-        return true;
-      });
+    if (success) {
       [self _readNextBodyChunk:chunkData completionBlock:block];
     } else {
       block(NO);
@@ -289,44 +242,6 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 
 @implementation GCDWebServerConnection (Write)
 
-- (void)_writeBuffer:(dispatch_data_t)buffer withCompletionBlock:(WriteBufferCompletionBlock)block {
-  size_t size = dispatch_data_get_size(buffer);
-#ifdef __GCDWEBSERVER_ENABLE_TESTING__
-  ARC_DISPATCH_RETAIN(buffer);
-#endif
-  dispatch_write(_socket, buffer, kGCDWebServerGCDQueue, ^(dispatch_data_t data, int error) {
-    
-    @autoreleasepool {
-      if (error == 0) {
-        DCHECK(data == NULL);
-        LOG_DEBUG(@"Connection sent %zu bytes on socket %i", size, _socket);
-        _bytesWritten += size;
-        [self didUpdateBytesWritten];
-#ifdef __GCDWEBSERVER_ENABLE_TESTING__
-        if (_responseFD > 0) {
-          bool success = dispatch_data_apply(buffer, ^bool(dispatch_data_t region, size_t chunkOffset, const void* chunkBytes, size_t chunkSize) {
-            return (write(_responseFD, chunkBytes, chunkSize) == (ssize_t)chunkSize);
-          });
-          if (!success) {
-            LOG_ERROR(@"Failed recording response data: %s (%i)", strerror(errno), errno);
-            close(_responseFD);
-            _responseFD = 0;
-          }
-        }
-#endif
-        block(YES);
-      } else {
-        LOG_ERROR(@"Error while writing to socket %i: %s (%i)", _socket, strerror(error), error);
-        block(NO);
-      }
-    }
-#ifdef __GCDWEBSERVER_ENABLE_TESTING__
-    ARC_DISPATCH_RELEASE(buffer);
-#endif
-    
-  });
-}
-
 - (void)_writeData:(NSData*)data withCompletionBlock:(WriteDataCompletionBlock)block {
 #if !__has_feature(objc_arc)
   [data retain];
@@ -338,7 +253,20 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     [data release];
 #endif
   });
-  [self _writeBuffer:buffer withCompletionBlock:block];
+  dispatch_write(_socket, buffer, kGCDWebServerGCDQueue, ^(dispatch_data_t remainingData, int error) {
+    
+    @autoreleasepool {
+      if (error == 0) {
+        DCHECK(remainingData == NULL);
+        [self didWriteBytes:data.bytes length:data.length];
+        block(YES);
+      } else {
+        LOG_ERROR(@"Error while writing to socket %i: %s (%i)", _socket, strerror(error), error);
+        block(NO);
+      }
+    }
+    
+  });
   ARC_DISPATCH_RELEASE(buffer);
 }
 
@@ -576,7 +504,8 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 
 - (void)_readRequestHeaders {
   _requestMessage = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, true);
-  [self _readHeadersWithCompletionBlock:^(NSData* extraData) {
+  NSMutableData* headersData = [[NSMutableData alloc] initWithCapacity:kHeadersReadCapacity];
+  [self _readHeaders:headersData withCompletionBlock:^(NSData* extraData) {
     
     if (extraData) {
       NSString* requestMethod = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestMethod(_requestMessage));  // Method verbs are case-sensitive and uppercase
@@ -646,6 +575,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     }
     
   }];
+  ARC_RELEASE(headersData);
 }
 
 - (id)initWithServer:(GCDWebServer*)server localAddress:(NSData*)localAddress remoteAddress:(NSData*)remoteAddress socket:(CFSocketNativeHandle)socket {
@@ -745,12 +675,30 @@ static NSString* _StringFromAddressData(NSData* data) {
   return YES;
 }
 
-- (void)didUpdateBytesRead {
-  ;
+- (void)didReadBytes:(const void*)bytes length:(NSUInteger)length {
+  LOG_DEBUG(@"Connection received %zu bytes on socket %i", length, _socket);
+  _bytesRead += length;
+  
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
+  if ((_requestFD > 0) && (write(_requestFD, bytes, length) != (ssize_t)length)) {
+    LOG_ERROR(@"Failed recording request data: %s (%i)", strerror(errno), errno);
+    close(_requestFD);
+    _requestFD = 0;
+  }
+#endif
 }
 
-- (void)didUpdateBytesWritten {
-  ;
+- (void)didWriteBytes:(const void*)bytes length:(NSUInteger)length {
+  LOG_DEBUG(@"Connection sent %zu bytes on socket %i", length, _socket);
+  _bytesWritten += length;
+  
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
+  if ((_responseFD > 0) && (write(_responseFD, bytes, length) != (ssize_t)length)) {
+    LOG_ERROR(@"Failed recording response data: %s (%i)", strerror(errno), errno);
+    close(_responseFD);
+    _responseFD = 0;
+  }
+#endif
 }
 
 - (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block {
