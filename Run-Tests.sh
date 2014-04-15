@@ -14,7 +14,7 @@ PAYLOAD_DIR="/tmp/GCDWebServer"
 function runTests {
   rm -rf "$PAYLOAD_DIR"
   ditto -x -k "$PAYLOAD_ZIP" "$PAYLOAD_DIR"
-  find "$PAYLOAD_DIR" -type d -exec SetFile -d "1/1/2014" -m "1/1/2014" '{}' \;  # ZIP archives do not preserve directories dates
+  TZ=GMT find "$PAYLOAD_DIR" -type d -exec SetFile -d "1/1/2014 00:00:00" -m "1/1/2014 00:00:00" '{}' \;  # ZIP archives do not preserve directories dates
   logLevel=2 $1 -mode "$2" -root "$PAYLOAD_DIR/Payload" -tests "$3"
 }
 
