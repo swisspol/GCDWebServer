@@ -79,7 +79,7 @@ int main(int argc, const char* argv[]) {
     // Use convenience method that runs server on port 8080 until SIGINT received (i.e. Ctrl-C in Terminal)
     [webServer runWithPort:8080];
     
-    // Destroy server
+    // Destroy server (unnecessary if using ARC)
     [webServer release];
     
   }
@@ -91,7 +91,7 @@ int main(int argc, const char* argv[]) {
 ```objectivec
 #import "GCDWebServer.h"
 
-static GCDWebServer* _webServer = nil;  // This should be an ivar of your application delegate class instead
+static GCDWebServer* _webServer = nil;  // This should really be an ivar of your application delegate class
 
 - (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
   
@@ -124,11 +124,13 @@ Simply instantiate and run a GCDWebUploader instance then visit http://{YOUR-IOS
 ```objectivec
 #import "GCDWebUploader.h"
 
+static GCDWebUploader* _webUploader = nil;  // This should really be an ivar of your application delegate class
+
 - (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
   NSString* documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
-  GCDWebUploader* webUploader = [[GCDWebUploader alloc] initWithUploadDirectory:documentsPath];
-  [webUploader start];
-  NSLog(@"Visit %@ in your web browser", webUploader.serverURL);
+  _webUploader = [[GCDWebUploader alloc] initWithUploadDirectory:documentsPath];
+  [_webUploader start];
+  NSLog(@"Visit %@ in your web browser", _webUploader.serverURL);
   return YES;
 }
 ```
@@ -145,11 +147,13 @@ Simply instantiate and run a GCDWebDAVServer instance then connect to http://{YO
 ```objectivec
 #import "GCDWebDAVServer.h"
 
+static GCDWebDAVServer* _davServer = nil;  // This should really be an ivar of your application delegate class
+
 - (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
   NSString* documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
-  GCDWebDAVServer* davServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:documentsPath];
-  [davServer start];
-  NSLog(@"Visit %@ in your WebDAV client", davServer.serverURL);
+  _davServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:documentsPath];
+  [_davServer start];
+  NSLog(@"Visit %@ in your WebDAV client", _davServer.serverURL);
   return YES;
 }
 ```
@@ -168,7 +172,7 @@ int main(int argc, const char* argv[]) {
     GCDWebServer* webServer = [[GCDWebServer alloc] init];
     [webServer addGETHandlerForBasePath:@"/" directoryPath:NSHomeDirectory() indexFilename:nil cacheAge:3600 allowRangeRequests:YES];
     [webServer runWithPort:8080];
-    [webServer release];
+    [webServer release];  // Remove if using ARC
     
   }
   return 0;
