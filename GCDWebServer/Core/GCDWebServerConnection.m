@@ -676,7 +676,7 @@ static NSString* _StringFromAddressData(NSData* data) {
 }
 
 - (void)didReadBytes:(const void*)bytes length:(NSUInteger)length {
-  LOG_DEBUG(@"Connection received %zu bytes on socket %i", length, _socket);
+  LOG_DEBUG(@"Connection received %lu bytes on socket %i", (unsigned long)length, _socket);
   _bytesRead += length;
   
 #ifdef __GCDWEBSERVER_ENABLE_TESTING__
@@ -689,7 +689,7 @@ static NSString* _StringFromAddressData(NSData* data) {
 }
 
 - (void)didWriteBytes:(const void*)bytes length:(NSUInteger)length {
-  LOG_DEBUG(@"Connection sent %zu bytes on socket %i", length, _socket);
+  LOG_DEBUG(@"Connection sent %lu bytes on socket %i", (unsigned long)length, _socket);
   _bytesWritten += length;
   
 #ifdef __GCDWEBSERVER_ENABLE_TESTING__
