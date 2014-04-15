@@ -26,6 +26,11 @@
  */
 
 #import <TargetConditionals.h>
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
+#if !TARGET_OS_IPHONE
+#import <AppKit/AppKit.h>
+#endif
+#endif
 #import <netinet/in.h>
 
 #import "GCDWebServerPrivate.h"
@@ -515,6 +520,7 @@ static void _LogResult(NSString* format, ...) {
                       if (![actualBody isEqualToData:expectedBody]) {
                         _LogResult(@"  Bodies not matching:\n    Expected: %lu bytes\n      Actual: %lu bytes", (unsigned long)expectedBody.length, (unsigned long)actualBody.length);
                         success = NO;
+#if !TARGET_OS_IPHONE
 #ifndef NDEBUG
                         if (GCDWebServerIsTextContentType([expectedHeaders objectForKey:@"Content-Type"])) {
                           NSString* expectedPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[[NSProcessInfo processInfo] globallyUniqueString] stringByAppendingPathExtension:@"txt"]];
@@ -527,6 +533,7 @@ static void _LogResult(NSString* format, ...) {
                             ARC_RELEASE(task);
                           }
                         }
+#endif
 #endif
                       }
                       
