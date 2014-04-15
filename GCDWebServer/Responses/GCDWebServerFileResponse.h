@@ -33,7 +33,7 @@
 + (instancetype)responseWithFile:(NSString*)path byteRange:(NSRange)range;
 + (instancetype)responseWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment;
 - (instancetype)initWithFile:(NSString*)path;
-- (instancetype)initWithFile:(NSString*)path isAttachment:(BOOL)attachment;
-- (instancetype)initWithFile:(NSString*)path byteRange:(NSRange)range;  // Pass [NSNotFound, 0] to disable byte range entirely, [offset, length] to enable byte range from beginning of file or [NSNotFound, -bytes] from end of file
+- (instancetype)initWithFile:(NSString*)path isAttachment:(BOOL)attachment;  // If in attachment mode, "Content-Disposition" header will be set accordingly
+- (instancetype)initWithFile:(NSString*)path byteRange:(NSRange)range;  // Pass [NSNotFound, 0] to disable byte range entirely, [offset, length] to enable byte range from beginning of file or [NSNotFound, -length] from end of file
 - (instancetype)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment;
 @end
