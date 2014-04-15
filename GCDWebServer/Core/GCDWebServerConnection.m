@@ -343,9 +343,9 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 
 - (void)_writeHeadersWithCompletionBlock:(WriteHeadersCompletionBlock)block {
   DCHECK(_responseMessage);
-  CFDataRef message = CFHTTPMessageCopySerializedMessage(_responseMessage);
-  [self _writeData:(ARC_BRIDGE NSData*)message withCompletionBlock:block];
-  CFRelease(message);
+  CFDataRef data = CFHTTPMessageCopySerializedMessage(_responseMessage);
+  [self _writeData:(ARC_BRIDGE NSData*)data withCompletionBlock:block];
+  CFRelease(data);
 }
 
 - (void)_writeBodyWithCompletionBlock:(WriteBodyCompletionBlock)block {

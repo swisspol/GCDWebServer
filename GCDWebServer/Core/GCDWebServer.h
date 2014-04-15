@@ -50,7 +50,7 @@ typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* r
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
 - (void)removeAllHandlers;
 
-- (BOOL)start;  // Default is port 8080 (OS X & iOS Simulator) or 80 (iOS) and computer name
+- (BOOL)start;  // Default is port 8080 (OS X & iOS Simulator) or 80 (iOS) and computer / device name for Bonjour
 - (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name;  // Pass nil name to disable Bonjour or empty string to use computer name
 - (void)stop;
 @end
