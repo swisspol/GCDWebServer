@@ -20,20 +20,20 @@ function runTests {
 }
 
 # Build for iOS in manual memory management mode (TODO: run tests on iOS)
-rm -rf "MRC_BUILD_DIR"
 xcodebuild -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$MRC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=NO" > /dev/null
+rm -rf "$MRC_BUILD_DIR"
 
 # Build for iOS in ARC mode (TODO: run tests on iOS)
-rm -rf "ARC_BUILD_DIR"
 xcodebuild -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$ARC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=YES" > /dev/null
+rm -rf "$ARC_BUILD_DIR"
 
 # Build for OS X in manual memory management mode
-rm -rf "MRC_BUILD_DIR"
 xcodebuild -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$MRC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=NO" > /dev/null
+rm -rf "$MRC_BUILD_DIR"
 
 # Build for OS X in ARC mode
-rm -rf "ARC_BUILD_DIR"
 xcodebuild -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$ARC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=YES" > /dev/null
+rm -rf "$ARC_BUILD_DIR"
 
 # Run tests
 runTests $MRC_PRODUCT "webServer" "Tests/WebServer"
