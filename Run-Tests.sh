@@ -1,5 +1,12 @@
 #!/bin/bash -ex
 
+OSX_SDK="macosx"
+if [ -z "$TRAVIS" ]; then
+  IOS_SDK="iphoneos"
+else
+  IOS_SDK="iphonesimulator"
+fi
+
 OSX_TARGET="GCDWebServer (Mac)"
 IOS_TARGET="GCDWebServer (iOS)"
 CONFIGURATION="Release"
@@ -20,20 +27,20 @@ function runTests {
 }
 
 # Build for iOS in manual memory management mode (TODO: run tests on iOS)
-xcodebuild -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$MRC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=NO" > /dev/null
 rm -rf "$MRC_BUILD_DIR"
+xcodebuild -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$MRC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=NO" > /dev/null
 
 # Build for iOS in ARC mode (TODO: run tests on iOS)
-xcodebuild -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$ARC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=YES" > /dev/null
 rm -rf "$ARC_BUILD_DIR"
+xcodebuild -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$ARC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=YES" > /dev/null
 
 # Build for OS X in manual memory management mode
-xcodebuild -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$MRC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=NO" > /dev/null
 rm -rf "$MRC_BUILD_DIR"
+xcodebuild -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$MRC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=NO" > /dev/null
 
 # Build for OS X in ARC mode
-xcodebuild -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$ARC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=YES" > /dev/null
 rm -rf "$ARC_BUILD_DIR"
+xcodebuild -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$ARC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=YES" > /dev/null
 
 # Run tests
 runTests $MRC_PRODUCT "webServer" "Tests/WebServer"
