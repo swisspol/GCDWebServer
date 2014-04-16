@@ -128,6 +128,8 @@ extern NSString* GCDWebServerDescribeData(NSData* data, NSString* contentType);
 
 @interface GCDWebServer ()
 @property(nonatomic, readonly) NSArray* handlers;
+- (void)willStartConnection:(GCDWebServerConnection*)connection;
+- (void)didEndConnection:(GCDWebServerConnection*)connection;
 @end
 
 @interface GCDWebServerHandler : NSObject

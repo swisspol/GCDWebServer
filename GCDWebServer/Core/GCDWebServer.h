@@ -48,6 +48,8 @@ typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* r
 @protocol GCDWebServerDelegate <NSObject>
 @optional
 - (void)webServerDidStart:(GCDWebServer*)server;
+- (void)webServerDidConnect:(GCDWebServer*)server;
+- (void)webServerDidDisconnect:(GCDWebServer*)server;
 - (void)webServerDidStop:(GCDWebServer*)server;
 @end
 
@@ -56,6 +58,7 @@ typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* r
 @property(nonatomic, readonly, getter=isRunning) BOOL running;
 @property(nonatomic, readonly) NSUInteger port;
 @property(nonatomic, readonly) NSString* bonjourName;  // Only non-nil if Bonjour registration is active
+@property(nonatomic, readonly, getter=isConnected) BOOL connected;
 - (instancetype)init;
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
 - (void)removeAllHandlers;
@@ -70,6 +73,7 @@ typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* r
 + (Class)connectionClass;  // Default is GCDWebServerConnection
 + (NSString*)serverName;  // Default is class name
 + (BOOL)shouldAutomaticallyMapHEADToGET;  // Default is YES which means HEAD requests are mapped to GET requests with the response body being discarded
++ (NSTimeInterval)connectedStateCoalescingInterval;  // Allows coalescing of fast sequences of -webServerDidConnect: / -webServerDidDisconnect: - Default is 1.0 seconds (set to 0.0 to disable)
 @end
 
 @interface GCDWebServer (Extensions)

@@ -52,6 +52,77 @@ typedef enum {
   kMode_StreamingResponse
 } Mode;
 
+@interface Delegate : NSObject <GCDWebServerDelegate, GCDWebDAVServerDelegate, GCDWebUploaderDelegate>
+@end
+
+@implementation Delegate
+
+- (void)_logDelegateCall:(SEL)selector {
+  fprintf(stdout, "<DELEGATE METHOD \"%s\" CALLED>\n", [NSStringFromSelector(selector) UTF8String]);
+}
+
+- (void)webServerDidStart:(GCDWebServer*)server {
+  [self _logDelegateCall:_cmd];
+}
+
+- (void)webServerDidConnect:(GCDWebServer*)server {
+  [self _logDelegateCall:_cmd];
+}
+
+- (void)webServerDidDisconnect:(GCDWebServer*)server {
+  [self _logDelegateCall:_cmd];
+}
+
+- (void)webServerDidStop:(GCDWebServer*)server {
+  [self _logDelegateCall:_cmd];
+}
+
+- (void)davServer:(GCDWebDAVServer*)server didDownloadFileAtPath:(NSString*)path {
+  [self _logDelegateCall:_cmd];
+}
+
+- (void)davServer:(GCDWebDAVServer*)server didUploadFileAtPath:(NSString*)path {
+  [self _logDelegateCall:_cmd];
+}
+
+- (void)davServer:(GCDWebDAVServer*)server didMoveItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath {
+  [self _logDelegateCall:_cmd];
+}
+
+- (void)davServer:(GCDWebDAVServer*)server didCopyItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath {
+  [self _logDelegateCall:_cmd];
+}
+
+- (void)davServer:(GCDWebDAVServer*)server didDeleteItemAtPath:(NSString*)path {
+  [self _logDelegateCall:_cmd];
+}
+
+- (void)davServer:(GCDWebDAVServer*)server didCreateDirectoryAtPath:(NSString*)path {
+  [self _logDelegateCall:_cmd];
+}
+
+- (void)webUploader:(GCDWebUploader*)uploader didDownloadFileAtPath:(NSString*)path {
+  [self _logDelegateCall:_cmd];
+}
+
+- (void)webUploader:(GCDWebUploader*)uploader didUploadFileAtPath:(NSString*)path {
+  [self _logDelegateCall:_cmd];
+}
+
+- (void)webUploader:(GCDWebUploader*)uploader didMoveItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath {
+  [self _logDelegateCall:_cmd];
+}
+
+- (void)webUploader:(GCDWebUploader*)uploader didDeleteItemAtPath:(NSString*)path {
+  [self _logDelegateCall:_cmd];
+}
+
+- (void)webUploader:(GCDWebUploader*)uploader didCreateDirectoryAtPath:(NSString*)path {
+  [self _logDelegateCall:_cmd];
+}
+
+@end
+
 int main(int argc, const char* argv[]) {
   int result = -1;
   @autoreleasepool {
@@ -199,6 +270,8 @@ int main(int argc, const char* argv[]) {
 #endif
     
     if (webServer) {
+      Delegate* delegate = [[Delegate alloc] init];
+      webServer.delegate = delegate;
       if (testDirectory) {
         fprintf(stdout, "<RUNNING TESTS FROM \"%s\">\n\n", [testDirectory UTF8String]);
         result = (int)[webServer runTestsInDirectory:testDirectory withPort:8080];
@@ -214,6 +287,7 @@ int main(int argc, const char* argv[]) {
       }
 #if !__has_feature(objc_arc)
       [webServer release];
+      [delegate release];
 #endif
     }
   }

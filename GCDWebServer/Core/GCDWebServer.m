@@ -44,7 +44,11 @@
 @interface GCDWebServer () {
 @private
   id<GCDWebServerDelegate> __unsafe_unretained _delegate;
+  dispatch_queue_t _syncQueue;
   NSMutableArray* _handlers;
+  NSInteger _activeConnections;  // Accessed only with _syncQueue
+  BOOL _connected;
+  CFRunLoopTimerRef _connectedTimer;
   
   NSUInteger _port;
   dispatch_source_t _source;
@@ -120,7 +124,7 @@ static void _SignalHandler(int signal) {
 
 @implementation GCDWebServer
 
-@synthesize delegate=_delegate, handlers=_handlers, port=_port;
+@synthesize delegate=_delegate, handlers=_handlers, port=_port, connected=_connected;
 
 #ifndef __GCDWEBSERVER_LOGGING_HEADER__
 
@@ -137,22 +141,97 @@ static void _SignalHandler(int signal) {
   GCDWebServerInitializeFunctions();
 }
 
+static void _ConnectedTimerCallBack(CFRunLoopTimerRef timer, void* info) {
+  @autoreleasepool {
+    [(ARC_BRIDGE GCDWebServer*)info _didDisconnect];
+  }
+}
+
 - (instancetype)init {
   if ((self = [super init])) {
+    _syncQueue = dispatch_queue_create([NSStringFromClass([self class]) UTF8String], DISPATCH_QUEUE_SERIAL);
     _handlers = [[NSMutableArray alloc] init];
+    CFRunLoopTimerContext context = {0, (ARC_BRIDGE void*)self, NULL, NULL, NULL};
+    if ([[self class] connectedStateCoalescingInterval] > 0.0) {
+      _connectedTimer = CFRunLoopTimerCreate(kCFAllocatorDefault, HUGE_VAL, HUGE_VAL, 0, 0, _ConnectedTimerCallBack, &context);
+      CFRunLoopAddTimer(CFRunLoopGetMain(), _connectedTimer, kCFRunLoopCommonModes);
+    }
   }
   return self;
 }
 
 - (void)dealloc {
+  DCHECK(_connected == NO);
+  DCHECK(_activeConnections == 0);
+  
   _delegate = nil;
   if (_source) {
     [self stop];
   }
   
+  if (_connectedTimer) {
+    CFRunLoopTimerInvalidate(_connectedTimer);
+    CFRelease(_connectedTimer);
+  }
   ARC_RELEASE(_handlers);
+  ARC_DISPATCH_RELEASE(_syncQueue);
   
   ARC_DEALLOC(super);
+}
+
+- (void)_didConnect {
+  DCHECK(_connected == NO);
+  _connected = YES;
+  LOG_DEBUG(@"Did connect");
+  if ([_delegate respondsToSelector:@selector(webServerDidConnect:)]) {
+    [_delegate webServerDidConnect:self];
+  }
+}
+
+// Called from any thread
+- (void)willStartConnection:(GCDWebServerConnection*)connection {
+  dispatch_sync(_syncQueue, ^{
+    
+    DCHECK(_activeConnections >= 0);
+    if (_activeConnections == 0) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        if (_connectedTimer) {
+          CFRunLoopTimerSetNextFireDate(_connectedTimer, HUGE_VAL);
+        }
+        if (_connected == NO) {
+          [self _didConnect];
+        }
+      });
+    }
+    _activeConnections += 1;
+    
+  });
+}
+
+- (void)_didDisconnect {
+  DCHECK(_connected == YES);
+  _connected = NO;
+  LOG_DEBUG(@"Did disconnect");
+  if ([_delegate respondsToSelector:@selector(webServerDidDisconnect:)]) {
+    [_delegate webServerDidDisconnect:self];
+  }
+}
+
+// Called from any thread
+- (void)didEndConnection:(GCDWebServerConnection*)connection {
+  dispatch_sync(_syncQueue, ^{
+    DCHECK(_activeConnections > 0);
+    _activeConnections -= 1;
+    if (_activeConnections == 0) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        if (_connectedTimer) {
+          CFRunLoopTimerSetNextFireDate(_connectedTimer, CFAbsoluteTimeGetCurrent() + [[self class] connectedStateCoalescingInterval]);
+        } else {
+          [self _didDisconnect];
+        }
+      });
+    }
+  });
 }
 
 - (NSString*)bonjourName {
@@ -344,6 +423,10 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 
 + (BOOL)shouldAutomaticallyMapHEADToGET {
   return YES;
+}
+
++ (NSTimeInterval)connectedStateCoalescingInterval {
+  return 1.0;
 }
 
 @end

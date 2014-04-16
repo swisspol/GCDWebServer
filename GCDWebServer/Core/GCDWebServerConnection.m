@@ -584,6 +584,9 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     _localAddress = ARC_RETAIN(localAddress);
     _remoteAddress = ARC_RETAIN(remoteAddress);
     _socket = socket;
+    LOG_DEBUG(@"Did open connection on socket %i", _socket);
+    
+    [_server willStartConnection:self];
     
     if (![self open]) {
       close(_socket);
@@ -592,7 +595,6 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     }
     _opened = YES;
     
-    LOG_DEBUG(@"Did open connection on socket %i", _socket);
     [self _readRequestHeaders];
   }
   return self;
@@ -620,10 +622,6 @@ static NSString* _StringFromAddressData(NSData* data) {
 }
 
 - (void)dealloc {
-  if (_opened) {
-    [self close];
-  }
-  
   int result = close(_socket);
   if (result != 0) {
     LOG_ERROR(@"Failed closing socket %i for connection: %s (%i)", _socket, strerror(errno), errno);
@@ -631,6 +629,11 @@ static NSString* _StringFromAddressData(NSData* data) {
     LOG_DEBUG(@"Did close connection on socket %i", _socket);
   }
   
+  if (_opened) {
+    [self close];
+  }
+  
+  [_server didEndConnection:self];
   ARC_RELEASE(_server);
   ARC_RELEASE(_localAddress);
   ARC_RELEASE(_remoteAddress);
@@ -783,6 +786,7 @@ static inline BOOL _CompareResources(NSString* responseETag, NSString* requestET
     unlink([_responsePath fileSystemRepresentation]);
   }
 #endif
+  
   if (_request) {
     LOG_VERBOSE(@"[%@] %@ %i \"%@ %@\" (%lu | %lu)", self.localAddressString, self.remoteAddressString, (int)_statusCode, _virtualHEAD ? @"HEAD" : _request.method, _request.path, (unsigned long)_bytesRead, (unsigned long)_bytesWritten);
   } else {
