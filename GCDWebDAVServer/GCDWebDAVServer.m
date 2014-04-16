@@ -54,7 +54,6 @@ typedef NS_ENUM(NSInteger, DAVProperties) {
 @interface GCDWebDAVServer () {
 @private
   NSString* _uploadDirectory;
-  id<GCDWebDAVServerDelegate> __unsafe_unretained _delegate;
   NSArray* _allowedExtensions;
   BOOL _showHidden;
 }
@@ -102,9 +101,9 @@ static inline BOOL _IsMacFinder(GCDWebServerRequest* request) {
     return [GCDWebServerResponse response];
   }
   
-  if ([_delegate respondsToSelector:@selector(davServer:didDownloadFileAtPath:)]) {
+  if ([self.delegate respondsToSelector:@selector(davServer:didDownloadFileAtPath:)]) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      [_delegate davServer:self didDownloadFileAtPath:absolutePath];
+      [self.delegate davServer:self didDownloadFileAtPath:absolutePath];
     });
   }
   return [GCDWebServerFileResponse responseWithFile:absolutePath];
@@ -145,9 +144,9 @@ static inline BOOL _IsMacFinder(GCDWebServerRequest* request) {
     return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed moving uploaded file to \"%@\"", relativePath];
   }
   
-  if ([_delegate respondsToSelector:@selector(davServer:didUploadFileAtPath:)]) {
+  if ([self.delegate respondsToSelector:@selector(davServer:didUploadFileAtPath:)]) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      [_delegate davServer:self didUploadFileAtPath:absolutePath];
+      [self.delegate davServer:self didUploadFileAtPath:absolutePath];
     });
   }
   return [GCDWebServerResponse responseWithStatusCode:(existing ? kGCDWebServerHTTPStatusCode_NoContent : kGCDWebServerHTTPStatusCode_Created)];
@@ -180,9 +179,9 @@ static inline BOOL _IsMacFinder(GCDWebServerRequest* request) {
     return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed deleting \"%@\"", relativePath];
   }
   
-  if ([_delegate respondsToSelector:@selector(davServer:didDeleteItemAtPath:)]) {
+  if ([self.delegate respondsToSelector:@selector(davServer:didDeleteItemAtPath:)]) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      [_delegate davServer:self didDeleteItemAtPath:absolutePath];
+      [self.delegate davServer:self didDeleteItemAtPath:absolutePath];
     });
   }
   return [GCDWebServerResponse responseWithStatusCode:kGCDWebServerHTTPStatusCode_NoContent];
@@ -226,9 +225,9 @@ static inline BOOL _IsMacFinder(GCDWebServerRequest* request) {
   }
 #endif
   
-  if ([_delegate respondsToSelector:@selector(davServer:didCreateDirectoryAtPath:)]) {
+  if ([self.delegate respondsToSelector:@selector(davServer:didCreateDirectoryAtPath:)]) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      [_delegate davServer:self didCreateDirectoryAtPath:absolutePath];
+      [self.delegate davServer:self didCreateDirectoryAtPath:absolutePath];
     });
   }
   return [GCDWebServerResponse responseWithStatusCode:kGCDWebServerHTTPStatusCode_Created];
@@ -298,15 +297,15 @@ static inline BOOL _IsMacFinder(GCDWebServerRequest* request) {
   }
   
   if (isMove) {
-    if ([_delegate respondsToSelector:@selector(davServer:didMoveItemFromPath:toPath:)]) {
+    if ([self.delegate respondsToSelector:@selector(davServer:didMoveItemFromPath:toPath:)]) {
       dispatch_async(dispatch_get_main_queue(), ^{
-        [_delegate davServer:self didMoveItemFromPath:srcAbsolutePath toPath:dstAbsolutePath];
+        [self.delegate davServer:self didMoveItemFromPath:srcAbsolutePath toPath:dstAbsolutePath];
       });
     }
   } else {
-    if ([_delegate respondsToSelector:@selector(davServer:didCopyItemFromPath:toPath:)]) {
+    if ([self.delegate respondsToSelector:@selector(davServer:didCopyItemFromPath:toPath:)]) {
       dispatch_async(dispatch_get_main_queue(), ^{
-        [_delegate davServer:self didCopyItemFromPath:srcAbsolutePath toPath:dstAbsolutePath];
+        [self.delegate davServer:self didCopyItemFromPath:srcAbsolutePath toPath:dstAbsolutePath];
       });
     }
   }
@@ -598,7 +597,7 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
 
 @implementation GCDWebDAVServer
 
-@synthesize uploadDirectory=_uploadDirectory, delegate=_delegate, allowedFileExtensions=_allowedExtensions, showHiddenFiles=_showHidden;
+@synthesize uploadDirectory=_uploadDirectory, allowedFileExtensions=_allowedExtensions, showHiddenFiles=_showHidden;
 
 - (instancetype)initWithUploadDirectory:(NSString*)path {
   if ((self = [super init])) {

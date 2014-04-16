@@ -42,7 +42,17 @@ typedef NS_ENUM(int, GCDWebServerLogLevel) {
 typedef GCDWebServerRequest* (^GCDWebServerMatchBlock)(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery);
 typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* request);
 
+@class GCDWebServer;
+
+// These methods are always called on main thread
+@protocol GCDWebServerDelegate <NSObject>
+@optional
+- (void)webServerDidStart:(GCDWebServer*)server;
+- (void)webServerDidStop:(GCDWebServer*)server;
+@end
+
 @interface GCDWebServer : NSObject
+@property(nonatomic, assign) id<GCDWebServerDelegate> delegate;
 @property(nonatomic, readonly, getter=isRunning) BOOL running;
 @property(nonatomic, readonly) NSUInteger port;
 @property(nonatomic, readonly) NSString* bonjourName;  // Only non-nil if Bonjour registration is active

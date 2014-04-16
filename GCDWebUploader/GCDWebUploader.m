@@ -45,7 +45,6 @@
 @interface GCDWebUploader () {
 @private
   NSString* _uploadDirectory;
-  id<GCDWebUploaderDelegate> __unsafe_unretained _delegate;
   NSArray* _allowedExtensions;
   BOOL _showHidden;
   NSString* _title;
@@ -143,9 +142,9 @@
     return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Downlading file name \"%@\" is not allowed", fileName];
   }
   
-  if ([_delegate respondsToSelector:@selector(webUploader:didDownloadFileAtPath:  )]) {
+  if ([self.delegate respondsToSelector:@selector(webUploader:didDownloadFileAtPath:  )]) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      [_delegate webUploader:self didDownloadFileAtPath:absolutePath];
+      [self.delegate webUploader:self didDownloadFileAtPath:absolutePath];
     });
   }
   return [GCDWebServerFileResponse responseWithFile:absolutePath isAttachment:YES];
@@ -171,9 +170,9 @@
     return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed moving uploaded file to \"%@\"", relativePath];
   }
   
-  if ([_delegate respondsToSelector:@selector(webUploader:didUploadFileAtPath:)]) {
+  if ([self.delegate respondsToSelector:@selector(webUploader:didUploadFileAtPath:)]) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      [_delegate webUploader:self didUploadFileAtPath:absolutePath];
+      [self.delegate webUploader:self didUploadFileAtPath:absolutePath];
     });
   }
   return [GCDWebServerDataResponse responseWithJSONObject:@{} contentType:contentType];
@@ -204,9 +203,9 @@
     return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed moving \"%@\" to \"%@\"", oldRelativePath, newRelativePath];
   }
   
-  if ([_delegate respondsToSelector:@selector(webUploader:didMoveItemFromPath:toPath:)]) {
+  if ([self.delegate respondsToSelector:@selector(webUploader:didMoveItemFromPath:toPath:)]) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      [_delegate webUploader:self didMoveItemFromPath:oldAbsolutePath toPath:newAbsolutePath];
+      [self.delegate webUploader:self didMoveItemFromPath:oldAbsolutePath toPath:newAbsolutePath];
     });
   }
   return [GCDWebServerDataResponse responseWithJSONObject:@{}];
@@ -234,9 +233,9 @@
     return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed deleting \"%@\"", relativePath];
   }
   
-  if ([_delegate respondsToSelector:@selector(webUploader:didDeleteItemAtPath:)]) {
+  if ([self.delegate respondsToSelector:@selector(webUploader:didDeleteItemAtPath:)]) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      [_delegate webUploader:self didDeleteItemAtPath:absolutePath];
+      [self.delegate webUploader:self didDeleteItemAtPath:absolutePath];
     });
   }
   return [GCDWebServerDataResponse responseWithJSONObject:@{}];
@@ -260,9 +259,9 @@
     return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed creating directory \"%@\"", relativePath];
   }
   
-  if ([_delegate respondsToSelector:@selector(webUploader:didCreateDirectoryAtPath:)]) {
+  if ([self.delegate respondsToSelector:@selector(webUploader:didCreateDirectoryAtPath:)]) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      [_delegate webUploader:self didCreateDirectoryAtPath:absolutePath];
+      [self.delegate webUploader:self didCreateDirectoryAtPath:absolutePath];
     });
   }
   return [GCDWebServerDataResponse responseWithJSONObject:@{}];
@@ -272,7 +271,7 @@
 
 @implementation GCDWebUploader
 
-@synthesize uploadDirectory=_uploadDirectory, delegate=_delegate, allowedFileExtensions=_allowedExtensions, showHiddenFiles=_showHidden,
+@synthesize uploadDirectory=_uploadDirectory, allowedFileExtensions=_allowedExtensions, showHiddenFiles=_showHidden,
             title=_title, header=_header, prologue=_prologue, epilogue=_epilogue, footer=_footer;
 
 - (instancetype)initWithUploadDirectory:(NSString*)path {

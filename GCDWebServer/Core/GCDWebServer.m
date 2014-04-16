@@ -43,6 +43,7 @@
 
 @interface GCDWebServer () {
 @private
+  id<GCDWebServerDelegate> __unsafe_unretained _delegate;
   NSMutableArray* _handlers;
   
   NSUInteger _port;
@@ -119,7 +120,7 @@ static void _SignalHandler(int signal) {
 
 @implementation GCDWebServer
 
-@synthesize handlers=_handlers, port=_port;
+@synthesize delegate=_delegate, handlers=_handlers, port=_port;
 
 #ifndef __GCDWEBSERVER_LOGGING_HEADER__
 
@@ -144,6 +145,7 @@ static void _SignalHandler(int signal) {
 }
 
 - (void)dealloc {
+  _delegate = nil;
   if (_source) {
     [self stop];
   }
@@ -249,7 +251,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
           
         });
         
-        if (port == 0) {  // Determine the actual port we are listening on
+        if (port == 0) {
           struct sockaddr addr;
           socklen_t addrlen = sizeof(addr);
           if (getsockname(listeningSocket, &addr, &addrlen) == 0) {
@@ -277,6 +279,11 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
         
         dispatch_resume(_source);
         LOG_INFO(@"%@ started on port %i and reachable at %@", [self class], (int)_port, self.serverURL);
+        if ([_delegate respondsToSelector:@selector(webServerDidStart:)]) {
+          dispatch_async(dispatch_get_main_queue(), ^{
+            [_delegate webServerDidStart:self];
+          });
+        }
       } else {
         LOG_ERROR(@"Failed listening on socket: %s (%i)", strerror(errno), errno);
         close(listeningSocket);
@@ -308,10 +315,15 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
     dispatch_source_cancel(_source);  // This will close the socket
     ARC_DISPATCH_RELEASE(_source);
     _source = NULL;
+    _port = 0;
     
     LOG_INFO(@"%@ stopped", [self class]);
+    if ([_delegate respondsToSelector:@selector(webServerDidStop:)]) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        [_delegate webServerDidStop:self];
+      });
+    }
   }
-  _port = 0;
 }
 
 @end
