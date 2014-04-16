@@ -200,6 +200,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
     addr4.sin_addr.s_addr = htonl(INADDR_ANY);
     if (bind(listeningSocket, (void*)&addr4, sizeof(addr4)) == 0) {
       if (listen(listeningSocket, (int)[[self class] maxPendingConnections]) == 0) {
+        LOG_DEBUG(@"Did open listening socket %i", listeningSocket);
         _source = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, listeningSocket, 0, kGCDWebServerGCDQueue);
         dispatch_source_set_cancel_handler(_source, ^{
           
@@ -208,7 +209,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
             if (result != 0) {
               LOG_ERROR(@"Failed closing socket (%i): %s", errno, strerror(errno));
             } else {
-              LOG_DEBUG(@"Closed listening socket");
+              LOG_DEBUG(@"Did close listening socket %i", listeningSocket);
             }
           }
           
