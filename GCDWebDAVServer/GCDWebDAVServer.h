@@ -47,6 +47,7 @@
 - (instancetype)initWithUploadDirectory:(NSString*)path;
 @end
 
+// These methods can be called from any thread
 @interface GCDWebDAVServer (Subclassing)
 - (BOOL)shouldUploadFileAtPath:(NSString*)path withTemporaryFile:(NSString*)tempPath;  // Default implementation returns YES
 - (BOOL)shouldMoveItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath;  // Default implementation returns YES

@@ -39,6 +39,7 @@
 @property(nonatomic, readonly) NSUInteger totalBytesWritten;
 @end
 
+// These methods can be called from any thread
 @interface GCDWebServerConnection (Subclassing)
 - (BOOL)open;  // Return NO to reject connection e.g. after validating local or remote addresses
 - (void)didReadBytes:(const void*)bytes length:(NSUInteger)length;  // Called after data has been read from the connection
