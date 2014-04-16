@@ -48,7 +48,7 @@ extern NSString* const GCDWebServerOption_MaxPendingConnections;  // NSNumber / 
 extern NSString* const GCDWebServerOption_ServerName;  // NSString (default is server class name)
 extern NSString* const GCDWebServerOption_ConnectionClass;  // Subclass of GCDWebServerConnection (default is GCDWebServerConnection class)
 extern NSString* const GCDWebServerOption_AutomaticallyMapHEADToGET;  // NSNumber / BOOL (default is YES)
-extern NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval;  // NSNumber / double (default is 1.0 - set to 0.0 to disable)
+extern NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval;  // NSNumber / double (default is 1.0 - set to 0.0 to disable coaslescing of -webServerDidConnect: / -webServerDidDisconnect:)
 
 @class GCDWebServer;
 
@@ -56,8 +56,8 @@ extern NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval;  // 
 @protocol GCDWebServerDelegate <NSObject>
 @optional
 - (void)webServerDidStart:(GCDWebServer*)server;
-- (void)webServerDidConnect:(GCDWebServer*)server;
-- (void)webServerDidDisconnect:(GCDWebServer*)server;
+- (void)webServerDidConnect:(GCDWebServer*)server;  // Called when first connection is opened
+- (void)webServerDidDisconnect:(GCDWebServer*)server;  // Called when last connection is closed
 - (void)webServerDidStop:(GCDWebServer*)server;
 @end
 
@@ -66,7 +66,6 @@ extern NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval;  // 
 @property(nonatomic, readonly, getter=isRunning) BOOL running;
 @property(nonatomic, readonly) NSUInteger port;
 @property(nonatomic, readonly) NSString* bonjourName;  // Only non-nil if Bonjour registration is active
-@property(nonatomic, readonly, getter=isConnected) BOOL connected;
 - (instancetype)init;
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
 - (void)removeAllHandlers;

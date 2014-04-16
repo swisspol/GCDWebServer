@@ -136,7 +136,7 @@ static void _SignalHandler(int signal) {
 
 @implementation GCDWebServer
 
-@synthesize delegate=_delegate, handlers=_handlers, port=_port, connected=_connected, serverName=_serverName, shouldAutomaticallyMapHEADToGET=_mapHEADToGET;
+@synthesize delegate=_delegate, handlers=_handlers, port=_port, serverName=_serverName, shouldAutomaticallyMapHEADToGET=_mapHEADToGET;
 
 #ifndef __GCDWEBSERVER_LOGGING_HEADER__
 
