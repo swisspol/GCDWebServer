@@ -56,7 +56,8 @@ typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* r
 @end
 
 @interface GCDWebServer (Subclassing)
-+ (Class)connectionClass;
++ (NSUInteger)maxPendingConnections;  // Default is 16
++ (Class)connectionClass;  // Default is GCDWebServerConnection
 + (NSString*)serverName;  // Default is class name
 + (BOOL)shouldAutomaticallyMapHEADToGET;  // Default is YES which means HEAD requests are mapped to GET requests with the response body being discarded
 @end

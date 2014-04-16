@@ -40,7 +40,6 @@
 #else
 #define kDefaultPort 8080
 #endif
-#define kMaxPendingConnections 16
 
 @interface GCDWebServer () {
 @private
@@ -200,7 +199,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
     addr4.sin_port = htons(port);
     addr4.sin_addr.s_addr = htonl(INADDR_ANY);
     if (bind(listeningSocket, (void*)&addr4, sizeof(addr4)) == 0) {
-      if (listen(listeningSocket, kMaxPendingConnections) == 0) {
+      if (listen(listeningSocket, (int)[[self class] maxPendingConnections]) == 0) {
         _source = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, listeningSocket, 0, kGCDWebServerGCDQueue);
         dispatch_source_set_cancel_handler(_source, ^{
           
@@ -317,6 +316,10 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 @end
 
 @implementation GCDWebServer (Subclassing)
+
++ (NSUInteger)maxPendingConnections {
+  return 16;
+}
 
 + (Class)connectionClass {
   return [GCDWebServerConnection class];
