@@ -42,6 +42,14 @@ typedef NS_ENUM(int, GCDWebServerLogLevel) {
 typedef GCDWebServerRequest* (^GCDWebServerMatchBlock)(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery);
 typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* request);
 
+extern NSString* const GCDWebServerOption_Port;  // NSNumber / NSUInteger (default is 0 i.e. use a random port)
+extern NSString* const GCDWebServerOption_BonjourName;  // NSString (default is empty string i.e. use computer name)
+extern NSString* const GCDWebServerOption_MaxPendingConnections;  // NSNumber / NSUInteger (default is 16)
+extern NSString* const GCDWebServerOption_ServerName;  // NSString (default is server class name)
+extern NSString* const GCDWebServerOption_ConnectionClass;  // Subclass of GCDWebServerConnection (default is GCDWebServerConnection class)
+extern NSString* const GCDWebServerOption_AutomaticallyMapHEADToGET;  // NSNumber / BOOL (default is YES)
+extern NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval;  // NSNumber / double (default is 1.0 - set to 0.0 to disable)
+
 @class GCDWebServer;
 
 // These methods are always called on main thread
@@ -65,15 +73,8 @@ typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* r
 
 - (BOOL)start;  // Default is port 8080 (OS X & iOS Simulator) or 80 (iOS) and computer / device name for Bonjour
 - (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name;  // Pass nil name to disable Bonjour or empty string to use computer name
+- (BOOL)startWithOptions:(NSDictionary*)options;
 - (void)stop;
-@end
-
-@interface GCDWebServer (Subclassing)
-+ (NSUInteger)maxPendingConnections;  // Default is 16
-+ (Class)connectionClass;  // Default is GCDWebServerConnection
-+ (NSString*)serverName;  // Default is class name
-+ (BOOL)shouldAutomaticallyMapHEADToGET;  // Default is YES which means HEAD requests are mapped to GET requests with the response body being discarded
-+ (NSTimeInterval)connectedStateCoalescingInterval;  // Allows coalescing of fast sequences of -webServerDidConnect: / -webServerDidDisconnect: - Default is 1.0 seconds (set to 0.0 to disable)
 @end
 
 @interface GCDWebServer (Extensions)

@@ -50,6 +50,10 @@
   BOOL _connected;
   CFRunLoopTimerRef _connectedTimer;
   
+  NSString* _serverName;
+  Class _connectionClass;
+  BOOL _mapHEADToGET;
+  CFTimeInterval _disconnectDelay;
   NSUInteger _port;
   dispatch_source_t _source;
   CFNetServiceRef _service;
@@ -65,6 +69,14 @@
   GCDWebServerProcessBlock _processBlock;
 }
 @end
+
+NSString* const GCDWebServerOption_Port = @"Port";
+NSString* const GCDWebServerOption_BonjourName = @"BonjourName";
+NSString* const GCDWebServerOption_MaxPendingConnections = @"MaxPendingConnections";
+NSString* const GCDWebServerOption_ServerName = @"ServerName";
+NSString* const GCDWebServerOption_ConnectionClass = @"ConnectionClass";
+NSString* const GCDWebServerOption_AutomaticallyMapHEADToGET = @"AutomaticallyMapHEADToGET";
+NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval = @"ConnectedStateCoalescingInterval";
 
 #ifndef __GCDWEBSERVER_LOGGING_HEADER__
 #ifdef NDEBUG
@@ -124,7 +136,7 @@ static void _SignalHandler(int signal) {
 
 @implementation GCDWebServer
 
-@synthesize delegate=_delegate, handlers=_handlers, port=_port, connected=_connected;
+@synthesize delegate=_delegate, handlers=_handlers, port=_port, connected=_connected, serverName=_serverName, shouldAutomaticallyMapHEADToGET=_mapHEADToGET;
 
 #ifndef __GCDWEBSERVER_LOGGING_HEADER__
 
@@ -152,10 +164,8 @@ static void _ConnectedTimerCallBack(CFRunLoopTimerRef timer, void* info) {
     _syncQueue = dispatch_queue_create([NSStringFromClass([self class]) UTF8String], DISPATCH_QUEUE_SERIAL);
     _handlers = [[NSMutableArray alloc] init];
     CFRunLoopTimerContext context = {0, (ARC_BRIDGE void*)self, NULL, NULL, NULL};
-    if ([[self class] connectedStateCoalescingInterval] > 0.0) {
-      _connectedTimer = CFRunLoopTimerCreate(kCFAllocatorDefault, HUGE_VAL, HUGE_VAL, 0, 0, _ConnectedTimerCallBack, &context);
-      CFRunLoopAddTimer(CFRunLoopGetMain(), _connectedTimer, kCFRunLoopCommonModes);
-    }
+    _connectedTimer = CFRunLoopTimerCreate(kCFAllocatorDefault, HUGE_VAL, HUGE_VAL, 0, 0, _ConnectedTimerCallBack, &context);
+    CFRunLoopAddTimer(CFRunLoopGetMain(), _connectedTimer, kCFRunLoopCommonModes);
   }
   return self;
 }
@@ -169,10 +179,8 @@ static void _ConnectedTimerCallBack(CFRunLoopTimerRef timer, void* info) {
     [self stop];
   }
   
-  if (_connectedTimer) {
-    CFRunLoopTimerInvalidate(_connectedTimer);
-    CFRelease(_connectedTimer);
-  }
+  CFRunLoopTimerInvalidate(_connectedTimer);
+  CFRelease(_connectedTimer);
   ARC_RELEASE(_handlers);
   ARC_DISPATCH_RELEASE(_syncQueue);
   
@@ -195,7 +203,7 @@ static void _ConnectedTimerCallBack(CFRunLoopTimerRef timer, void* info) {
     DCHECK(_activeConnections >= 0);
     if (_activeConnections == 0) {
       dispatch_async(dispatch_get_main_queue(), ^{
-        if (_connectedTimer) {
+        if (_disconnectDelay > 0.0) {
           CFRunLoopTimerSetNextFireDate(_connectedTimer, HUGE_VAL);
         }
         if (_connected == NO) {
@@ -224,8 +232,8 @@ static void _ConnectedTimerCallBack(CFRunLoopTimerRef timer, void* info) {
     _activeConnections -= 1;
     if (_activeConnections == 0) {
       dispatch_async(dispatch_get_main_queue(), ^{
-        if (_connectedTimer) {
-          CFRunLoopTimerSetNextFireDate(_connectedTimer, CFAbsoluteTimeGetCurrent() + [[self class] connectedStateCoalescingInterval]);
+        if (_disconnectDelay > 0.0) {
+          CFRunLoopTimerSetNextFireDate(_connectedTimer, CFAbsoluteTimeGetCurrent() + _disconnectDelay);
         } else {
           [self _didDisconnect];
         }
@@ -267,7 +275,22 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 }
 
 - (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name {
+  NSMutableDictionary* options = [NSMutableDictionary dictionary];
+  [options setObject:[NSNumber numberWithInteger:port] forKey:GCDWebServerOption_Port];
+  [options setValue:name forKey:GCDWebServerOption_BonjourName];
+  return [self startWithOptions:options];
+}
+
+static inline id _GetOption(NSDictionary* options, NSString* key, id defaultValue) {
+  id value = [options objectForKey:key];
+  return value ? value : defaultValue;
+}
+
+- (BOOL)startWithOptions:(NSDictionary*)options {
   DCHECK(_source == NULL);
+  NSUInteger port = [_GetOption(options, GCDWebServerOption_Port, [NSNumber numberWithUnsignedInteger:0]) unsignedIntegerValue];
+  NSString* name = _GetOption(options, GCDWebServerOption_BonjourName, @"");
+  NSUInteger maxPendingConnections = [_GetOption(options, GCDWebServerOption_MaxPendingConnections, [NSNumber numberWithUnsignedInteger:16]) unsignedIntegerValue];
   int listeningSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (listeningSocket > 0) {
     int yes = 1;
@@ -280,8 +303,12 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
     addr4.sin_port = htons(port);
     addr4.sin_addr.s_addr = htonl(INADDR_ANY);
     if (bind(listeningSocket, (void*)&addr4, sizeof(addr4)) == 0) {
-      if (listen(listeningSocket, (int)[[self class] maxPendingConnections]) == 0) {
+      if (listen(listeningSocket, (int)maxPendingConnections) == 0) {
         LOG_DEBUG(@"Did open listening socket %i", listeningSocket);
+        _serverName = [_GetOption(options, GCDWebServerOption_ServerName, NSStringFromClass([self class])) copy];
+        _connectionClass = _GetOption(options, GCDWebServerOption_ConnectionClass, [GCDWebServerConnection class]);
+        _mapHEADToGET = [_GetOption(options, GCDWebServerOption_AutomaticallyMapHEADToGET, [NSNumber numberWithBool:YES]) boolValue];
+        _disconnectDelay = [_GetOption(options, GCDWebServerOption_ConnectedStateCoalescingInterval, [NSNumber numberWithDouble:1.0]) doubleValue];
         _source = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, listeningSocket, 0, kGCDWebServerGCDQueue);
         dispatch_source_set_cancel_handler(_source, ^{
           
@@ -316,8 +343,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
               int noSigPipe = 1;
               setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &noSigPipe, sizeof(noSigPipe));  // Make sure this socket cannot generate SIG_PIPE
               
-              Class connectionClass = [[self class] connectionClass];
-              GCDWebServerConnection* connection = [[connectionClass alloc] initWithServer:self localAddress:localAddress remoteAddress:remoteAddress socket:socket];  // Connection will automatically retain itself while opened
+              GCDWebServerConnection* connection = [[_connectionClass alloc] initWithServer:self localAddress:localAddress remoteAddress:remoteAddress socket:socket];  // Connection will automatically retain itself while opened
 #if __has_feature(objc_arc)
               [connection self];  // Prevent compiler from complaining about unused variable / useless statement
 #else
@@ -396,6 +422,9 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
     _source = NULL;
     _port = 0;
     
+    ARC_RELEASE(_serverName);
+    _serverName = nil;
+    
     LOG_INFO(@"%@ stopped", [self class]);
     if ([_delegate respondsToSelector:@selector(webServerDidStop:)]) {
       dispatch_async(dispatch_get_main_queue(), ^{
@@ -403,30 +432,6 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
       });
     }
   }
-}
-
-@end
-
-@implementation GCDWebServer (Subclassing)
-
-+ (NSUInteger)maxPendingConnections {
-  return 16;
-}
-
-+ (Class)connectionClass {
-  return [GCDWebServerConnection class];
-}
-
-+ (NSString*)serverName {
-  return NSStringFromClass(self);
-}
-
-+ (BOOL)shouldAutomaticallyMapHEADToGET {
-  return YES;
-}
-
-+ (NSTimeInterval)connectedStateCoalescingInterval {
-  return 1.0;
 }
 
 @end
