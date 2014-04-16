@@ -207,7 +207,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
           @autoreleasepool {
             int result = close(listeningSocket);
             if (result != 0) {
-              LOG_ERROR(@"Failed closing socket (%i): %s", errno, strerror(errno));
+              LOG_ERROR(@"Failed closing listening socket: %s (%i)", strerror(errno), errno);
             } else {
               LOG_DEBUG(@"Did close listening socket %i", listeningSocket);
             }
@@ -243,7 +243,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
               [connection release];
 #endif
             } else {
-              LOG_ERROR(@"Failed accepting socket (%i): %s", errno, strerror(errno));
+              LOG_ERROR(@"Failed accepting socket: %s (%i)", strerror(errno), errno);
             }
           }
           
@@ -256,7 +256,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
             struct sockaddr_in* sockaddr = (struct sockaddr_in*)&addr;
             _port = ntohs(sockaddr->sin_port);
           } else {
-            LOG_ERROR(@"Failed retrieving socket address (%i): %s", errno, strerror(errno));
+            LOG_ERROR(@"Failed retrieving socket address: %s (%i)", strerror(errno), errno);
           }
         } else {
           _port = port;
@@ -278,15 +278,15 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
         dispatch_resume(_source);
         LOG_INFO(@"%@ started on port %i and reachable at %@", [self class], (int)_port, self.serverURL);
       } else {
-        LOG_ERROR(@"Failed listening on socket (%i): %s", errno, strerror(errno));
+        LOG_ERROR(@"Failed listening on socket: %s (%i)", strerror(errno), errno);
         close(listeningSocket);
       }
     } else {
-      LOG_ERROR(@"Failed binding socket (%i): %s", errno, strerror(errno));
+      LOG_ERROR(@"Failed binding socket: %s (%i)", strerror(errno), errno);
       close(listeningSocket);
     }
   } else {
-    LOG_ERROR(@"Failed creating socket (%i): %s", errno, strerror(errno));
+    LOG_ERROR(@"Failed creating socket: %s (%i)", strerror(errno), errno);
   }
   return (_source ? YES : NO);
 }

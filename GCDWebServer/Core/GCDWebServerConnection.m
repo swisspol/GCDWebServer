@@ -626,7 +626,7 @@ static NSString* _StringFromAddressData(NSData* data) {
   
   int result = close(_socket);
   if (result != 0) {
-    LOG_ERROR(@"Failed closing socket %i for connection (%i): %s", _socket, errno, strerror(errno));
+    LOG_ERROR(@"Failed closing socket %i for connection: %s (%i)", _socket, strerror(errno), errno);
   } else {
     LOG_DEBUG(@"Did close connection on socket %i", _socket);
   }
