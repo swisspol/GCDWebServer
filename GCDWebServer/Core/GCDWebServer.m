@@ -365,6 +365,7 @@ static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* er
 #if !TARGET_OS_IPHONE
 
 - (BOOL)runWithPort:(NSUInteger)port {
+  DCHECK([NSThread isMainThread]);
   BOOL success = NO;
   _run = YES;
   void (*handler)(int) = signal(SIGINT, _SignalHandler);
