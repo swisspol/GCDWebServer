@@ -20,7 +20,7 @@ Extra built-in features:
 * Automatically handle transitions between foreground, background and suspended modes in iOS apps
 
 Included extensions:
-* [GCDWebUploader](GCDWebUploader/GCDWebUploader.h): subclass of ```GCDWebServer``` that implements an interface for uploading and downloading files from an iOS app's sandbox using a web browser
+* [GCDWebUploader](GCDWebUploader/GCDWebUploader.h): subclass of ```GCDWebServer``` that implements an interface for uploading and downloading files using a web browser
 * [GCDWebDAVServer](GCDWebDAVServer/GCDWebDAVServer.h): subclass of ```GCDWebServer``` that implements a class 1 [WebDAV](https://en.wikipedia.org/wiki/WebDAV) server (with partial class 2 support for OS X Finder)
 
 What's not available out of the box but can be implemented on top of the API:
