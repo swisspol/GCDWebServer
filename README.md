@@ -56,7 +56,7 @@ pod "GCDWebServer/WebDAV", "~> 2.0"
 Hello World
 ===========
 
-These codes snippets show how to implement a custom HTTP server that runs on port 8080 and returns a "Hello World" HTML page to any request. Since GCDWebServer uses GCD blocks to handle requests, no subclassing or delegates are needed, which results in very clean code.
+These code snippets show how to implement a custom HTTP server that runs on port 8080 and returns a "Hello World" HTML page to any request. Since GCDWebServer uses GCD blocks to handle requests, no subclassing or delegates are needed, which results in very clean code.
 
 **OS X version (command line tool):**
 ```objectivec
