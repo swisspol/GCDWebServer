@@ -529,7 +529,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
           if ([_request hasBody]) {
             [_request prepareForWriting];
             if (_request.usesChunkedTransferEncoding || (extraData.length <= _request.contentLength)) {
-              NSString* expectHeader = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyHeaderFieldValue(_requestMessage, CFSTR("Expect")));
+              NSString* expectHeader = [requestHeaders objectForKey:@"Expect"];
               if (expectHeader) {
                 if ([expectHeader caseInsensitiveCompare:@"100-continue"] == NSOrderedSame) {
                   [self _writeData:_continueData withCompletionBlock:^(BOOL success) {
