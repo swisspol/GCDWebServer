@@ -92,7 +92,7 @@ int main(int argc, const char* argv[]) {
 ```objectivec
 #import "GCDWebServer.h"
 
-static GCDWebServer* _webServer = nil;  // This should really be an ivar of your application delegate class
+static GCDWebServer* _webServer = nil;  // This should really be an ivar of your application's delegate class
 
 - (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
   
@@ -120,12 +120,12 @@ Web Based Uploads in iOS Apps
 
 GCDWebUploader is a subclass of ```GCDWebServer``` that provides a ready-to-use HTML 5 file uploader & downloader. This lets users upload, download, delete files and create directories from a directory inside your iOS app's sandbox using a clean user interface in their web browser.
 
-Simply instantiate and run a GCDWebUploader instance then visit http://{YOUR-IOS-DEVICE-IP-ADDRESS}/ from your web browser:
+Simply instantiate and run a ```GCDWebUploader``` instance then visit ```http://{YOUR-IOS-DEVICE-IP-ADDRESS}/``` from your web browser:
 
 ```objectivec
 #import "GCDWebUploader.h"
 
-static GCDWebUploader* _webUploader = nil;  // This should really be an ivar of your application delegate class
+static GCDWebUploader* _webUploader = nil;  // This should really be an ivar of your application's delegate class
 
 - (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
   NSString* documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
@@ -143,12 +143,12 @@ GCDWebDAVServer is a subclass of ```GCDWebServer``` that provides a class 1 comp
 
 GCDWebDAVServer should also work with the [OS X Finder](http://support.apple.com/kb/PH13859) as it is partially class 2 compliant (but only when the client is the OS X WebDAV implementation).
 
-Simply instantiate and run a GCDWebDAVServer instance then connect to http://{YOUR-IOS-DEVICE-IP-ADDRESS}/ using a WebDAV client:
+Simply instantiate and run a ```GCDWebDAVServer``` instance then connect to ```http://{YOUR-IOS-DEVICE-IP-ADDRESS}/``` using a WebDAV client:
 
 ```objectivec
 #import "GCDWebDAVServer.h"
 
-static GCDWebDAVServer* _davServer = nil;  // This should really be an ivar of your application delegate class
+static GCDWebDAVServer* _davServer = nil;  // This should really be an ivar of your application's delegate class
 
 - (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
   NSString* documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
