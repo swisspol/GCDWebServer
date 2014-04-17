@@ -49,6 +49,9 @@ extern NSString* const GCDWebServerOption_ServerName;  // NSString (default is s
 extern NSString* const GCDWebServerOption_ConnectionClass;  // Subclass of GCDWebServerConnection (default is GCDWebServerConnection class)
 extern NSString* const GCDWebServerOption_AutomaticallyMapHEADToGET;  // NSNumber / BOOL (default is YES)
 extern NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval;  // NSNumber / double (default is 1.0 seconds - set to <=0.0 to disable coaslescing of -webServerDidConnect: / -webServerDidDisconnect:)
+#if TARGET_OS_IPHONE
+extern NSString* const GCDWebServerOption_AutomaticallySuspendInBackground;  // NSNumber / BOOL (default is YES)
+#endif
 
 @class GCDWebServer;
 
