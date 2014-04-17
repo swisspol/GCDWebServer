@@ -212,7 +212,7 @@ Note that most methods on ```GCDWebServer``` to add handlers only require the ``
 GCDWebServer & Background Mode for iOS Apps
 ===========================================
 
-When doing networking operations in iOS apps, you must handle carefully [what happens when iOS puts the app in the background](https://developer.apple.com/library/ios/technotes/tn2277/_index.html). Typically you must stop any server while the app is in the background and restart them when it comes back to the foreground. This can become quite complex considering the server might have ongoing connections when it needs to be stopped.
+When doing networking operations in iOS apps, you must handle carefully [what happens when iOS puts the app in the background](https://developer.apple.com/library/ios/technotes/tn2277/_index.html). Typically you must stop any network servers while the app is in the background and restart them when the app comes back to the foreground. This can become quite complex considering servers might have ongoing connections when they need to be stopped.
 
 Fortunately, GCDWebServer does all of this automatically for you:
 - GCDWebServer begins a [background task](https://developer.apple.com/library/ios/documentation/iphone/conceptual/iphoneosprogrammingguide/ManagingYourApplicationsFlow/ManagingYourApplicationsFlow.html) whenever the first HTTP connection is opened and ends it only when the last one is closed. This prevents iOS from suspending the app after it goes in the background, which would immediately kill HTTP connections to the client.
