@@ -228,27 +228,34 @@ static NSData* _dashNewlineData = nil;
       _contentType = nil;
       ARC_RELEASE(_tmpPath);
       _tmpPath = nil;
-      CFHTTPMessageRef message = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, true);
-      const char* temp = "GET / HTTP/1.0\r\n";
-      CFHTTPMessageAppendBytes(message, (const UInt8*)temp, strlen(temp));
-      CFHTTPMessageAppendBytes(message, _parserData.bytes, range.location + range.length);
-      if (CFHTTPMessageIsHeaderComplete(message)) {
-        NSString* controlName = nil;
-        NSString* fileName = nil;
-        NSDictionary* headers = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyAllHeaderFields(message));
-        NSString* contentDisposition = GCDWebServerNormalizeHeaderValue([headers objectForKey:@"Content-Disposition"]);
-        if ([GCDWebServerTruncateHeaderValue(contentDisposition) isEqualToString:@"form-data"]) {
-          controlName = GCDWebServerExtractHeaderValueParameter(contentDisposition, @"name");
-          fileName = GCDWebServerExtractHeaderValueParameter(contentDisposition, @"filename");
+      NSString* headers = [[NSString alloc] initWithData:[_parserData subdataWithRange:NSMakeRange(0, range.location)] encoding:NSUTF8StringEncoding];
+      if (headers) {
+        for (NSString* header in [headers componentsSeparatedByString:@"\r\n"]) {
+          NSRange subRange = [header rangeOfString:@":"];
+          if (subRange.location != NSNotFound) {
+            NSString* name = [header substringToIndex:subRange.location];
+            NSString* value = [[header substringFromIndex:(subRange.location + subRange.length)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+            if ([name caseInsensitiveCompare:@"Content-Type"] == NSOrderedSame) {
+              _contentType = ARC_RETAIN(GCDWebServerNormalizeHeaderValue(value));
+            } else if ([name caseInsensitiveCompare:@"Content-Disposition"] == NSOrderedSame) {
+              NSString* contentDisposition = GCDWebServerNormalizeHeaderValue(value);
+              if ([GCDWebServerTruncateHeaderValue(contentDisposition) isEqualToString:@"form-data"]) {
+                _controlName = ARC_RETAIN(GCDWebServerExtractHeaderValueParameter(contentDisposition, @"name"));
+                _fileName = ARC_RETAIN(GCDWebServerExtractHeaderValueParameter(contentDisposition, @"filename"));
+              }
+            }
+          } else {
+            DNOT_REACHED();
+          }
         }
-        _controlName = [controlName copy];
-        _fileName = [fileName copy];
-        _contentType = ARC_RETAIN(GCDWebServerNormalizeHeaderValue([headers objectForKey:@"Content-Type"]));
         if (_contentType == nil) {
           _contentType = @"text/plain";
         }
+        ARC_RELEASE(headers);
+      } else {
+        LOG_ERROR(@"Failed decoding headers in part of 'multipart/form-data'");
+        DNOT_REACHED();
       }
-      CFRelease(message);
       if (_controlName) {
         if (_fileName) {
           NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]];
