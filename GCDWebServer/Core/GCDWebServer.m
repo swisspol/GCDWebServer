@@ -596,13 +596,20 @@ static inline id _GetOption(NSDictionary* options, NSString* key, id defaultValu
 
 #if !TARGET_OS_IPHONE
 
-- (BOOL)runWithPort:(NSUInteger)port {
+- (BOOL)runWithPort:(NSUInteger)port bonjourName:(NSString*)name {
+  NSMutableDictionary* options = [NSMutableDictionary dictionary];
+  [options setObject:[NSNumber numberWithInteger:port] forKey:GCDWebServerOption_Port];
+  [options setValue:name forKey:GCDWebServerOption_BonjourName];
+  return [self runWithOptions:options];
+}
+
+- (BOOL)runWithOptions:(NSDictionary*)options {
   DCHECK([NSThread isMainThread]);
   BOOL success = NO;
   _run = YES;
   void (*handler)(int) = signal(SIGINT, _SignalHandler);
   if (handler != SIG_ERR) {
-    if ([self startWithPort:port bonjourName:@""]) {
+    if ([self startWithOptions:options]) {
       while (_run) {
         CFRunLoopRunInMode(kCFRunLoopDefaultMode, 1.0, true);
       }
@@ -899,10 +906,10 @@ static void _LogResult(NSString* format, ...) {
   ARC_RELEASE(message);
 }
 
-- (NSInteger)runTestsInDirectory:(NSString*)path withPort:(NSUInteger)port {
+- (NSInteger)runTestsWithOptions:(NSDictionary*)options inDirectory:(NSString*)path {
   NSArray* ignoredHeaders = @[@"Date", @"Etag"];  // Dates are always different by definition and ETags depend on file system node IDs
   NSInteger result = -1;
-  if ([self startWithPort:port bonjourName:nil]) {
+  if ([self startWithOptions:options]) {
     
     result = 0;
     NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:path error:NULL];
@@ -927,7 +934,7 @@ static void _LogResult(NSString* format, ...) {
                 if (responseData) {
                 CFHTTPMessageRef expectedResponse = _CreateHTTPMessageFromData(responseData, NO);
                   if (expectedResponse) {
-                    CFHTTPMessageRef actualResponse = _CreateHTTPMessageFromPerformingRequest(requestData, port);
+                    CFHTTPMessageRef actualResponse = _CreateHTTPMessageFromPerformingRequest(requestData, self.port);
                     if (actualResponse) {
                       success = YES;
                       

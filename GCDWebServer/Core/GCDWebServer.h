@@ -83,7 +83,8 @@ extern NSString* const GCDWebServerOption_AutomaticallySuspendInBackground;  // 
 @property(nonatomic, readonly) NSURL* serverURL;  // Only non-nil if server is running
 @property(nonatomic, readonly) NSURL* bonjourServerURL;  // Only non-nil if server is running and Bonjour registration is active
 #if !TARGET_OS_IPHONE
-- (BOOL)runWithPort:(NSUInteger)port;  // Starts then automatically stops on SIGINT i.e. Ctrl-C (use on main thread only)
+- (BOOL)runWithPort:(NSUInteger)port bonjourName:(NSString*)name;
+- (BOOL)runWithOptions:(NSDictionary*)options;  // Starts then automatically stops on SIGINT i.e. Ctrl-C (use on main thread only)
 #endif
 @end
 
@@ -113,7 +114,7 @@ extern NSString* const GCDWebServerOption_AutomaticallySuspendInBackground;  // 
 
 @interface GCDWebServer (Testing)
 @property(nonatomic, getter=isRecordingEnabled) BOOL recordingEnabled;  // Creates files in the current directory containing the raw data for all requests and responses (directory most NOT contain prior recordings)
-- (NSInteger)runTestsInDirectory:(NSString*)path withPort:(NSUInteger)port;  // Returns number of failed tests or -1 if server failed to start
+- (NSInteger)runTestsWithOptions:(NSDictionary*)options inDirectory:(NSString*)path;  // Returns number of failed tests or -1 if server failed to start
 @end
 
 #endif

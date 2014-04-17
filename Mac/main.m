@@ -274,14 +274,17 @@ int main(int argc, const char* argv[]) {
       webServer.delegate = delegate;
       if (testDirectory) {
         fprintf(stdout, "<RUNNING TESTS FROM \"%s\">\n\n", [testDirectory UTF8String]);
-        result = (int)[webServer runTestsInDirectory:testDirectory withPort:8080];
+        result = (int)[webServer runTestsWithOptions:@{GCDWebServerOption_Port: @8080} inDirectory:testDirectory];
       } else {
         if (recording) {
           fprintf(stdout, "<RECORDING ENABLED>\n");
           webServer.recordingEnabled = YES;
         }
         fprintf(stdout, "\n");
-        if ([webServer runWithPort:8080]) {
+        NSMutableDictionary* options = [NSMutableDictionary dictionary];
+        [options setObject:@8080 forKey:GCDWebServerOption_Port];
+        [options setObject:@"" forKey:GCDWebServerOption_BonjourName];
+        if ([webServer runWithOptions:options]) {
           result = 0;
         }
       }
