@@ -48,7 +48,7 @@ extern NSString* const GCDWebServerOption_MaxPendingConnections;  // NSNumber / 
 extern NSString* const GCDWebServerOption_ServerName;  // NSString (default is server class name)
 extern NSString* const GCDWebServerOption_ConnectionClass;  // Subclass of GCDWebServerConnection (default is GCDWebServerConnection class)
 extern NSString* const GCDWebServerOption_AutomaticallyMapHEADToGET;  // NSNumber / BOOL (default is YES)
-extern NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval;  // NSNumber / double (default is 1.0 - set to 0.0 to disable coaslescing of -webServerDidConnect: / -webServerDidDisconnect:)
+extern NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval;  // NSNumber / double (default is 1.0 seconds - set to <=0.0 to disable coaslescing of -webServerDidConnect: / -webServerDidDisconnect:)
 
 @class GCDWebServer;
 
@@ -64,7 +64,7 @@ extern NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval;  // 
 @interface GCDWebServer : NSObject
 @property(nonatomic, assign) id<GCDWebServerDelegate> delegate;
 @property(nonatomic, readonly, getter=isRunning) BOOL running;
-@property(nonatomic, readonly) NSUInteger port;
+@property(nonatomic, readonly) NSUInteger port;  // Only non-zero if running
 @property(nonatomic, readonly) NSString* bonjourName;  // Only non-nil if Bonjour registration is active
 - (instancetype)init;
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
@@ -73,7 +73,7 @@ extern NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval;  // 
 - (BOOL)start;  // Default is port 8080 (OS X & iOS Simulator) or 80 (iOS) and computer / device name for Bonjour
 - (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name;  // Pass nil name to disable Bonjour or empty string to use computer name
 - (BOOL)startWithOptions:(NSDictionary*)options;
-- (void)stop;
+- (void)stop;  // Does not abort any currently opened connections
 @end
 
 @interface GCDWebServer (Extensions)
