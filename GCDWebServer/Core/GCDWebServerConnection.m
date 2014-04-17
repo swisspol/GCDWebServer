@@ -707,11 +707,24 @@ static NSString* _StringFromAddressData(NSData* data) {
 - (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block {
   LOG_DEBUG(@"Connection on socket %i processing request \"%@ %@\" with %lu bytes body", _socket, _virtualHEAD ? @"HEAD" : _request.method, _request.path, (unsigned long)_bytesRead);
   GCDWebServerResponse* response = nil;
-  @try {
-    response = block(request);
+  BOOL authorized = YES;
+  if (_server.authenticationBasicAccount) {
+    NSString* authorizationHeader = [request.headers objectForKey:@"Authorization"];
+    if (![authorizationHeader hasPrefix:@"Basic "] || ![[authorizationHeader substringFromIndex:6] isEqualToString:_server.authenticationBasicAccount]) {
+      authorized = NO;
+    }
   }
-  @catch (NSException* exception) {
-    LOG_EXCEPTION(exception);
+  if (authorized) {
+    @try {
+      response = block(request);
+    }
+    @catch (NSException* exception) {
+      LOG_EXCEPTION(exception);
+    }
+  } else {
+    response = [GCDWebServerResponse responseWithStatusCode:kGCDWebServerHTTPStatusCode_Unauthorized];
+    [response setValue:[NSString stringWithFormat:@"Basic realm=\"%@\"", _server.authenticationRealm] forAdditionalHeader:@"WWW-Authenticate"];
+    return response;
   }
   return response;
 }

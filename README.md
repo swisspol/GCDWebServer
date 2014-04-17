@@ -18,13 +18,14 @@ Extra built-in features:
 * [HTTP compression](https://en.wikipedia.org/wiki/HTTP_compression) with gzip for request and response HTTP bodies
 * [HTTP range](https://en.wikipedia.org/wiki/Byte_serving) support for requests of local files
 * Automatically handle transitions between foreground, background and suspended modes in iOS apps
+* [Basic Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication) for simple password protection
 
 Included extensions:
 * [GCDWebUploader](GCDWebUploader/GCDWebUploader.h): subclass of ```GCDWebServer``` that implements an interface for uploading and downloading files using a web browser
 * [GCDWebDAVServer](GCDWebDAVServer/GCDWebDAVServer.h): subclass of ```GCDWebServer``` that implements a class 1 [WebDAV](https://en.wikipedia.org/wiki/WebDAV) server (with partial class 2 support for OS X Finder)
 
 What's not available out of the box but can be implemented on top of the API:
-* Authentication like [Basic Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication)
+* Advanced authentication like [digest access](https://en.wikipedia.org/wiki/Digest_access_authentication)
 * Web forms submitted using "multipart/mixed"
 
 What's not supported (but not really required from an embedded HTTP server):

@@ -54,6 +54,8 @@
   
   NSDictionary* _options;
   NSString* _serverName;
+  NSString* _authenticationRealm;
+  NSString* _authenticationBasicAccount;
   Class _connectionClass;
   BOOL _mapHEADToGET;
   CFTimeInterval _disconnectDelay;
@@ -81,6 +83,8 @@ NSString* const GCDWebServerOption_Port = @"Port";
 NSString* const GCDWebServerOption_BonjourName = @"BonjourName";
 NSString* const GCDWebServerOption_MaxPendingConnections = @"MaxPendingConnections";
 NSString* const GCDWebServerOption_ServerName = @"ServerName";
+NSString* const GCDWebServerOption_AuthenticationRealm = @"AuthenticationRealm";
+NSString* const GCDWebServerOption_BasicAuthenticationAccount = @"BasicAuthenticationAccount";
 NSString* const GCDWebServerOption_ConnectionClass = @"ConnectionClass";
 NSString* const GCDWebServerOption_AutomaticallyMapHEADToGET = @"AutomaticallyMapHEADToGET";
 NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval = @"ConnectedStateCoalescingInterval";
@@ -146,7 +150,8 @@ static void _SignalHandler(int signal) {
 
 @implementation GCDWebServer
 
-@synthesize delegate=_delegate, handlers=_handlers, port=_port, serverName=_serverName, shouldAutomaticallyMapHEADToGET=_mapHEADToGET;
+@synthesize delegate=_delegate, handlers=_handlers, port=_port, serverName=_serverName, authenticationRealm=_authenticationRealm,
+            authenticationBasicAccount=_authenticationBasicAccount, shouldAutomaticallyMapHEADToGET=_mapHEADToGET;
 
 #ifndef __GCDWEBSERVER_LOGGING_HEADER__
 
@@ -339,6 +344,15 @@ static inline id _GetOption(NSDictionary* options, NSString* key, id defaultValu
   return value ? value : defaultValue;
 }
 
+static inline NSString* _EncodeBase64(NSString* string) {
+  NSData* data = [string dataUsingEncoding:NSUTF8StringEncoding];
+#if (TARGET_OS_IPHONE && !(__IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_7_0)) || (!TARGET_OS_IPHONE && !(__MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_10_9))
+  if (![data respondsToSelector:@selector(base64EncodedDataWithOptions:)]) {
+    return [data base64Encoding];
+  }
+#endif
+  return ARC_AUTORELEASE([[NSString alloc] initWithData:[data base64EncodedDataWithOptions:0] encoding:NSASCIIStringEncoding]);
+}
 - (BOOL)_start {
   DCHECK(_source == NULL);
   NSUInteger port = [_GetOption(_options, GCDWebServerOption_Port, @0) unsignedIntegerValue];
@@ -359,6 +373,9 @@ static inline id _GetOption(NSDictionary* options, NSString* key, id defaultValu
       if (listen(listeningSocket, (int)maxPendingConnections) == 0) {
         LOG_DEBUG(@"Did open listening socket %i", listeningSocket);
         _serverName = [_GetOption(_options, GCDWebServerOption_ServerName, NSStringFromClass([self class])) copy];
+        _authenticationRealm = [_GetOption(_options, GCDWebServerOption_AuthenticationRealm, _serverName) copy];
+        NSString* basicAuthenticationAccount = _GetOption(_options, GCDWebServerOption_BasicAuthenticationAccount, nil);
+        _authenticationBasicAccount = basicAuthenticationAccount.length ? _EncodeBase64(basicAuthenticationAccount) : nil;
         _connectionClass = _GetOption(_options, GCDWebServerOption_ConnectionClass, [GCDWebServerConnection class]);
         _mapHEADToGET = [_GetOption(_options, GCDWebServerOption_AutomaticallyMapHEADToGET, @YES) boolValue];
         _disconnectDelay = [_GetOption(_options, GCDWebServerOption_ConnectedStateCoalescingInterval, @1.0) doubleValue];
@@ -473,6 +490,10 @@ static inline id _GetOption(NSDictionary* options, NSString* key, id defaultValu
   
   ARC_RELEASE(_serverName);
   _serverName = nil;
+  ARC_RELEASE(_authenticationRealm);
+  _authenticationRealm = nil;
+  ARC_RELEASE(_authenticationBasicAccount);
+  _authenticationBasicAccount = nil;
   
   LOG_INFO(@"%@ stopped", [self class]);
   if ([_delegate respondsToSelector:@selector(webServerDidStop:)]) {

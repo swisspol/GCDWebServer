@@ -129,6 +129,8 @@ extern NSString* GCDWebServerDescribeData(NSData* data, NSString* contentType);
 @interface GCDWebServer ()
 @property(nonatomic, readonly) NSArray* handlers;
 @property(nonatomic, readonly) NSString* serverName;
+@property(nonatomic, readonly) NSString* authenticationRealm;
+@property(nonatomic, readonly) NSString* authenticationBasicAccount;
 @property(nonatomic, readonly) BOOL shouldAutomaticallyMapHEADToGET;
 - (void)willStartConnection:(GCDWebServerConnection*)connection;
 - (void)didEndConnection:(GCDWebServerConnection*)connection;
