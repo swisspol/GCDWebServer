@@ -88,7 +88,7 @@ int main(int argc, const char* argv[]) {
 }
 ```
 
-**iOS Version:**
+**iOS version:**
 ```objectivec
 #import "GCDWebServer.h"
 
