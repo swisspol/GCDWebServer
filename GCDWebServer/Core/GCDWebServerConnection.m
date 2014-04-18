@@ -372,20 +372,23 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   DCHECK(_responseMessage == NULL);
   BOOL hasBody = NO;
   
-  GCDWebServerResponse* response = [self processRequest:_request withBlock:_handler.processBlock];
+  GCDWebServerResponse* response = [self preflightRequest:_request];
+  if (!response) {
+    response = [self processRequest:_request withBlock:_handler.processBlock];
+  }
   if (response) {
-    response = [self replaceResponse:response forRequest:_request];
-    if (response) {
-      if ([response hasBody]) {
-        [response prepareForReading];
-        hasBody = !_virtualHEAD;
-      }
-      NSError* error = nil;
-      if (hasBody && ![response performOpen:&error]) {
-        LOG_ERROR(@"Failed opening response body for socket %i: %@", _socket, error);
-      } else {
-        _response = ARC_RETAIN(response);
-      }
+    response = [self overrideResponse:response forRequest:_request];
+  }
+  if (response) {
+    if ([response hasBody]) {
+      [response prepareForReading];
+      hasBody = !_virtualHEAD;
+    }
+    NSError* error = nil;
+    if (hasBody && ![response performOpen:&error]) {
+      LOG_ERROR(@"Failed opening response body for socket %i: %@", _socket, error);
+    } else {
+      _response = ARC_RETAIN(response);
     }
   }
   
@@ -704,27 +707,27 @@ static NSString* _StringFromAddressData(NSData* data) {
 #endif
 }
 
-- (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block {
-  LOG_DEBUG(@"Connection on socket %i processing request \"%@ %@\" with %lu bytes body", _socket, _virtualHEAD ? @"HEAD" : _request.method, _request.path, (unsigned long)_bytesRead);
+- (GCDWebServerResponse*)preflightRequest:(GCDWebServerRequest*)request {
+  LOG_DEBUG(@"Connection on socket %i preflighting request \"%@ %@\" with %lu bytes body", _socket, _virtualHEAD ? @"HEAD" : _request.method, _request.path, (unsigned long)_bytesRead);
   GCDWebServerResponse* response = nil;
-  BOOL authorized = YES;
   if (_server.authenticationBasicAccount) {
     NSString* authorizationHeader = [request.headers objectForKey:@"Authorization"];
     if (![authorizationHeader hasPrefix:@"Basic "] || ![[authorizationHeader substringFromIndex:6] isEqualToString:_server.authenticationBasicAccount]) {
-      authorized = NO;
+      response = [GCDWebServerResponse responseWithStatusCode:kGCDWebServerHTTPStatusCode_Unauthorized];
+      [response setValue:[NSString stringWithFormat:@"Basic realm=\"%@\"", _server.authenticationRealm] forAdditionalHeader:@"WWW-Authenticate"];
     }
   }
-  if (authorized) {
-    @try {
-      response = block(request);
-    }
-    @catch (NSException* exception) {
-      LOG_EXCEPTION(exception);
-    }
-  } else {
-    response = [GCDWebServerResponse responseWithStatusCode:kGCDWebServerHTTPStatusCode_Unauthorized];
-    [response setValue:[NSString stringWithFormat:@"Basic realm=\"%@\"", _server.authenticationRealm] forAdditionalHeader:@"WWW-Authenticate"];
-    return response;
+  return response;
+}
+
+- (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block {
+  LOG_DEBUG(@"Connection on socket %i processing request \"%@ %@\" with %lu bytes body", _socket, _virtualHEAD ? @"HEAD" : _request.method, _request.path, (unsigned long)_bytesRead);
+  GCDWebServerResponse* response = nil;
+  @try {
+    response = block(request);
+  }
+  @catch (NSException* exception) {
+    LOG_EXCEPTION(exception);
   }
   return response;
 }
@@ -744,7 +747,7 @@ static inline BOOL _CompareResources(NSString* responseETag, NSString* requestET
   return NO;
 }
 
-- (GCDWebServerResponse*)replaceResponse:(GCDWebServerResponse*)response forRequest:(GCDWebServerRequest*)request {
+- (GCDWebServerResponse*)overrideResponse:(GCDWebServerResponse*)response forRequest:(GCDWebServerRequest*)request {
   if ((response.statusCode >= 200) && (response.statusCode < 300) && _CompareResources(response.eTag, request.ifNoneMatch, response.lastModifiedDate, request.ifModifiedSince)) {
     NSInteger code = [request.method isEqualToString:@"HEAD"] || [request.method isEqualToString:@"GET"] ? kGCDWebServerHTTPStatusCode_NotModified : kGCDWebServerHTTPStatusCode_PreconditionFailed;
     GCDWebServerResponse* newResponse = [GCDWebServerResponse responseWithStatusCode:code];
