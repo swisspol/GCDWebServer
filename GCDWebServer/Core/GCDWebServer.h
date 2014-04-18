@@ -46,14 +46,18 @@ extern NSString* const GCDWebServerOption_Port;  // NSNumber / NSUInteger (defau
 extern NSString* const GCDWebServerOption_BonjourName;  // NSString (default is empty string i.e. use computer name)
 extern NSString* const GCDWebServerOption_MaxPendingConnections;  // NSNumber / NSUInteger (default is 16)
 extern NSString* const GCDWebServerOption_ServerName;  // NSString (default is server class name)
+extern NSString* const GCDWebServerOption_AuthenticationMethod;  // One of "GCDWebServerAuthenticationMethod_..." (default is nil i.e. no authentication)
 extern NSString* const GCDWebServerOption_AuthenticationRealm;  // NSString (default is server name)
-extern NSString* const GCDWebServerOption_BasicAuthenticationAccount;  // NSString in the form "user:password" (default is nil i.e. basic authentication disabled)
+extern NSString* const GCDWebServerOption_AuthenticationUser;  // NSString
+extern NSString* const GCDWebServerOption_AuthenticationPassword;  // NSString
 extern NSString* const GCDWebServerOption_ConnectionClass;  // Subclass of GCDWebServerConnection (default is GCDWebServerConnection class)
 extern NSString* const GCDWebServerOption_AutomaticallyMapHEADToGET;  // NSNumber / BOOL (default is YES)
 extern NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval;  // NSNumber / double (default is 1.0 seconds - set to <=0.0 to disable coaslescing of -webServerDidConnect: / -webServerDidDisconnect:)
 #if TARGET_OS_IPHONE
 extern NSString* const GCDWebServerOption_AutomaticallySuspendInBackground;  // NSNumber / BOOL (default is YES)
 #endif
+
+extern NSString* const GCDWebServerAuthenticationMethod_Basic;
 
 @class GCDWebServer;
 

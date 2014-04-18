@@ -83,14 +83,18 @@ NSString* const GCDWebServerOption_Port = @"Port";
 NSString* const GCDWebServerOption_BonjourName = @"BonjourName";
 NSString* const GCDWebServerOption_MaxPendingConnections = @"MaxPendingConnections";
 NSString* const GCDWebServerOption_ServerName = @"ServerName";
+NSString* const GCDWebServerOption_AuthenticationMethod = @"AuthenticationMethod";
 NSString* const GCDWebServerOption_AuthenticationRealm = @"AuthenticationRealm";
-NSString* const GCDWebServerOption_BasicAuthenticationAccount = @"BasicAuthenticationAccount";
+NSString* const GCDWebServerOption_AuthenticationUser = @"AuthenticationUser";
+NSString* const GCDWebServerOption_AuthenticationPassword = @"AuthenticationPassword";
 NSString* const GCDWebServerOption_ConnectionClass = @"ConnectionClass";
 NSString* const GCDWebServerOption_AutomaticallyMapHEADToGET = @"AutomaticallyMapHEADToGET";
 NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval = @"ConnectedStateCoalescingInterval";
 #if TARGET_OS_IPHONE
 NSString* const GCDWebServerOption_AutomaticallySuspendInBackground = @"AutomaticallySuspendInBackground";
 #endif
+
+NSString* const GCDWebServerAuthenticationMethod_Basic = @"Basic";
 
 #ifndef __GCDWEBSERVER_LOGGING_HEADER__
 #ifdef NDEBUG
@@ -373,9 +377,13 @@ static inline NSString* _EncodeBase64(NSString* string) {
       if (listen(listeningSocket, (int)maxPendingConnections) == 0) {
         LOG_DEBUG(@"Did open listening socket %i", listeningSocket);
         _serverName = [_GetOption(_options, GCDWebServerOption_ServerName, NSStringFromClass([self class])) copy];
-        _authenticationRealm = [_GetOption(_options, GCDWebServerOption_AuthenticationRealm, _serverName) copy];
-        NSString* basicAuthenticationAccount = _GetOption(_options, GCDWebServerOption_BasicAuthenticationAccount, nil);
-        _authenticationBasicAccount = basicAuthenticationAccount.length ? _EncodeBase64(basicAuthenticationAccount) : nil;
+        NSString* authenticationMethod = _GetOption(_options, GCDWebServerOption_AuthenticationMethod, nil);
+        if ([authenticationMethod isEqualToString:GCDWebServerAuthenticationMethod_Basic]) {
+          _authenticationRealm = [_GetOption(_options, GCDWebServerOption_AuthenticationRealm, _serverName) copy];
+          NSString* user = _GetOption(_options, GCDWebServerOption_AuthenticationUser, @"");
+          NSString* password = _GetOption(_options, GCDWebServerOption_AuthenticationPassword, @"");
+          _authenticationBasicAccount = ARC_RETAIN(_EncodeBase64([NSString stringWithFormat:@"%@:%@", user, password]));
+        }
         _connectionClass = _GetOption(_options, GCDWebServerOption_ConnectionClass, [GCDWebServerConnection class]);
         _mapHEADToGET = [_GetOption(_options, GCDWebServerOption_AutomaticallyMapHEADToGET, @YES) boolValue];
         _disconnectDelay = [_GetOption(_options, GCDWebServerOption_ConnectedStateCoalescingInterval, @1.0) doubleValue];

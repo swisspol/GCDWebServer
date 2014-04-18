@@ -131,10 +131,11 @@ int main(int argc, const char* argv[]) {
     NSString* rootDirectory = NSHomeDirectory();
     NSString* testDirectory = nil;
     NSString* authenticationRealm = nil;
-    NSString* authenticationAccount = nil;
+    NSString* authenticationUser = nil;
+    NSString* authenticationPassword = nil;
     
     if (argc == 1) {
-      fprintf(stdout, "Usage: %s [-mode webServer | htmlPage | htmlForm | webDAV | webUploader | streamingResponse] [-record] [-root directory] [-tests directory] [-authenticationRealm realm] [-authenticationAccount user:password]\n\n", basename((char*)argv[0]));
+      fprintf(stdout, "Usage: %s [-mode webServer | htmlPage | htmlForm | webDAV | webUploader | streamingResponse] [-record] [-root directory] [-tests directory] [-authenticationRealm realm] [-authenticationUser user] [-authenticationPassword password]\n\n", basename((char*)argv[0]));
     } else {
       for (int i = 1; i < argc; ++i) {
         if (argv[i][0] != '-') {
@@ -166,9 +167,12 @@ int main(int argc, const char* argv[]) {
         } else if (!strcmp(argv[i], "-authenticationRealm") && (i + 1 < argc)) {
           ++i;
           authenticationRealm = [NSString stringWithUTF8String:argv[i]];
-        } else if (!strcmp(argv[i], "-authenticationAccount") && (i + 1 < argc)) {
+        } else if (!strcmp(argv[i], "-authenticationUser") && (i + 1 < argc)) {
           ++i;
-          authenticationAccount = [NSString stringWithUTF8String:argv[i]];
+          authenticationUser = [NSString stringWithUTF8String:argv[i]];
+        } else if (!strcmp(argv[i], "-authenticationPassword") && (i + 1 < argc)) {
+          ++i;
+          authenticationPassword = [NSString stringWithUTF8String:argv[i]];
         }
       }
     }
@@ -292,8 +296,12 @@ int main(int argc, const char* argv[]) {
         NSMutableDictionary* options = [NSMutableDictionary dictionary];
         [options setObject:@8080 forKey:GCDWebServerOption_Port];
         [options setObject:@"" forKey:GCDWebServerOption_BonjourName];
-        [options setValue:authenticationRealm forKey:GCDWebServerOption_AuthenticationRealm];
-        [options setValue:authenticationAccount forKey:GCDWebServerOption_BasicAuthenticationAccount];
+        if (authenticationUser && authenticationPassword) {
+          [options setObject:GCDWebServerAuthenticationMethod_Basic forKey:GCDWebServerOption_AuthenticationMethod];
+          [options setValue:authenticationRealm forKey:GCDWebServerOption_AuthenticationRealm];
+          [options setObject:authenticationUser forKey:GCDWebServerOption_AuthenticationUser];
+          [options setObject:authenticationPassword forKey:GCDWebServerOption_AuthenticationPassword];
+        }
         if ([webServer runWithOptions:options]) {
           result = 0;
         }
