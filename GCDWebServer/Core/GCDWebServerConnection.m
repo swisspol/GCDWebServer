@@ -531,7 +531,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
             if (_request.usesChunkedTransferEncoding || (extraData.length <= _request.contentLength)) {
               NSString* expectHeader = [requestHeaders objectForKey:@"Expect"];
               if (expectHeader) {
-                if ([expectHeader caseInsensitiveCompare:@"100-continue"] == NSOrderedSame) {
+                if ([expectHeader caseInsensitiveCompare:@"100-continue"] == NSOrderedSame) {  // TODO: Actually validate request before continuing
                   [self _writeData:_continueData withCompletionBlock:^(BOOL success) {
                     
                     if (success) {
