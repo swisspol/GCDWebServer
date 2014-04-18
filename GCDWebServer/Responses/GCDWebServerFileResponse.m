@@ -112,12 +112,14 @@ static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
       _size = (NSUInteger)info.st_size;
     }
     
-    if (attachment) {  // TODO: Use http://tools.ietf.org/html/rfc5987 to encode file names with special characters instead of using lossy conversion to ISO 8859-1
-      NSData* data = [[path lastPathComponent] dataUsingEncoding:NSISOLatin1StringEncoding allowLossyConversion:YES];
-      NSString* fileName = data ? [[NSString alloc] initWithData:data encoding:NSISOLatin1StringEncoding] : nil;
-      if (fileName) {
-        [self setValue:[NSString stringWithFormat:@"attachment; filename=\"%@\"", fileName] forAdditionalHeader:@"Content-Disposition"];
-        ARC_RELEASE(fileName);
+    if (attachment) {
+      NSString* fileName = [path lastPathComponent];
+      NSData* data = [[fileName stringByReplacingOccurrencesOfString:@"\"" withString:@""] dataUsingEncoding:NSISOLatin1StringEncoding allowLossyConversion:YES];
+      NSString* lossyFileName = data ? [[NSString alloc] initWithData:data encoding:NSISOLatin1StringEncoding] : nil;
+      if (lossyFileName) {
+        NSString* value = [NSString stringWithFormat:@"attachment; filename=\"%@\"; filename*=UTF-8''%@", lossyFileName, GCDWebServerEscapeURLString(fileName)];
+        [self setValue:value forAdditionalHeader:@"Content-Disposition"];
+        ARC_RELEASE(lossyFileName);
       } else {
         DNOT_REACHED();
       }
