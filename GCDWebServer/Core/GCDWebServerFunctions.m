@@ -79,13 +79,11 @@ NSString* GCDWebServerNormalizeHeaderValue(NSString* value) {
 }
 
 NSString* GCDWebServerTruncateHeaderValue(NSString* value) {
-  DCHECK([value isEqualToString:GCDWebServerNormalizeHeaderValue(value)]);
   NSRange range = [value rangeOfString:@";"];
   return range.location != NSNotFound ? [value substringToIndex:range.location] : value;
 }
 
 NSString* GCDWebServerExtractHeaderValueParameter(NSString* value, NSString* name) {
-  DCHECK([value isEqualToString:GCDWebServerNormalizeHeaderValue(value)]);
   NSString* parameter = nil;
   NSScanner* scanner = [[NSScanner alloc] initWithString:value];
   [scanner setCaseSensitive:NO];  // Assume parameter names are case-insensitive
