@@ -121,6 +121,7 @@ extern NSString* GCDWebServerExtractHeaderValueParameter(NSString* header, NSStr
 extern NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset);
 extern BOOL GCDWebServerIsTextContentType(NSString* type);
 extern NSString* GCDWebServerDescribeData(NSData* data, NSString* contentType);
+extern NSString* GCDWebServerComputeMD5Digest(NSString* format, ...) NS_FORMAT_FUNCTION(1,2);
 
 @interface GCDWebServerConnection ()
 - (id)initWithServer:(GCDWebServer*)server localAddress:(NSData*)localAddress remoteAddress:(NSData*)remoteAddress socket:(CFSocketNativeHandle)socket;
@@ -131,6 +132,7 @@ extern NSString* GCDWebServerDescribeData(NSData* data, NSString* contentType);
 @property(nonatomic, readonly) NSString* serverName;
 @property(nonatomic, readonly) NSString* authenticationRealm;
 @property(nonatomic, readonly) NSString* authenticationBasicAccount;
+@property(nonatomic, readonly) NSString* authenticationDigestAccount;
 @property(nonatomic, readonly) BOOL shouldAutomaticallyMapHEADToGET;
 - (void)willStartConnection:(GCDWebServerConnection*)connection;
 - (void)didEndConnection:(GCDWebServerConnection*)connection;

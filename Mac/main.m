@@ -130,12 +130,13 @@ int main(int argc, const char* argv[]) {
     BOOL recording = NO;
     NSString* rootDirectory = NSHomeDirectory();
     NSString* testDirectory = nil;
+    NSString* authenticationMethod = nil;
     NSString* authenticationRealm = nil;
     NSString* authenticationUser = nil;
     NSString* authenticationPassword = nil;
     
     if (argc == 1) {
-      fprintf(stdout, "Usage: %s [-mode webServer | htmlPage | htmlForm | webDAV | webUploader | streamingResponse] [-record] [-root directory] [-tests directory] [-authenticationRealm realm] [-authenticationUser user] [-authenticationPassword password]\n\n", basename((char*)argv[0]));
+      fprintf(stdout, "Usage: %s [-mode webServer | htmlPage | htmlForm | webDAV | webUploader | streamingResponse] [-record] [-root directory] [-tests directory] [-authenticationMethod Basic | Digest] [-authenticationRealm realm] [-authenticationUser user] [-authenticationPassword password]\n\n", basename((char*)argv[0]));
     } else {
       for (int i = 1; i < argc; ++i) {
         if (argv[i][0] != '-') {
@@ -164,6 +165,9 @@ int main(int argc, const char* argv[]) {
         } else if (!strcmp(argv[i], "-tests") && (i + 1 < argc)) {
           ++i;
           testDirectory = [[[NSFileManager defaultManager] stringWithFileSystemRepresentation:argv[i] length:strlen(argv[i])] stringByStandardizingPath];
+        } else if (!strcmp(argv[i], "-authenticationMethod") && (i + 1 < argc)) {
+          ++i;
+          authenticationMethod = [NSString stringWithUTF8String:argv[i]];
         } else if (!strcmp(argv[i], "-authenticationRealm") && (i + 1 < argc)) {
           ++i;
           authenticationRealm = [NSString stringWithUTF8String:argv[i]];
@@ -296,11 +300,16 @@ int main(int argc, const char* argv[]) {
         NSMutableDictionary* options = [NSMutableDictionary dictionary];
         [options setObject:@8080 forKey:GCDWebServerOption_Port];
         [options setObject:@"" forKey:GCDWebServerOption_BonjourName];
-        if (authenticationUser && authenticationPassword) {
+        if ([authenticationMethod isEqualToString:@"Basic"]) {
           [options setObject:GCDWebServerAuthenticationMethod_Basic forKey:GCDWebServerOption_AuthenticationMethod];
           [options setValue:authenticationRealm forKey:GCDWebServerOption_AuthenticationRealm];
-          [options setObject:authenticationUser forKey:GCDWebServerOption_AuthenticationUser];
-          [options setObject:authenticationPassword forKey:GCDWebServerOption_AuthenticationPassword];
+          [options setValue:authenticationUser forKey:GCDWebServerOption_AuthenticationUser];
+          [options setValue:authenticationPassword forKey:GCDWebServerOption_AuthenticationPassword];
+        } else if ([authenticationMethod isEqualToString:@"Digest"]) {
+          [options setObject:GCDWebServerAuthenticationMethod_DigestAccess forKey:GCDWebServerOption_AuthenticationMethod];
+          [options setValue:authenticationRealm forKey:GCDWebServerOption_AuthenticationRealm];
+          [options setValue:authenticationUser forKey:GCDWebServerOption_AuthenticationUser];
+          [options setValue:authenticationPassword forKey:GCDWebServerOption_AuthenticationPassword];
         }
         if ([webServer runWithOptions:options]) {
           result = 0;

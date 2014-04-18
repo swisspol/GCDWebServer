@@ -58,6 +58,7 @@ extern NSString* const GCDWebServerOption_AutomaticallySuspendInBackground;  // 
 #endif
 
 extern NSString* const GCDWebServerAuthenticationMethod_Basic;
+extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 
 @class GCDWebServer;
 

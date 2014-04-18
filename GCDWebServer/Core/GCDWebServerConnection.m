@@ -48,6 +48,7 @@ static NSData* _CRLFData = nil;
 static NSData* _CRLFCRLFData = nil;
 static NSData* _continueData = nil;
 static NSData* _lastChunkData = nil;
+static NSString* _digestAuthenticationNonce = nil;
 #ifdef __GCDWEBSERVER_ENABLE_TESTING__
 static int32_t _connectionCounter = 0;
 #endif
@@ -356,6 +357,11 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   }
   if (_lastChunkData == nil) {
     _lastChunkData = [[NSData alloc] initWithBytes:"0\r\n\r\n" length:5];
+  }
+  if (_digestAuthenticationNonce == nil) {
+    CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
+    _digestAuthenticationNonce = ARC_RETAIN(GCDWebServerComputeMD5Digest(@"%@", ARC_BRIDGE_RELEASE(CFUUIDCreateString(kCFAllocatorDefault, uuid))));
+    CFRelease(uuid);
   }
 }
 
@@ -707,14 +713,45 @@ static NSString* _StringFromAddressData(NSData* data) {
 #endif
 }
 
+// https://tools.ietf.org/html/rfc2617
 - (GCDWebServerResponse*)preflightRequest:(GCDWebServerRequest*)request {
   LOG_DEBUG(@"Connection on socket %i preflighting request \"%@ %@\" with %lu bytes body", _socket, _virtualHEAD ? @"HEAD" : _request.method, _request.path, (unsigned long)_bytesRead);
   GCDWebServerResponse* response = nil;
   if (_server.authenticationBasicAccount) {
+    BOOL authenticated = NO;
     NSString* authorizationHeader = [request.headers objectForKey:@"Authorization"];
-    if (![authorizationHeader hasPrefix:@"Basic "] || ![[authorizationHeader substringFromIndex:6] isEqualToString:_server.authenticationBasicAccount]) {
+    if ([authorizationHeader hasPrefix:@"Basic "]) {
+      NSString* basicAccount = [authorizationHeader substringFromIndex:6];
+      if ([basicAccount isEqualToString:_server.authenticationBasicAccount]) {
+        authenticated = YES;
+      }
+    }
+    if (!authenticated) {
       response = [GCDWebServerResponse responseWithStatusCode:kGCDWebServerHTTPStatusCode_Unauthorized];
       [response setValue:[NSString stringWithFormat:@"Basic realm=\"%@\"", _server.authenticationRealm] forAdditionalHeader:@"WWW-Authenticate"];
+    }
+  } else if (_server.authenticationDigestAccount) {
+    BOOL authenticated = NO;
+    BOOL isStaled = NO;
+    NSString* authorizationHeader = [request.headers objectForKey:@"Authorization"];
+    if ([authorizationHeader hasPrefix:@"Digest "]) {
+      NSString* nonce = GCDWebServerExtractHeaderValueParameter(authorizationHeader, @"nonce");
+      if ([nonce isEqualToString:_digestAuthenticationNonce]) {  // TODO: Also check "realm" and "username" provided by client
+        NSString* uri = GCDWebServerExtractHeaderValueParameter(authorizationHeader, @"uri");
+        NSString* actualResponse = GCDWebServerExtractHeaderValueParameter(authorizationHeader, @"response");
+        NSString* ha1 = _server.authenticationDigestAccount;
+        NSString* ha2 = GCDWebServerComputeMD5Digest(@"%@:%@", request.method, uri);  // We cannot use "request.path" as the query string is required
+        NSString* expectedResponse = GCDWebServerComputeMD5Digest(@"%@:%@:%@", ha1, _digestAuthenticationNonce, ha2);
+        if ([actualResponse isEqualToString:expectedResponse]) {
+          authenticated = YES;
+        }
+      } else if (nonce.length) {
+        isStaled = YES;
+      }
+    }
+    if (!authenticated) {
+      response = [GCDWebServerResponse responseWithStatusCode:kGCDWebServerHTTPStatusCode_Unauthorized];
+      [response setValue:[NSString stringWithFormat:@"Digest realm=\"%@\", nonce=\"%@\"%@", _server.authenticationRealm, _digestAuthenticationNonce, isStaled ? @", stale=TRUE" : @""] forAdditionalHeader:@"WWW-Authenticate"];  // TODO: Support Quality of Protection ("qop")
     }
   }
   return response;

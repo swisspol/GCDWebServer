@@ -18,7 +18,7 @@ Extra built-in features:
 * [HTTP compression](https://en.wikipedia.org/wiki/HTTP_compression) with gzip for request and response HTTP bodies
 * [HTTP range](https://en.wikipedia.org/wiki/Byte_serving) support for requests of local files
 * Automatically handle transitions between foreground, background and suspended modes in iOS apps
-* [Basic Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication) for simple password protection
+* [Basic](https://en.wikipedia.org/wiki/Basic_access_authentication) and [Digest Access](https://en.wikipedia.org/wiki/Digest_access_authentication) Authentications for password protection
 
 Included extensions:
 * [GCDWebUploader](GCDWebUploader/GCDWebUploader.h): subclass of ```GCDWebServer``` that implements an interface for uploading and downloading files using a web browser
