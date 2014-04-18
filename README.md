@@ -24,10 +24,6 @@ Included extensions:
 * [GCDWebUploader](GCDWebUploader/GCDWebUploader.h): subclass of ```GCDWebServer``` that implements an interface for uploading and downloading files using a web browser
 * [GCDWebDAVServer](GCDWebDAVServer/GCDWebDAVServer.h): subclass of ```GCDWebServer``` that implements a class 1 [WebDAV](https://en.wikipedia.org/wiki/WebDAV) server (with partial class 2 support for OS X Finder)
 
-What's not available out of the box but can be implemented on top of the API:
-* Advanced authentication like [digest access](https://en.wikipedia.org/wiki/Digest_access_authentication)
-* Web forms submitted using "multipart/mixed"
-
 What's not supported (but not really required from an embedded HTTP server):
 * Keep-alive connections
 * HTTPS
