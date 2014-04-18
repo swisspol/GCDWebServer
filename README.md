@@ -58,6 +58,7 @@ These code snippets show how to implement a custom HTTP server that runs on port
 **OS X version (command line tool):**
 ```objectivec
 #import "GCDWebServer.h"
+#import "GCDWebServerDataResponse.h"
 
 int main(int argc, const char* argv[]) {
   @autoreleasepool {
@@ -88,6 +89,7 @@ int main(int argc, const char* argv[]) {
 **iOS version:**
 ```objectivec
 #import "GCDWebServer.h"
+#import "GCDWebServerDataResponse.h"
 
 static GCDWebServer* _webServer = nil;  // This should really be an ivar of your application's delegate class
 
