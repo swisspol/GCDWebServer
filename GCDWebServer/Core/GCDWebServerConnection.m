@@ -717,36 +717,43 @@ static NSString* _StringFromAddressData(NSData* data) {
 - (GCDWebServerResponse*)preflightRequest:(GCDWebServerRequest*)request {
   LOG_DEBUG(@"Connection on socket %i preflighting request \"%@ %@\" with %lu bytes body", _socket, _virtualHEAD ? @"HEAD" : _request.method, _request.path, (unsigned long)_bytesRead);
   GCDWebServerResponse* response = nil;
-  if (_server.authenticationBasicAccount) {
-    BOOL authenticated = NO;
+  if (_server.authenticationBasicAccounts) {
+    __block BOOL authenticated = NO;
     NSString* authorizationHeader = [request.headers objectForKey:@"Authorization"];
     if ([authorizationHeader hasPrefix:@"Basic "]) {
       NSString* basicAccount = [authorizationHeader substringFromIndex:6];
-      if ([basicAccount isEqualToString:_server.authenticationBasicAccount]) {
-        authenticated = YES;
-      }
+      [_server.authenticationBasicAccounts enumerateKeysAndObjectsUsingBlock:^(NSString* username, NSString* digest, BOOL* stop) {
+        if ([basicAccount isEqualToString:digest]) {
+          authenticated = YES;
+          *stop = YES;
+        }
+      }];
     }
     if (!authenticated) {
       response = [GCDWebServerResponse responseWithStatusCode:kGCDWebServerHTTPStatusCode_Unauthorized];
       [response setValue:[NSString stringWithFormat:@"Basic realm=\"%@\"", _server.authenticationRealm] forAdditionalHeader:@"WWW-Authenticate"];
     }
-  } else if (_server.authenticationDigestAccount) {
+  } else if (_server.authenticationDigestAccounts) {
     BOOL authenticated = NO;
     BOOL isStaled = NO;
     NSString* authorizationHeader = [request.headers objectForKey:@"Authorization"];
     if ([authorizationHeader hasPrefix:@"Digest "]) {
-      NSString* nonce = GCDWebServerExtractHeaderValueParameter(authorizationHeader, @"nonce");
-      if ([nonce isEqualToString:_digestAuthenticationNonce]) {  // TODO: Also check "realm" and "username" provided by client
-        NSString* uri = GCDWebServerExtractHeaderValueParameter(authorizationHeader, @"uri");
-        NSString* actualResponse = GCDWebServerExtractHeaderValueParameter(authorizationHeader, @"response");
-        NSString* ha1 = _server.authenticationDigestAccount;
-        NSString* ha2 = GCDWebServerComputeMD5Digest(@"%@:%@", request.method, uri);  // We cannot use "request.path" as the query string is required
-        NSString* expectedResponse = GCDWebServerComputeMD5Digest(@"%@:%@:%@", ha1, _digestAuthenticationNonce, ha2);
-        if ([actualResponse isEqualToString:expectedResponse]) {
-          authenticated = YES;
+      NSString* realm = GCDWebServerExtractHeaderValueParameter(authorizationHeader, @"realm");
+      if ([realm isEqualToString:_server.authenticationRealm]) {
+        NSString* nonce = GCDWebServerExtractHeaderValueParameter(authorizationHeader, @"nonce");
+        if ([nonce isEqualToString:_digestAuthenticationNonce]) {
+          NSString* username = GCDWebServerExtractHeaderValueParameter(authorizationHeader, @"username");
+          NSString* uri = GCDWebServerExtractHeaderValueParameter(authorizationHeader, @"uri");
+          NSString* actualResponse = GCDWebServerExtractHeaderValueParameter(authorizationHeader, @"response");
+          NSString* ha1 = [_server.authenticationDigestAccounts objectForKey:username];
+          NSString* ha2 = GCDWebServerComputeMD5Digest(@"%@:%@", request.method, uri);  // We cannot use "request.path" as the query string is required
+          NSString* expectedResponse = GCDWebServerComputeMD5Digest(@"%@:%@:%@", ha1, _digestAuthenticationNonce, ha2);
+          if ([actualResponse isEqualToString:expectedResponse]) {
+            authenticated = YES;
+          }
+        } else if (nonce.length) {
+          isStaled = YES;
         }
-      } else if (nonce.length) {
-        isStaled = YES;
       }
     }
     if (!authenticated) {

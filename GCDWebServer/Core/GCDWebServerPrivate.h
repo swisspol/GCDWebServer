@@ -131,8 +131,8 @@ extern NSString* GCDWebServerComputeMD5Digest(NSString* format, ...) NS_FORMAT_F
 @property(nonatomic, readonly) NSArray* handlers;
 @property(nonatomic, readonly) NSString* serverName;
 @property(nonatomic, readonly) NSString* authenticationRealm;
-@property(nonatomic, readonly) NSString* authenticationBasicAccount;
-@property(nonatomic, readonly) NSString* authenticationDigestAccount;
+@property(nonatomic, readonly) NSDictionary* authenticationBasicAccounts;
+@property(nonatomic, readonly) NSDictionary* authenticationDigestAccounts;
 @property(nonatomic, readonly) BOOL shouldAutomaticallyMapHEADToGET;
 - (void)willStartConnection:(GCDWebServerConnection*)connection;
 - (void)didEndConnection:(GCDWebServerConnection*)connection;

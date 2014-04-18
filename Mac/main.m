@@ -300,16 +300,14 @@ int main(int argc, const char* argv[]) {
         NSMutableDictionary* options = [NSMutableDictionary dictionary];
         [options setObject:@8080 forKey:GCDWebServerOption_Port];
         [options setObject:@"" forKey:GCDWebServerOption_BonjourName];
-        if ([authenticationMethod isEqualToString:@"Basic"]) {
-          [options setObject:GCDWebServerAuthenticationMethod_Basic forKey:GCDWebServerOption_AuthenticationMethod];
+        if (authenticationUser && authenticationPassword) {
           [options setValue:authenticationRealm forKey:GCDWebServerOption_AuthenticationRealm];
-          [options setValue:authenticationUser forKey:GCDWebServerOption_AuthenticationUser];
-          [options setValue:authenticationPassword forKey:GCDWebServerOption_AuthenticationPassword];
-        } else if ([authenticationMethod isEqualToString:@"Digest"]) {
-          [options setObject:GCDWebServerAuthenticationMethod_DigestAccess forKey:GCDWebServerOption_AuthenticationMethod];
-          [options setValue:authenticationRealm forKey:GCDWebServerOption_AuthenticationRealm];
-          [options setValue:authenticationUser forKey:GCDWebServerOption_AuthenticationUser];
-          [options setValue:authenticationPassword forKey:GCDWebServerOption_AuthenticationPassword];
+          [options setObject:@{authenticationUser: authenticationPassword} forKey:GCDWebServerOption_AuthenticationAccounts];
+          if ([authenticationMethod isEqualToString:@"Basic"]) {
+            [options setObject:GCDWebServerAuthenticationMethod_Basic forKey:GCDWebServerOption_AuthenticationMethod];
+          } else if ([authenticationMethod isEqualToString:@"Digest"]) {
+            [options setObject:GCDWebServerAuthenticationMethod_DigestAccess forKey:GCDWebServerOption_AuthenticationMethod];
+          }
         }
         if ([webServer runWithOptions:options]) {
           result = 0;

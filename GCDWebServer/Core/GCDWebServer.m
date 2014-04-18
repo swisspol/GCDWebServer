@@ -55,8 +55,8 @@
   NSDictionary* _options;
   NSString* _serverName;
   NSString* _authenticationRealm;
-  NSString* _authenticationBasicAccount;
-  NSString* _authenticationDigestAccount;
+  NSMutableDictionary* _authenticationBasicAccounts;
+  NSMutableDictionary* _authenticationDigestAccounts;
   Class _connectionClass;
   BOOL _mapHEADToGET;
   CFTimeInterval _disconnectDelay;
@@ -86,8 +86,7 @@ NSString* const GCDWebServerOption_MaxPendingConnections = @"MaxPendingConnectio
 NSString* const GCDWebServerOption_ServerName = @"ServerName";
 NSString* const GCDWebServerOption_AuthenticationMethod = @"AuthenticationMethod";
 NSString* const GCDWebServerOption_AuthenticationRealm = @"AuthenticationRealm";
-NSString* const GCDWebServerOption_AuthenticationUser = @"AuthenticationUser";
-NSString* const GCDWebServerOption_AuthenticationPassword = @"AuthenticationPassword";
+NSString* const GCDWebServerOption_AuthenticationAccounts = @"AuthenticationAccounts";
 NSString* const GCDWebServerOption_ConnectionClass = @"ConnectionClass";
 NSString* const GCDWebServerOption_AutomaticallyMapHEADToGET = @"AutomaticallyMapHEADToGET";
 NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval = @"ConnectedStateCoalescingInterval";
@@ -157,7 +156,7 @@ static void _SignalHandler(int signal) {
 @implementation GCDWebServer
 
 @synthesize delegate=_delegate, handlers=_handlers, port=_port, serverName=_serverName, authenticationRealm=_authenticationRealm,
-            authenticationBasicAccount=_authenticationBasicAccount, authenticationDigestAccount=_authenticationDigestAccount,
+            authenticationBasicAccounts=_authenticationBasicAccounts, authenticationDigestAccounts=_authenticationDigestAccounts,
             shouldAutomaticallyMapHEADToGET=_mapHEADToGET;
 
 #ifndef __GCDWEBSERVER_LOGGING_HEADER__
@@ -383,14 +382,18 @@ static inline NSString* _EncodeBase64(NSString* string) {
         NSString* authenticationMethod = _GetOption(_options, GCDWebServerOption_AuthenticationMethod, nil);
         if ([authenticationMethod isEqualToString:GCDWebServerAuthenticationMethod_Basic]) {
           _authenticationRealm = [_GetOption(_options, GCDWebServerOption_AuthenticationRealm, _serverName) copy];
-          NSString* user = _GetOption(_options, GCDWebServerOption_AuthenticationUser, @"");
-          NSString* password = _GetOption(_options, GCDWebServerOption_AuthenticationPassword, @"");
-          _authenticationBasicAccount = ARC_RETAIN(_EncodeBase64([NSString stringWithFormat:@"%@:%@", user, password]));
+          _authenticationBasicAccounts = [[NSMutableDictionary alloc] init];
+          NSDictionary* accounts = _GetOption(_options, GCDWebServerOption_AuthenticationAccounts, @{});
+          [accounts enumerateKeysAndObjectsUsingBlock:^(NSString* username, NSString* password, BOOL* stop) {
+            [_authenticationBasicAccounts setObject:_EncodeBase64([NSString stringWithFormat:@"%@:%@", username, password]) forKey:username];
+          }];
         } else if ([authenticationMethod isEqualToString:GCDWebServerAuthenticationMethod_DigestAccess]) {
           _authenticationRealm = [_GetOption(_options, GCDWebServerOption_AuthenticationRealm, _serverName) copy];
-          NSString* user = _GetOption(_options, GCDWebServerOption_AuthenticationUser, @"");
-          NSString* password = _GetOption(_options, GCDWebServerOption_AuthenticationPassword, @"");
-          _authenticationDigestAccount = ARC_RETAIN(GCDWebServerComputeMD5Digest(@"%@:%@:%@", user, _authenticationRealm, password));
+          _authenticationDigestAccounts = [[NSMutableDictionary alloc] init];
+          NSDictionary* accounts = _GetOption(_options, GCDWebServerOption_AuthenticationAccounts, @{});
+          [accounts enumerateKeysAndObjectsUsingBlock:^(NSString* username, NSString* password, BOOL* stop) {
+            [_authenticationDigestAccounts setObject:GCDWebServerComputeMD5Digest(@"%@:%@:%@", username, _authenticationRealm, password) forKey:username];
+          }];
         }
         _connectionClass = _GetOption(_options, GCDWebServerOption_ConnectionClass, [GCDWebServerConnection class]);
         _mapHEADToGET = [_GetOption(_options, GCDWebServerOption_AutomaticallyMapHEADToGET, @YES) boolValue];
@@ -508,10 +511,10 @@ static inline NSString* _EncodeBase64(NSString* string) {
   _serverName = nil;
   ARC_RELEASE(_authenticationRealm);
   _authenticationRealm = nil;
-  ARC_RELEASE(_authenticationBasicAccount);
-  _authenticationBasicAccount = nil;
-  ARC_RELEASE(_authenticationDigestAccount);
-  _authenticationDigestAccount = nil;
+  ARC_RELEASE(_authenticationBasicAccounts);
+  _authenticationBasicAccounts = nil;
+  ARC_RELEASE(_authenticationDigestAccounts);
+  _authenticationDigestAccounts = nil;
   
   LOG_INFO(@"%@ stopped", [self class]);
   if ([_delegate respondsToSelector:@selector(webServerDidStop:)]) {

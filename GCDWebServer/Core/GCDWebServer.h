@@ -48,8 +48,7 @@ extern NSString* const GCDWebServerOption_MaxPendingConnections;  // NSNumber / 
 extern NSString* const GCDWebServerOption_ServerName;  // NSString (default is server class name)
 extern NSString* const GCDWebServerOption_AuthenticationMethod;  // One of "GCDWebServerAuthenticationMethod_..." (default is nil i.e. no authentication)
 extern NSString* const GCDWebServerOption_AuthenticationRealm;  // NSString (default is server name)
-extern NSString* const GCDWebServerOption_AuthenticationUser;  // NSString
-extern NSString* const GCDWebServerOption_AuthenticationPassword;  // NSString
+extern NSString* const GCDWebServerOption_AuthenticationAccounts;  // NSDictionary of username / password (default is nil i.e. no accounts)
 extern NSString* const GCDWebServerOption_ConnectionClass;  // Subclass of GCDWebServerConnection (default is GCDWebServerConnection class)
 extern NSString* const GCDWebServerOption_AutomaticallyMapHEADToGET;  // NSNumber / BOOL (default is YES)
 extern NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval;  // NSNumber / double (default is 1.0 seconds - set to <=0.0 to disable coaslescing of -webServerDidConnect: / -webServerDidDisconnect:)
@@ -57,7 +56,7 @@ extern NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval;  // 
 extern NSString* const GCDWebServerOption_AutomaticallySuspendInBackground;  // NSNumber / BOOL (default is YES)
 #endif
 
-extern NSString* const GCDWebServerAuthenticationMethod_Basic;
+extern NSString* const GCDWebServerAuthenticationMethod_Basic;  // Not recommended as password is sent in clear
 extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 
 @class GCDWebServer;
