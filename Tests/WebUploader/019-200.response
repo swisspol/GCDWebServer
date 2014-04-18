@@ -4,7 +4,7 @@ Server: GCDWebUploader
 Content-Type: text/plain
 Last-Modified: Thu, 10 Apr 2014 11:10:14 GMT
 Date: Sat, 12 Apr 2014 05:36:17 GMT
-Content-Disposition: attachment; filename="Copy.txt"
+Content-Disposition: attachment; filename="Copy.txt"; filename*=UTF-8''Copy.txt
 Content-Length: 271
 Cache-Control: no-cache
 Etag: 73598983/1397128214/0
