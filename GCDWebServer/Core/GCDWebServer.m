@@ -335,12 +335,16 @@ static void _ConnectedTimerCallBack(CFRunLoopTimerRef timer, void* info) {
 }
 
 static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* error, void* info) {
+  DCHECK([NSThread isMainThread]);
   @autoreleasepool {
     if (error->error) {
       LOG_ERROR(@"Bonjour error %i (domain %i)", (int)error->error, (int)error->domain);
     } else {
       GCDWebServer* server = (ARC_BRIDGE GCDWebServer*)info;
       LOG_INFO(@"%@ now reachable at %@", [server class], server.bonjourServerURL);
+      if ([server.delegate respondsToSelector:@selector(webServerDidCompleteBonjourRegistration:)]) {
+        [server.delegate webServerDidCompleteBonjourRegistration:server];
+      }
     }
   }
 }

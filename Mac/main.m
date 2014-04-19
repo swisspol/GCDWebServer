@@ -65,6 +65,10 @@ typedef enum {
   [self _logDelegateCall:_cmd];
 }
 
+- (void)webServerDidCompleteBonjourRegistration:(GCDWebServer*)server {
+  [self _logDelegateCall:_cmd];
+}
+
 - (void)webServerDidConnect:(GCDWebServer*)server {
   [self _logDelegateCall:_cmd];
 }

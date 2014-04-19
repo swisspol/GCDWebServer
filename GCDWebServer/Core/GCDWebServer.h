@@ -192,6 +192,12 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 - (void)webServerDidStart:(GCDWebServer*)server;
 
 /**
+ *  This method is called after the Bonjour registration for the server has
+ *  successfully completed.
+ */
+- (void)webServerDidCompleteBonjourRegistration:(GCDWebServer*)server;
+
+/**
  *  This method is called when the first GCDWebServerConnection is opened by the
  *  server to serve a series of HTTP requests. A series is ongoing as long as
  *  new HTTP requests keep coming (and new GCDWebServerConnection instances keep
