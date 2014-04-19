@@ -722,10 +722,10 @@ static inline NSString* _EncodeBase64(NSString* string) {
 @implementation GCDWebServer (GETHandlers)
 
 - (void)addGETHandlerForPath:(NSString*)path staticData:(NSData*)staticData contentType:(NSString*)contentType cacheAge:(NSUInteger)cacheAge {
-  GCDWebServerResponse* response = [GCDWebServerDataResponse responseWithData:staticData contentType:contentType];
-  response.cacheControlMaxAge = cacheAge;
   [self addHandlerForMethod:@"GET" path:path requestClass:[GCDWebServerRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
     
+    GCDWebServerResponse* response = [GCDWebServerDataResponse responseWithData:staticData contentType:contentType];
+    response.cacheControlMaxAge = cacheAge;
     return response;
     
   }];
