@@ -76,10 +76,7 @@ int main(int argc, const char* argv[]) {
     }];
     
     // Use convenience method that runs server on port 8080 until SIGINT received (i.e. Ctrl-C in Terminal)
-    [webServer runWithPort:8080];
-    
-    // Destroy server (unnecessary if using ARC)
-    [webServer release];
+    [webServer runWithPort:8080 bonjourName:nil];
     
   }
   return 0;
