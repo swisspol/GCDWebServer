@@ -46,7 +46,7 @@
 @private
   NSString* _uploadDirectory;
   NSArray* _allowedExtensions;
-  BOOL _showHidden;
+  BOOL _allowHidden;
   NSString* _title;
   NSString* _header;
   NSString* _prologue;
@@ -94,7 +94,7 @@
   }
   
   NSString* directoryName = [absolutePath lastPathComponent];
-  if (!_showHidden && [directoryName hasPrefix:@"."]) {
+  if (!_allowHidden && [directoryName hasPrefix:@"."]) {
     return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Listing directory name \"%@\" is not allowed", directoryName];
   }
   
@@ -106,7 +106,7 @@
   
   NSMutableArray* array = [NSMutableArray array];
   for (NSString* item in [contents sortedArrayUsingSelector:@selector(localizedStandardCompare:)]) {
-    if (_showHidden || ![item hasPrefix:@"."]) {
+    if (_allowHidden || ![item hasPrefix:@"."]) {
       NSDictionary* attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[absolutePath stringByAppendingPathComponent:item] error:NULL];
       NSString* type = [attributes objectForKey:NSFileType];
       if ([type isEqualToString:NSFileTypeRegular] && [self _checkFileExtension:item]) {
@@ -138,7 +138,7 @@
   }
   
   NSString* fileName = [absolutePath lastPathComponent];
-  if (([fileName hasPrefix:@"."] && !_showHidden) || ![self _checkFileExtension:fileName]) {
+  if (([fileName hasPrefix:@"."] && !_allowHidden) || ![self _checkFileExtension:fileName]) {
     return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Downlading file name \"%@\" is not allowed", fileName];
   }
   
@@ -155,7 +155,7 @@
   NSString* contentType = (range.location != NSNotFound ? @"application/json" : @"text/plain; charset=utf-8");  // Required when using iFrame transport (see https://github.com/blueimp/jQuery-File-Upload/wiki/Setup)
   
   GCDWebServerMultiPartFile* file = [request.files objectForKey:@"files[]"];
-  if ((!_showHidden && [file.fileName hasPrefix:@"."]) || ![self _checkFileExtension:file.fileName]) {
+  if ((!_allowHidden && [file.fileName hasPrefix:@"."]) || ![self _checkFileExtension:file.fileName]) {
     return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Uploaded file name \"%@\" is not allowed", file.fileName];
   }
   NSString* relativePath = [(GCDWebServerMultiPartArgument*)[request.arguments objectForKey:@"path"] string];
@@ -190,7 +190,7 @@
   NSString* newAbsolutePath = [self _uniquePathForPath:[_uploadDirectory stringByAppendingPathComponent:newRelativePath]];
   
   NSString* itemName = [newAbsolutePath lastPathComponent];
-  if ((!_showHidden && [itemName hasPrefix:@"."]) || (!isDirectory && ![self _checkFileExtension:itemName])) {
+  if ((!_allowHidden && [itemName hasPrefix:@"."]) || (!isDirectory && ![self _checkFileExtension:itemName])) {
     return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Moving to item name \"%@\" is not allowed", itemName];
   }
   
@@ -220,7 +220,7 @@
   }
   
   NSString* itemName = [absolutePath lastPathComponent];
-  if (([itemName hasPrefix:@"."] && !_showHidden) || (!isDirectory && ![self _checkFileExtension:itemName])) {
+  if (([itemName hasPrefix:@"."] && !_allowHidden) || (!isDirectory && ![self _checkFileExtension:itemName])) {
     return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Deleting item name \"%@\" is not allowed", itemName];
   }
   
@@ -246,7 +246,7 @@
   NSString* absolutePath = [self _uniquePathForPath:[_uploadDirectory stringByAppendingPathComponent:relativePath]];
   
   NSString* directoryName = [absolutePath lastPathComponent];
-  if (!_showHidden && [directoryName hasPrefix:@"."]) {
+  if (!_allowHidden && [directoryName hasPrefix:@"."]) {
     return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Creating directory name \"%@\" is not allowed", directoryName];
   }
   
@@ -271,7 +271,7 @@
 
 @implementation GCDWebUploader
 
-@synthesize uploadDirectory=_uploadDirectory, allowedFileExtensions=_allowedExtensions, showHiddenFiles=_showHidden,
+@synthesize uploadDirectory=_uploadDirectory, allowedFileExtensions=_allowedExtensions, allowHiddenItems=_allowHidden,
             title=_title, header=_header, prologue=_prologue, epilogue=_epilogue, footer=_footer;
 
 - (instancetype)initWithUploadDirectory:(NSString*)path {

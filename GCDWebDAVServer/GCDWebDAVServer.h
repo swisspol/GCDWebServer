@@ -102,7 +102,7 @@
  *
  *  The default value is NO.
  */
-@property(nonatomic) BOOL showHiddenFiles;
+@property(nonatomic) BOOL allowHiddenItems;
 
 /**
  *  This method is the designated initializer for the class.

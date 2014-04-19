@@ -57,7 +57,7 @@
   NSString* documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
   _webServer = [[GCDWebUploader alloc] initWithUploadDirectory:documentsPath];
   _webServer.delegate = self;
-  _webServer.showHiddenFiles = YES;
+  _webServer.allowHiddenItems = YES;
   [_webServer start];
   
   return YES;

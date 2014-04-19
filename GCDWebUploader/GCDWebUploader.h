@@ -97,7 +97,7 @@
  *
  *  The default value is NO.
  */
-@property(nonatomic) BOOL showHiddenFiles;
+@property(nonatomic) BOOL allowHiddenItems;
 
 /**
  *  Sets the title for the uploader interface.
