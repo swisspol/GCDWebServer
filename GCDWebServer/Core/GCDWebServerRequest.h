@@ -126,12 +126,12 @@
 @property(nonatomic, readonly) NSUInteger contentLength;
 
 /**
- *  Returns the parsed "If-Modified-Since" header or nil if absent of malformed.
+ *  Returns the parsed "If-Modified-Since" header or nil if absent or malformed.
  */
 @property(nonatomic, readonly) NSDate* ifModifiedSince;
 
 /**
- *  Returns the parsed "If-None-Match" header or nil if absent of malformed.
+ *  Returns the parsed "If-None-Match" header or nil if absent or malformed.
  */
 @property(nonatomic, readonly) NSString* ifNoneMatch;
 

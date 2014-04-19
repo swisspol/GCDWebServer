@@ -27,7 +27,25 @@
 
 #import "GCDWebServerDataRequest.h"
 
+/**
+ *  The GCDWebServerURLEncodedFormRequest subclass of GCDWebServerRequest
+ *  parses the body of the HTTP request as a URL encoded form using
+ *  GCDWebServerParseURLEncodedForm().
+ */
 @interface GCDWebServerURLEncodedFormRequest : GCDWebServerDataRequest
-@property(nonatomic, readonly) NSDictionary* arguments;  // Text encoding is extracted from Content-Type or defaults to UTF-8
+
+/**
+ *  Returns the unescaped names and values for the URL encoded form.
+ *
+ *  The text encoding used to interpret the data is extracted from the
+ *  "Content-Type" header or defaults to UTF-8.
+ */
+@property(nonatomic, readonly) NSDictionary* arguments;
+
+/**
+ *  Returns the MIME type for URL encoded forms
+ *  i.e. "application/x-www-form-urlencoded".
+ */
 + (NSString*)mimeType;
+
 @end

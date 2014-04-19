@@ -138,7 +138,7 @@
 @property(nonatomic, getter=isGZipContentEncodingEnabled) BOOL gzipContentEncodingEnabled;
 
 /**
- *  Creates a default response.
+ *  Creates an empty response.
  */
 + (instancetype)response;
 
@@ -166,7 +166,7 @@
 @interface GCDWebServerResponse (Extensions)
 
 /**
- *  Creates a default response with a specific HTTP status code.
+ *  Creates a empty response with a specific HTTP status code.
  */
 + (instancetype)responseWithStatusCode:(NSInteger)statusCode;
 
@@ -176,7 +176,7 @@
 + (instancetype)responseWithRedirect:(NSURL*)location permanent:(BOOL)permanent;
 
 /**
- *  Initializes a default response with a specific HTTP status code.
+ *  Initializes an empty response with a specific HTTP status code.
  */
 - (instancetype)initWithStatusCode:(NSInteger)statusCode;
 

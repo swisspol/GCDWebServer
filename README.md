@@ -4,9 +4,9 @@ Overview
 [![Build Status](https://travis-ci.org/swisspol/GCDWebServer.svg?branch=master)](https://travis-ci.org/swisspol/GCDWebServer)
 
 GCDWebServer is a modern and lightweight GCD based HTTP 1.1 server designed to be embedded in OS X & iOS apps. It was written from scratch with the following goals in mind:
-* Easy to use and understand architecture with only 4 core classes: server, connection, request and response (see "Understanding GCDWebServer's Architecture" below)
-* Well designed API for easy integration and customization
-* Entirely built with an event-driven design using [Grand Central Dispatch](http://en.wikipedia.org/wiki/Grand_Central_Dispatch) for maximal performance and concurrency
+* Elegant and easy to use architecture with only 4 core classes: server, connection, request and response (see "Understanding GCDWebServer's Architecture" below)
+* Well designed API with fully documented headers for easy integration and customization
+* Entirely built with an event-driven design using [Grand Central Dispatch](http://en.wikipedia.org/wiki/Grand_Central_Dispatch) for best performance and concurrency
 * No dependencies on third-party source code
 * Available under a friendly [New BSD License](LICENSE)
 
