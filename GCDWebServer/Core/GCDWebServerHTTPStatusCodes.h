@@ -30,12 +30,18 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ *  Convenience constants for "informational" HTTP status codes.
+ */
 typedef NS_ENUM(NSInteger, GCDWebServerInformationalHTTPStatusCode) {
   kGCDWebServerHTTPStatusCode_Continue = 100,
   kGCDWebServerHTTPStatusCode_SwitchingProtocols = 101,
   kGCDWebServerHTTPStatusCode_Processing = 102
 };
 
+/**
+ *  Convenience constants for "successful" HTTP status codes.
+ */
 typedef NS_ENUM(NSInteger, GCDWebServerSuccessfulHTTPStatusCode) {
   kGCDWebServerHTTPStatusCode_OK = 200,
   kGCDWebServerHTTPStatusCode_Created = 201,
@@ -48,6 +54,9 @@ typedef NS_ENUM(NSInteger, GCDWebServerSuccessfulHTTPStatusCode) {
   kGCDWebServerHTTPStatusCode_AlreadyReported = 208
 };
 
+/**
+ *  Convenience constants for "redirection" HTTP status codes.
+ */
 typedef NS_ENUM(NSInteger, GCDWebServerRedirectionHTTPStatusCode) {
   kGCDWebServerHTTPStatusCode_MultipleChoices = 300,
   kGCDWebServerHTTPStatusCode_MovedPermanently = 301,
@@ -59,6 +68,9 @@ typedef NS_ENUM(NSInteger, GCDWebServerRedirectionHTTPStatusCode) {
   kGCDWebServerHTTPStatusCode_PermanentRedirect = 308
 };
 
+/**
+ *  Convenience constants for "client error" HTTP status codes.
+ */
 typedef NS_ENUM(NSInteger, GCDWebServerClientErrorHTTPStatusCode) {
   kGCDWebServerHTTPStatusCode_BadRequest = 400,
   kGCDWebServerHTTPStatusCode_Unauthorized = 401,
@@ -87,6 +99,9 @@ typedef NS_ENUM(NSInteger, GCDWebServerClientErrorHTTPStatusCode) {
   kGCDWebServerHTTPStatusCode_RequestHeaderFieldsTooLarge = 431
 };
 
+/**
+ *  Convenience constants for "server error" HTTP status codes.
+ */
 typedef NS_ENUM(NSInteger, GCDWebServerServerErrorHTTPStatusCode) {
   kGCDWebServerHTTPStatusCode_InternalServerError = 500,
   kGCDWebServerHTTPStatusCode_NotImplemented = 501,

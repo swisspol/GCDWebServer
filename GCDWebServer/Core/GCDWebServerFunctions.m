@@ -43,8 +43,7 @@ static NSDateFormatter* _dateFormatterRFC822 = nil;
 static NSDateFormatter* _dateFormatterISO8601 = nil;
 static dispatch_queue_t _dateFormatterQueue = NULL;
 
-// HTTP/1.1 server must use RFC822
-// TODO: Handle RFC 850 and ANSI C's asctime() format (http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3)
+// TODO: Handle RFC 850 and ANSI C's asctime() format
 void GCDWebServerInitializeFunctions() {
   DCHECK([NSThread isMainThread]);  // NSDateFormatter should be initialized on main thread
   if (_dateFormatterRFC822 == nil) {
@@ -187,7 +186,6 @@ NSString* GCDWebServerUnescapeURLString(NSString* string) {
   return ARC_BRIDGE_RELEASE(CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault, (CFStringRef)string, CFSTR(""), kCFStringEncodingUTF8));
 }
 
-// http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4.1
 NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
   NSMutableDictionary* parameters = [NSMutableDictionary dictionary];
   NSScanner* scanner = [[NSScanner alloc] initWithString:form];

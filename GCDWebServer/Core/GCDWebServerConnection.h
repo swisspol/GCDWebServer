@@ -29,24 +29,132 @@
 
 @class GCDWebServerHandler;
 
+/**
+ *  The GCDWebServerConnection class is instantiated by GCDWebServer to handle
+ *  each new HTTP connection. Each instance stays alive until the connection is
+ *  closed.
+ *
+ *  You cannot use this class directly, but it is made public so you can
+ *  subclass it to override some hooks. Use the GCDWebServerOption_ConnectionClass
+ *  option for GCDWebServer to install your custom subclass.
+ *
+ *  @warning The GCDWebServerConnection retains the GCDWebServer
+ *  until the connection is closed.
+ */
 @interface GCDWebServerConnection : NSObject
+
+/**
+ *  Returns the GCDWebServer that owns the connection.
+ */
 @property(nonatomic, readonly) GCDWebServer* server;
-@property(nonatomic, readonly) NSData* localAddressData;  // struct sockaddr
+
+/**
+ *  Returns the address of the local peer (i.e. server) of the connection
+ *  as a raw "struct sockaddr".
+ */
+@property(nonatomic, readonly) NSData* localAddressData;
+
+/**
+ *  Returns the address of the local peer (i.e. server) of the connection
+ *  as a dotted string.
+ */
 @property(nonatomic, readonly) NSString* localAddressString;
-@property(nonatomic, readonly) NSData* remoteAddressData;  // struct sockaddr
+
+/**
+ *  Returns the address of the remote peer (i.e. client) of the connection
+ *  as a raw "struct sockaddr".
+ */
+@property(nonatomic, readonly) NSData* remoteAddressData;
+
+/**
+ *  Returns the address of the remote peer (i.e. client) of the connection
+ *  as a dotted string.
+ */
 @property(nonatomic, readonly) NSString* remoteAddressString;
+
+/**
+ *  Returns the total number of bytes received from the remote peer (i.e. client)
+ *  so far.
+ */
 @property(nonatomic, readonly) NSUInteger totalBytesRead;
+
+/**
+ *  Returns the total number of bytes sent to the remote peer (i.e. client) so far.
+ */
 @property(nonatomic, readonly) NSUInteger totalBytesWritten;
+
 @end
 
-// These methods can be called from any thread
+/**
+ *  Hooks to customize the behavior of GCDWebServer HTTP connections.
+ *
+ *  @warning These methods can be called on any GCD thread.
+ *  Be sure to also call "super" when overriding them.
+ */
 @interface GCDWebServerConnection (Subclassing)
-- (BOOL)open;  // Return NO to reject connection e.g. after validating local or remote addresses
-- (void)didReadBytes:(const void*)bytes length:(NSUInteger)length;  // Called after data has been read from the connection
-- (void)didWriteBytes:(const void*)bytes length:(NSUInteger)length;  // Called after data has been written to the connection
-- (GCDWebServerResponse*)preflightRequest:(GCDWebServerRequest*)request;  // Called before request is processed to return an override response bypassing processing or nil to continue - Default implementation checks authentication if applicable
-- (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block;  // Only called if the request can be processed
-- (GCDWebServerResponse*)overrideResponse:(GCDWebServerResponse*)response forRequest:(GCDWebServerRequest*)request;  // Default implementation replaces any response matching the "ETag" or "Last-Modified-Date" header of the request by a barebone "Not-Modified" (304) one
-- (void)abortRequest:(GCDWebServerRequest*)request withStatusCode:(NSInteger)statusCode;  // If request headers were malformed, "request" will be nil
+
+/**
+ *  This method is called when the connection is opened.
+ *  Return NO to reject the connection e.g. after validating the local
+ *  or remote address.
+ */
+- (BOOL)open;
+
+/**
+ *  This method is called whenever data has been received
+ *  from the remote peer (i.e. client).
+ */
+- (void)didReadBytes:(const void*)bytes length:(NSUInteger)length;
+
+/**
+ *  This method is called whenever data has been sent
+ *  to the remote peer (i.e. client).
+ */
+- (void)didWriteBytes:(const void*)bytes length:(NSUInteger)length;
+
+/**
+ *  Assuming a valid request was received, this method is called before
+ *  the request is processed.
+ *
+ *  Return a non-nil GCDWebServerResponse to bypass the request processing entirely.
+ *
+ *  The default implementation checks for HTTP authentication if applicable
+ *  and returns a barebone 401 status code response if authentication failed.
+ */
+- (GCDWebServerResponse*)preflightRequest:(GCDWebServerRequest*)request;
+
+/**
+ *  Assuming a valid request was received and -preflightRequest: returned nil,
+ *  this method is called to process the request.
+ */
+- (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block;
+
+/**
+ *  Assuming a valid request was received and either -preflightRequest:
+ *  or -processRequest:withBlock: returned a non-nil GCDWebServerResponse,
+ *  this method is called to override the response.
+ *
+ *  You can either modify the current response and return it, or return a
+ *  completely different one.
+ *
+ *  The default implementation replaces any response matching the "ETag" or
+ *  "Last-Modified-Date" header of the request by a barebone "Not-Modified" (304)
+ *  one.
+ */
+- (GCDWebServerResponse*)overrideResponse:(GCDWebServerResponse*)response forRequest:(GCDWebServerRequest*)request;
+
+/**
+ *  This method is called if any error happens while validing or processing
+ *  the request or no GCDWebServerResponse is generated.
+ *
+ *  @warning If the request was invalid (e.g. the HTTP headers were malformed),
+ *  the "request" argument will be nil.
+ */
+- (void)abortRequest:(GCDWebServerRequest*)request withStatusCode:(NSInteger)statusCode;
+
+/**
+ *  Called when the connection is closed.
+ */
 - (void)close;
+
 @end

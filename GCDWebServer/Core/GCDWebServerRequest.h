@@ -27,25 +27,140 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ *  This protocol is used by the GCDWebServerConnection to communicate with
+ *  the GCDWebServerRequest and write the received HTTP body data.
+ *
+ *  Note that multiple GCDWebServerBodyWriter objects can be chained together
+ *  internally e.g. to automatically decode gzip encoded content before
+ *  passing it on to the GCDWebServerRequest.
+ *
+ *  @warning These methods can be called on any GCD thread.
+ */
 @protocol GCDWebServerBodyWriter <NSObject>
-- (BOOL)open:(NSError**)error;  // Return NO on error ("error" is guaranteed to be non-NULL)
-- (BOOL)writeData:(NSData*)data error:(NSError**)error;  // Return NO on error ("error" is guaranteed to be non-NULL)
-- (BOOL)close:(NSError**)error;  // Return NO on error ("error" is guaranteed to be non-NULL)
+
+/**
+ *  This method is called before any body data is received.
+ *
+ *  It should return YES on success or NO on failure and set the "error" argument
+ *  which is guaranteed to be non-NULL.
+ */
+- (BOOL)open:(NSError**)error;
+
+/**
+ *  This method is called whenever body data has been received.
+ *
+ *  It should return YES on success or NO on failure and set the "error" argument
+ *  which is guaranteed to be non-NULL.
+ */
+- (BOOL)writeData:(NSData*)data error:(NSError**)error;
+
+/**
+ *  This method is called after all body data has been received.
+ *
+ *  It should return YES on success or NO on failure and set the "error" argument
+ *  which is guaranteed to be non-NULL.
+ */
+- (BOOL)close:(NSError**)error;
+
 @end
 
+/**
+ *  The GCDWebServerRequest class is instantiated by the GCDWebServerConnection
+ *  after the HTTP headers have been received. Each instance wraps a single HTTP
+ *  request. If a body is present, the methods from the GCDWebServerBodyWriter
+ *  protocol will be called by the GCDWebServerConnection to receive it.
+ *
+ *  The default implementation of the GCDWebServerBodyWriter protocol on the class
+ *  simply ignores the body data.
+ *
+ *  @warning GCDWebServerRequest instances can be created and used on any GCD thread.
+ */
 @interface GCDWebServerRequest : NSObject <GCDWebServerBodyWriter>
+
+/**
+ *  Returns the HTTP method for the request.
+ */
 @property(nonatomic, readonly) NSString* method;
+
+/**
+ *  Returns the URL for the request.
+ */
 @property(nonatomic, readonly) NSURL* URL;
+
+/**
+ *  Returns the HTTP headers for the request.
+ */
 @property(nonatomic, readonly) NSDictionary* headers;
+
+/**
+ *  Returns the path component of the URL for the request.
+ */
 @property(nonatomic, readonly) NSString* path;
-@property(nonatomic, readonly) NSDictionary* query;  // May be nil
-@property(nonatomic, readonly) NSString* contentType;  // Automatically parsed from headers (nil if request has no body or set to "application/octet-stream" if a body is present without a "Content-Type" header)
-@property(nonatomic, readonly) NSUInteger contentLength;  // Automatically parsed from headers (NSNotFound if request has no "Content-Length" header)
-@property(nonatomic, readonly) NSDate* ifModifiedSince;  // Automatically parsed from headers (nil if request has no "If-Modified-Since" header or it is malformatted)
-@property(nonatomic, readonly) NSString* ifNoneMatch;  // Automatically parsed from headers (nil if request has no "If-None-Match" header)
-@property(nonatomic, readonly) NSRange byteRange;  // Automatically parsed from headers ([NSNotFound, 0] if request has no "Range" header, [offset, length] for byte range from beginning or [NSNotFound, -length] from end)
-@property(nonatomic, readonly) BOOL acceptsGzipContentEncoding;  // Automatically parsed from headers
+
+/**
+ *  Returns the parsed and unescaped query component of the URL for the request.
+ *
+ *  @warning This property will be nil if there is no query in the URL.
+ */
+@property(nonatomic, readonly) NSDictionary* query;
+
+/**
+ *  Returns the content type for the body of the request (this property is
+ *  automatically parsed from the HTTP headers).
+ *
+ *  This property will be nil if the request has no body or set to
+ *  "application/octet-stream" if a body is present but there was no
+ *  "Content-Type" header.
+ */
+@property(nonatomic, readonly) NSString* contentType;
+
+/**
+ *  Returns the content length for the body of the request (this property is
+ *  automatically parsed from the HTTP headers).
+ *
+ *  This property will be set to "NSNotFound" if the request has no body or
+ *  if there is a body but no "Content-Length" header, typically because
+ *  chunked transfer encoding is used.
+ */
+@property(nonatomic, readonly) NSUInteger contentLength;
+
+/**
+ *  Returns the parsed "If-Modified-Since" header or nil if absent of malformed.
+ */
+@property(nonatomic, readonly) NSDate* ifModifiedSince;
+
+/**
+ *  Returns the parsed "If-None-Match" header or nil if absent of malformed.
+ */
+@property(nonatomic, readonly) NSString* ifNoneMatch;
+
+/**
+ *  Returns the parsed "Range" header or (NSNotFound, 0) if absent or malformed.
+ *  The range will be set to (offset, length) if expressed from the beginning
+ *  of the body, or (NSNotFound, -length) if expressed from the end of the body.
+ */
+@property(nonatomic, readonly) NSRange byteRange;
+
+/**
+ *  Indicates if the client supports gzip content encoding (this property is
+ *  automatically parsed from the HTTP headers).
+ */
+@property(nonatomic, readonly) BOOL acceptsGzipContentEncoding;
+
+/**
+ *  This method is the designated initializer for the class.
+ */
 - (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query;
-- (BOOL)hasBody;  // Convenience method that checks if "contentType" is not nil
-- (BOOL)hasByteRange;  // Convenience method that checks "byteRange"
+
+/**
+ *  Convenience method that checks if the contentType property is defined.
+ */
+- (BOOL)hasBody;
+
+/**
+ *  Convenience method that checks if the byteRange property is defined.
+ */
+- (BOOL)hasByteRange;
+
 @end

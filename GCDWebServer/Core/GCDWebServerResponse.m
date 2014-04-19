@@ -81,7 +81,7 @@
 
 - (id)initWithResponse:(GCDWebServerResponse*)response reader:(id<GCDWebServerBodyReader>)reader {
   if ((self = [super initWithResponse:response reader:reader])) {
-    response.contentLength = NSNotFound;  // Make sure "Content-Length" header is not set since we don't know it (client will determine body length when connection is closed)
+    response.contentLength = NSNotFound;  // Make sure "Content-Length" header is not set since we don't know it
     [response setValue:@"gzip" forAdditionalHeader:@"Content-Encoding"];
   }
   return self;

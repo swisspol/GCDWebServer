@@ -27,29 +27,162 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ *  This protocol is used by the GCDWebServerConnection to communicate with
+ *  the GCDWebServerResponse and read the sent HTTP body data.
+ *
+ *  Note that multiple GCDWebServerBodyReader objects can be chained together
+ *  internally e.g. to automatically apply gzip encoding to the content before
+ *  passing it on to the GCDWebServerResponse.
+ *
+ *  @warning These methods can be called on any GCD thread.
+ */
 @protocol GCDWebServerBodyReader <NSObject>
-- (BOOL)open:(NSError**)error;  // Return NO on error ("error" is guaranteed to be non-NULL)
-- (NSData*)readData:(NSError**)error;  // Must return nil on error or empty NSData if at end ("error" is guaranteed to be non-NULL)
+
+/**
+ *  This method is called before any body data is sent.
+ *
+ *  It should return YES on success or NO on failure and set the "error" argument
+ *  which is guaranteed to be non-NULL.
+ */
+- (BOOL)open:(NSError**)error;
+
+/**
+ *  This method is called whenever body data is ready to be sent.
+ *
+ *  It should return a non-empty NSData if there is body data available,
+ *  or an empty NSData there is no more body data, or nil on error and set
+ *  the "error" argument which is guaranteed to be non-NULL.
+ */
+- (NSData*)readData:(NSError**)error;
+
+/**
+ *  This method is called after all body data has been sent.
+ */
 - (void)close;
+
 @end
 
+/**
+ *  The GCDWebServerResponse class is used to wrap a single HTTP response.
+ *  It is instantiated by the handler of the GCDWebServer that handled the request.
+ *  If a body is present, the methods from the GCDWebServerBodyReader protocol
+ *  will be called by the GCDWebServerConnection to retrieve it.
+ *
+ *  The default implementation of the GCDWebServerBodyReader protocol
+ *  on the class simply returns an empty body.
+ *
+ *  @warning GCDWebServerResponse instances can be created and used on any GCD thread.
+ */
 @interface GCDWebServerResponse : NSObject <GCDWebServerBodyReader>
-@property(nonatomic, copy) NSString* contentType;  // Default is nil i.e. no body (must be set if a body is present)
-@property(nonatomic) NSUInteger contentLength;  // Default is NSNotFound i.e. undefined (if a body is present but length is undefined, chunked transfer encoding will be enabled)
-@property(nonatomic) NSInteger statusCode;  // Default is 200
-@property(nonatomic) NSUInteger cacheControlMaxAge;  // Default is 0 seconds i.e. "Cache-Control: no-cache"
-@property(nonatomic, retain) NSDate* lastModifiedDate;  // Default is nil i.e. no "Last-Modified" header
-@property(nonatomic, copy) NSString* eTag;  // Default is nil i.e. no "ETag" header
-@property(nonatomic, getter=isGZipContentEncodingEnabled) BOOL gzipContentEncodingEnabled;  // Default is disabled
+
+/**
+ *  Sets the content type for the body of the response.
+ *  This property must be set if a body is present.
+ *
+ *  The default value is nil i.e. the response has no body.
+ */
+@property(nonatomic, copy) NSString* contentType;
+
+/**
+ *  Sets the content length for the body of the response. If a body is present
+ *  but this property is set to "NSNotFound", this means the length of the body
+ *  cannot be known ahead of time and chunked transfer encoding will be
+ *  automatically enabled by the GCDWebServerConnection to comply with HTTP/1.1
+ *  specifications.
+ *
+ *  The default value is "NSNotFound" i.e. the response has no body or its length
+ *  is undefined.
+ */
+@property(nonatomic) NSUInteger contentLength;
+
+/**
+ *  Sets the HTTP status code for the response.
+ *
+ *  The default value is 200 i.e. "OK".
+ */
+@property(nonatomic) NSInteger statusCode;
+
+/**
+ *  Sets the caching hint for the response using the "Cache-Control" header.
+ *  This value is expressed in seconds.
+ *
+ *  The default value is 0 i.e. "no-cache".
+ */
+@property(nonatomic) NSUInteger cacheControlMaxAge;
+
+/**
+ *  Sets the last modified date for the response using the "Last-Modified" header.
+ *
+ *  The default value is nil.
+ */
+@property(nonatomic, retain) NSDate* lastModifiedDate;
+
+/**
+ *  Sets the ETag for the response using the "ETag" header.
+ *
+ *  The default value is nil.
+ */
+@property(nonatomic, copy) NSString* eTag;
+
+/**
+ *  Enables gzip encoding for the response body.
+ *
+ *  The default value is NO.
+ *
+ *  @warning Enabling gzip encoding will remove any "Content-Length" header
+ *  since the length of the body is not known anymore. The client will still
+ *  be able to determine the body length when connection is closed per
+ *  HTTP/1.1 specifications.
+ */
+@property(nonatomic, getter=isGZipContentEncodingEnabled) BOOL gzipContentEncodingEnabled;
+
+/**
+ *  Creates a default response.
+ */
 + (instancetype)response;
+
+/**
+ *  This method is the designated initializer for the class.
+ */
 - (instancetype)init;
-- (void)setValue:(NSString*)value forAdditionalHeader:(NSString*)header;  // Pass nil value to remove header
-- (BOOL)hasBody;  // Convenience method that checks if "contentType" is not nil
+
+/**
+ *  Sets an additional HTTP header on the response.
+ *  Pass a nil value to remove an additional header.
+ *
+ *  @warning Do not attempt to override the primary headers used
+ *  by GCDWebServerResponse e.g. "Content-Type" or "ETag".
+ */
+- (void)setValue:(NSString*)value forAdditionalHeader:(NSString*)header;
+
+/**
+ *  Convenience method that checks if the contentType property is defined.
+ */
+- (BOOL)hasBody;
+
 @end
 
 @interface GCDWebServerResponse (Extensions)
+
+/**
+ *  Creates a default response with a specific HTTP status code.
+ */
 + (instancetype)responseWithStatusCode:(NSInteger)statusCode;
+
+/**
+ *  Creates an HTTP redirect response to a new URL.
+ */
 + (instancetype)responseWithRedirect:(NSURL*)location permanent:(BOOL)permanent;
+
+/**
+ *  Initializes a default response with a specific HTTP status code.
+ */
 - (instancetype)initWithStatusCode:(NSInteger)statusCode;
+
+/**
+ *  Initializes an HTTP redirect response to a new URL.
+ */
 - (instancetype)initWithRedirect:(NSURL*)location permanent:(BOOL)permanent;
+
 @end
