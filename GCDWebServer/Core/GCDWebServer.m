@@ -875,6 +875,10 @@ static inline NSString* _EncodeBase64(NSString* string) {
   ARC_RELEASE(message);
 }
 
+- (void)logException:(NSException*)exception {
+  LOG_EXCEPTION(exception);
+}
+
 @end
 
 #ifdef __GCDWEBSERVER_ENABLE_TESTING__

@@ -437,6 +437,11 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  */
 - (void)logError:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
 
+/**
+ *  Logs an exception with the kGCDWebServerLogLevel_Exception level.
+ */
+- (void)logException:(NSException*)exception;
+
 @end
 
 #ifdef __GCDWEBSERVER_ENABLE_TESTING__
