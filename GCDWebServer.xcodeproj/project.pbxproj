@@ -54,8 +54,8 @@
 		E28BAE4918F99C810095C089 /* GCDWebServerErrorResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = E28BAE2F18F99C810095C089 /* GCDWebServerErrorResponse.m */; };
 		E28BAE4A18F99C810095C089 /* GCDWebServerFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = E28BAE3118F99C810095C089 /* GCDWebServerFileResponse.m */; };
 		E28BAE4B18F99C810095C089 /* GCDWebServerFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = E28BAE3118F99C810095C089 /* GCDWebServerFileResponse.m */; };
-		E28BAE4C18F99C810095C089 /* GCDWebServerStreamingResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = E28BAE3318F99C810095C089 /* GCDWebServerStreamingResponse.m */; };
-		E28BAE4D18F99C810095C089 /* GCDWebServerStreamingResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = E28BAE3318F99C810095C089 /* GCDWebServerStreamingResponse.m */; };
+		E28BAE4C18F99C810095C089 /* GCDWebServerStreamedResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = E28BAE3318F99C810095C089 /* GCDWebServerStreamedResponse.m */; };
+		E28BAE4D18F99C810095C089 /* GCDWebServerStreamedResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = E28BAE3318F99C810095C089 /* GCDWebServerStreamedResponse.m */; };
 		E2A0E80A18F3432600C580B1 /* GCDWebDAVServer.m in Sources */ = {isa = PBXBuildFile; fileRef = E2A0E80918F3432600C580B1 /* GCDWebDAVServer.m */; };
 		E2A0E80B18F3432600C580B1 /* GCDWebDAVServer.m in Sources */ = {isa = PBXBuildFile; fileRef = E2A0E80918F3432600C580B1 /* GCDWebDAVServer.m */; };
 		E2A0E80D18F35C9A00C580B1 /* libxml2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E2A0E80C18F35C9A00C580B1 /* libxml2.dylib */; };
@@ -138,8 +138,8 @@
 		E28BAE2F18F99C810095C089 /* GCDWebServerErrorResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebServerErrorResponse.m; sourceTree = "<group>"; };
 		E28BAE3018F99C810095C089 /* GCDWebServerFileResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebServerFileResponse.h; sourceTree = "<group>"; };
 		E28BAE3118F99C810095C089 /* GCDWebServerFileResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebServerFileResponse.m; sourceTree = "<group>"; };
-		E28BAE3218F99C810095C089 /* GCDWebServerStreamingResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebServerStreamingResponse.h; sourceTree = "<group>"; };
-		E28BAE3318F99C810095C089 /* GCDWebServerStreamingResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebServerStreamingResponse.m; sourceTree = "<group>"; };
+		E28BAE3218F99C810095C089 /* GCDWebServerStreamedResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebServerStreamedResponse.h; sourceTree = "<group>"; };
+		E28BAE3318F99C810095C089 /* GCDWebServerStreamedResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebServerStreamedResponse.m; sourceTree = "<group>"; };
 		E2A0E80818F3432600C580B1 /* GCDWebDAVServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebDAVServer.h; sourceTree = "<group>"; };
 		E2A0E80918F3432600C580B1 /* GCDWebDAVServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebDAVServer.m; sourceTree = "<group>"; };
 		E2A0E80C18F35C9A00C580B1 /* libxml2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk/usr/lib/libxml2.dylib; sourceTree = DEVELOPER_DIR; };
@@ -300,8 +300,8 @@
 				E28BAE2F18F99C810095C089 /* GCDWebServerErrorResponse.m */,
 				E28BAE3018F99C810095C089 /* GCDWebServerFileResponse.h */,
 				E28BAE3118F99C810095C089 /* GCDWebServerFileResponse.m */,
-				E28BAE3218F99C810095C089 /* GCDWebServerStreamingResponse.h */,
-				E28BAE3318F99C810095C089 /* GCDWebServerStreamingResponse.m */,
+				E28BAE3218F99C810095C089 /* GCDWebServerStreamedResponse.h */,
+				E28BAE3318F99C810095C089 /* GCDWebServerStreamedResponse.m */,
 			);
 			path = Responses;
 			sourceTree = "<group>";
@@ -437,7 +437,7 @@
 				E28BAE3618F99C810095C089 /* GCDWebServerConnection.m in Sources */,
 				E28BAE3C18F99C810095C089 /* GCDWebServerResponse.m in Sources */,
 				E28BAE4018F99C810095C089 /* GCDWebServerFileRequest.m in Sources */,
-				E28BAE4C18F99C810095C089 /* GCDWebServerStreamingResponse.m in Sources */,
+				E28BAE4C18F99C810095C089 /* GCDWebServerStreamedResponse.m in Sources */,
 				E28BAE3E18F99C810095C089 /* GCDWebServerDataRequest.m in Sources */,
 				E2A0E80A18F3432600C580B1 /* GCDWebDAVServer.m in Sources */,
 				E28BAE4218F99C810095C089 /* GCDWebServerMultiPartFormRequest.m in Sources */,
@@ -457,7 +457,7 @@
 				E28BAE4B18F99C810095C089 /* GCDWebServerFileResponse.m in Sources */,
 				E28BAE3918F99C810095C089 /* GCDWebServerFunctions.m in Sources */,
 				E28BAE4118F99C810095C089 /* GCDWebServerFileRequest.m in Sources */,
-				E28BAE4D18F99C810095C089 /* GCDWebServerStreamingResponse.m in Sources */,
+				E28BAE4D18F99C810095C089 /* GCDWebServerStreamedResponse.m in Sources */,
 				E28BAE3F18F99C810095C089 /* GCDWebServerDataRequest.m in Sources */,
 				E2BE850B18E77ECA0061360B /* GCDWebUploader.m in Sources */,
 				E22112951690B64F0048D2B2 /* AppDelegate.m in Sources */,
