@@ -29,33 +29,167 @@
 
 @class GCDWebUploader;
 
-// These methods are always called on main thread
+/**
+ *  Delegate methods for GCDWebUploaderDelegate.
+ *
+ *  @warning These methods are always called on the main thread in a serialized way.
+ */
 @protocol GCDWebUploaderDelegate <GCDWebServerDelegate>
 @optional
+
+/**
+ *  This method is called whenever a file has been downloaded.
+ */
 - (void)webUploader:(GCDWebUploader*)uploader didDownloadFileAtPath:(NSString*)path;
+
+/**
+ *  This method is called whenever a file has been uploaded.
+ */
 - (void)webUploader:(GCDWebUploader*)uploader didUploadFileAtPath:(NSString*)path;
+
+/**
+ *  This method is called whenever a file or directory has been moved.
+ */
 - (void)webUploader:(GCDWebUploader*)uploader didMoveItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath;
+
+/**
+ *  This method is called whenever a file or directory has been deleted.
+ */
 - (void)webUploader:(GCDWebUploader*)uploader didDeleteItemAtPath:(NSString*)path;
+
+/**
+ *  This method is called whenever a directory has been created.
+ */
 - (void)webUploader:(GCDWebUploader*)uploader didCreateDirectoryAtPath:(NSString*)path;
+
 @end
 
+/**
+ *  The GCDWebUploader subclass of GCDWebServer implements an HTML 5 web browser
+ *  interface for uploading or downloading files, and moving or deleting files
+ *  or directories.
+ *
+ *  See the README.md file for more information about the features of GCDWebUploader.
+ */
 @interface GCDWebUploader : GCDWebServer
+
+/**
+ *  Returns the upload directory as specified when the server was initialized.
+ */
 @property(nonatomic, readonly) NSString* uploadDirectory;
+
+/**
+ *  Sets the delegate for the server.
+ */
 @property(nonatomic, assign) id<GCDWebUploaderDelegate> delegate;
-@property(nonatomic, copy) NSArray* allowedFileExtensions;  // Default is nil i.e. all file extensions are allowed
-@property(nonatomic) BOOL showHiddenFiles;  // Default is NO
-@property(nonatomic, copy) NSString* title;  // Default is application name (must be HTML escaped)
-@property(nonatomic, copy) NSString* header;  // Default is same as title (must be HTML escaped)
-@property(nonatomic, copy) NSString* prologue;  // Default is mini help (must be raw HTML)
-@property(nonatomic, copy) NSString* epilogue;  // Default is nothing (must be raw HTML)
-@property(nonatomic, copy) NSString* footer;  // Default is application name and version (must be HTML escaped)
+
+/**
+ *  Restricts which files should be listed and allowed to be uploaded, downloaded,
+ *  moved or deleted depending on their extensions.
+ *
+ *  The default value is nil i.e. all file extensions are allowed.
+ */
+@property(nonatomic, copy) NSArray* allowedFileExtensions;
+
+/**
+ *  Sets if files and directories whose name start with a period should be
+ *  listed and allowed to be uploaded, downloaded, moved or deleted.
+ *
+ *  The default value is NO.
+ */
+@property(nonatomic) BOOL showHiddenFiles;
+
+/**
+ *  Sets the title for the uploader interface.
+ *
+ *  The default value is the application name.
+ *
+ *  @warning Any reserved HTML characters in the string value for this property
+ *  must have been replaced by character entities e.g. "&" becomes "&amp;".
+ */
+@property(nonatomic, copy) NSString* title;
+
+/**
+ *  Sets the header for the uploader interface.
+ *
+ *  The default value is the same as the title property.
+ *
+ *  @warning Any reserved HTML characters in the string value for this property
+ *  must have been replaced by character entities e.g. "&" becomes "&amp;".
+ */
+@property(nonatomic, copy) NSString* header;
+
+/**
+ *  Sets the prologue for the uploader interface.
+ *
+ *  The default value is a short help text.
+ *
+ *  @warning The string value for this property must be raw HTML
+ *  e.g. "<p>Some text</p>"
+ */
+@property(nonatomic, copy) NSString* prologue;
+
+/**
+ *  Sets the epilogue for the uploader interface.
+ *
+ *  The default value is nil i.e. no epilogue.
+ *
+ *  @warning The string value for this property must be raw HTML
+ *  e.g. "<p>Some text</p>"
+ */
+@property(nonatomic, copy) NSString* epilogue;
+
+/**
+ *  Sets the footer for the uploader interface.
+ *
+ *  The default value is the application name and version.
+ *
+ *  @warning Any reserved HTML characters in the string value for this property
+ *  must have been replaced by character entities e.g. "&" becomes "&amp;".
+ */
+@property(nonatomic, copy) NSString* footer;
+
+/**
+ *  This method is the designated initializer for the class.
+ */
 - (instancetype)initWithUploadDirectory:(NSString*)path;
+
 @end
 
-// These methods can be called from any thread
+/**
+ *  Hooks to customize the behavior of GCDWebUploader.
+ *
+ *  @warning These methods can be called on any GCD thread.
+ */
 @interface GCDWebUploader (Subclassing)
-- (BOOL)shouldUploadFileAtPath:(NSString*)path withTemporaryFile:(NSString*)tempPath;  // Default implementation returns YES
-- (BOOL)shouldMoveItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath;  // Default implementation returns YES
-- (BOOL)shouldDeleteItemAtPath:(NSString*)path;  // Default implementation returns YES
-- (BOOL)shouldCreateDirectoryAtPath:(NSString*)path;  // Default implementation returns YES
+
+/**
+ *  This method is called to check if a file is allowed to be uploaded.
+ *  The uploaded file is available for inspection at "tempPath".
+ *
+ *  The default implementation returns YES.
+ */
+- (BOOL)shouldUploadFileAtPath:(NSString*)path withTemporaryFile:(NSString*)tempPath;
+
+/**
+ *  This method is called to check if a file or directory is allowed to be moved.
+ *
+ *  The default implementation returns YES.
+ */
+- (BOOL)shouldMoveItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath;
+
+/**
+ *  This method is called to check if a file or directory is allowed to be deleted.
+ *
+ *  The default implementation returns YES.
+ */
+- (BOOL)shouldDeleteItemAtPath:(NSString*)path;
+
+/**
+ *  This method is called to check if a directory is allowed to be created.
+ *
+ *  The default implementation returns YES.
+ */
+- (BOOL)shouldCreateDirectoryAtPath:(NSString*)path;
+
 @end

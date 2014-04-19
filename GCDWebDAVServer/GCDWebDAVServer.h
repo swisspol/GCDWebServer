@@ -29,30 +29,129 @@
 
 @class GCDWebDAVServer;
 
-// These methods are always called on main thread
+/**
+ *  Delegate methods for GCDWebDAVServer.
+ *
+ *  @warning These methods are always called on the main thread in a serialized way.
+ */
 @protocol GCDWebDAVServerDelegate <GCDWebServerDelegate>
 @optional
+
+/**
+ *  This method is called whenever a file has been downloaded.
+ */
 - (void)davServer:(GCDWebDAVServer*)server didDownloadFileAtPath:(NSString*)path;
+
+/**
+ *  This method is called whenever a file has been uploaded.
+ */
 - (void)davServer:(GCDWebDAVServer*)server didUploadFileAtPath:(NSString*)path;
+
+/**
+ *  This method is called whenever a file or directory has been moved.
+ */
 - (void)davServer:(GCDWebDAVServer*)server didMoveItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath;
+
+/**
+ *  This method is called whenever a file or directory has been copied.
+ */
 - (void)davServer:(GCDWebDAVServer*)server didCopyItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath;
+
+/**
+ *  This method is called whenever a file or directory has been deleted.
+ */
 - (void)davServer:(GCDWebDAVServer*)server didDeleteItemAtPath:(NSString*)path;
+
+/**
+ *  This method is called whenever a directory has been created.
+ */
 - (void)davServer:(GCDWebDAVServer*)server didCreateDirectoryAtPath:(NSString*)path;
+
 @end
 
+/**
+ *  The GCDWebDAVServer subclass of GCDWebServer implements a class 1 compliant
+ *  WebDAV server. It is also partially class 2 compliant (but only when the
+ *  client is the OS X WebDAV implementation), so it can work with the OS X Finder.
+ *
+ *  See the README.md file for more information about the features of GCDWebDAVServer.
+ */
 @interface GCDWebDAVServer : GCDWebServer
+
+/**
+ *  Returns the upload directory as specified when the server was initialized.
+ */
 @property(nonatomic, readonly) NSString* uploadDirectory;
+
+/**
+ *  Sets the delegate for the server.
+ */
 @property(nonatomic, assign) id<GCDWebDAVServerDelegate> delegate;
-@property(nonatomic, copy) NSArray* allowedFileExtensions;  // Default is nil i.e. all file extensions are allowed
-@property(nonatomic) BOOL showHiddenFiles;  // Default is NO
+
+/**
+ *  Restricts which files should be listed and allowed to be uploaded, downloaded,
+ *  moved, copied or deleted depending on their extensions.
+ *
+ *  The default value is nil i.e. all file extensions are allowed.
+ */
+@property(nonatomic, copy) NSArray* allowedFileExtensions;
+
+/**
+ *  Sets if files and directories whose name start with a period should be
+ *  listed and allowed to be uploaded, downloaded, moved, copied or deleted.
+ *
+ *  The default value is NO.
+ */
+@property(nonatomic) BOOL showHiddenFiles;
+
+/**
+ *  This method is the designated initializer for the class.
+ */
 - (instancetype)initWithUploadDirectory:(NSString*)path;
+
 @end
 
-// These methods can be called from any thread
+/**
+ *  Hooks to customize the behavior of GCDWebDAVServer.
+ *
+ *  @warning These methods can be called on any GCD thread.
+ */
 @interface GCDWebDAVServer (Subclassing)
-- (BOOL)shouldUploadFileAtPath:(NSString*)path withTemporaryFile:(NSString*)tempPath;  // Default implementation returns YES
-- (BOOL)shouldMoveItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath;  // Default implementation returns YES
-- (BOOL)shouldCopyItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath;  // Default implementation returns YES
-- (BOOL)shouldDeleteItemAtPath:(NSString*)path;  // Default implementation returns YES
-- (BOOL)shouldCreateDirectoryAtPath:(NSString*)path;  // Default implementation returns YES
+
+/**
+ *  This method is called to check if a file is allowed to be uploaded.
+ *  The uploaded file is available for inspection at "tempPath".
+ *
+ *  The default implementation returns YES.
+ */
+- (BOOL)shouldUploadFileAtPath:(NSString*)path withTemporaryFile:(NSString*)tempPath;
+
+/**
+ *  This method is called to check if a file or directory is allowed to be moved.
+ *
+ *  The default implementation returns YES.
+ */
+- (BOOL)shouldMoveItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath;
+
+/**
+ *  This method is called to check if a file or directory is allowed to be copied.
+ *
+ *  The default implementation returns YES.
+ */
+- (BOOL)shouldCopyItemFromPath:(NSString*)fromPath toPath:(NSString*)toPath;
+
+/**
+ *  This method is called to check if a file or directory is allowed to be deleted.
+ *
+ *  The default implementation returns YES.
+ */
+- (BOOL)shouldDeleteItemAtPath:(NSString*)path;
+
+/**
+ *  This method is called to check if a directory is allowed to be created.
+ *
+ *  The default implementation returns YES.
+ */
+- (BOOL)shouldCreateDirectoryAtPath:(NSString*)path;
+
 @end
