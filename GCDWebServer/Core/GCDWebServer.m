@@ -846,37 +846,29 @@ static inline NSString* _EncodeBase64(NSString* string) {
 - (void)logVerbose:(NSString*)format, ... {
   va_list arguments;
   va_start(arguments, format);
-  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
+  LOG_VERBOSE(@"%@", ARC_AUTORELEASE([[NSString alloc] initWithFormat:format arguments:arguments]));
   va_end(arguments);
-  LOG_VERBOSE(@"%@", message);
-  ARC_RELEASE(message);
 }
 
 - (void)logInfo:(NSString*)format, ... {
   va_list arguments;
   va_start(arguments, format);
-  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
+  LOG_INFO(@"%@", ARC_AUTORELEASE([[NSString alloc] initWithFormat:format arguments:arguments]));
   va_end(arguments);
-  LOG_INFO(@"%@", message);
-  ARC_RELEASE(message);
 }
 
 - (void)logWarning:(NSString*)format, ... {
   va_list arguments;
   va_start(arguments, format);
-  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
+  LOG_WARNING(@"%@", ARC_AUTORELEASE([[NSString alloc] initWithFormat:format arguments:arguments]));
   va_end(arguments);
-  LOG_WARNING(@"%@", message);
-  ARC_RELEASE(message);
 }
 
 - (void)logError:(NSString*)format, ... {
   va_list arguments;
   va_start(arguments, format);
-  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
+  LOG_ERROR(@"%@", ARC_AUTORELEASE([[NSString alloc] initWithFormat:format arguments:arguments]));
   va_end(arguments);
-  LOG_ERROR(@"%@", message);
-  ARC_RELEASE(message);
 }
 
 - (void)logException:(NSException*)exception {
