@@ -30,6 +30,9 @@
 /**
  *  The GCDWebServerFileResponse subclass of GCDWebServerResponse reads the body
  *  of the HTTP response from a file on disk.
+ *
+ *  It will automatically set the lastModifiedDate and eTag properties of the
+ *  GCDWebServerResponse according to the file metadata.
  */
 @interface GCDWebServerFileResponse : GCDWebServerResponse
 

@@ -59,7 +59,7 @@ typedef GCDWebServerRequest* (^GCDWebServerMatchBlock)(NSString* requestMethod, 
 
 /**
  *  The GCDWebServerProcessBlock is called after the HTTP request has been fully
- *  received (i.e. the entire HTTP body has been read). THe block is passed the
+ *  received (i.e. the entire HTTP body has been read). The block is passed the
  *  GCDWebServerRequest created at the previous step by the GCDWebServerMatchBlock.
  *
  *  The block must return a GCDWebServerResponse or nil on error, which will
@@ -102,14 +102,14 @@ extern NSString* const GCDWebServerOption_ServerName;
  *  The authentication method used by the GCDWebServer
  *  (one of "GCDWebServerAuthenticationMethod_...").
  *
- *  The default value is nil i.e. authentication disabled.
+ *  The default value is nil i.e. authentication is disabled.
  */
 extern NSString* const GCDWebServerOption_AuthenticationMethod;
 
 /**
  *  The authentication realm used by the GCDWebServer (NSString).
  *
- *  The default value is the same as GCDWebServerOption_ServerName.
+ *  The default value is the same as the GCDWebServerOption_ServerName option.
  */
 extern NSString* const GCDWebServerOption_AuthenticationRealm;
 
@@ -125,7 +125,7 @@ extern NSString* const GCDWebServerOption_AuthenticationAccounts;
  *  The class used by the GCDWebServer when instantiating GCDWebServerConnection
  *  (subclass of GCDWebServerConnection).
  *
- *  The default value is GCDWebServerConnection class.
+ *  The default value is the GCDWebServerConnection class.
  */
 extern NSString* const GCDWebServerOption_ConnectionClass;
 
@@ -167,7 +167,8 @@ extern NSString* const GCDWebServerOption_AutomaticallySuspendInBackground;
 /**
  *  HTTP Basic Authentication scheme (see https://tools.ietf.org/html/rfc2617).
  *
- *  @warning Use of this method is not recommended as the passwords are sent in clear.
+ *  @warning Use of this authentication scheme is not recommended as the
+ *  passwords are sent in clear.
  */
 extern NSString* const GCDWebServerAuthenticationMethod_Basic;
 
@@ -199,9 +200,11 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 
 /**
  *  This method is called when the first GCDWebServerConnection is opened by the
- *  server to serve a series of HTTP requests. A series is ongoing as long as
- *  new HTTP requests keep coming (and new GCDWebServerConnection instances keep
- *  being opened), before the last HTTP request has been responded to (and the
+ *  server to serve a series of HTTP requests.
+ *
+ *  A series of HTTP requests is considered ongoing as long as new HTTP requests
+ *  keep coming (and new GCDWebServerConnection instances keep being opened),
+ *  until before the last HTTP request has been responded to (and the
  *  corresponding last GCDWebServerConnection closed).
  */
 - (void)webServerDidConnect:(GCDWebServer*)server;
@@ -226,8 +229,9 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 @end
 
 /**
- *  The GCDWebServer class manages the socket that listens for HTTP requests and
- *  the list of handlers used to respond to them.
+ *  The GCDWebServer class listens for incoming HTTP requests on a given port,
+ *  then passes each one to a "handler" capable of generating an HTTP response
+ *  for it, which is then sent back to the client.
  *
  *  See the README.md file for more information about the architecture of GCDWebServer.
  */
@@ -239,7 +243,7 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 @property(nonatomic, assign) id<GCDWebServerDelegate> delegate;
 
 /**
- *  Indicates if the server is currently running.
+ *  Returns YES if the server is currently running.
  */
 @property(nonatomic, readonly, getter=isRunning) BOOL running;
 
@@ -251,7 +255,7 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 @property(nonatomic, readonly) NSUInteger port;
 
 /**
- *  Returns the Bonjour name in used by the server.
+ *  Returns the Bonjour name used by the server.
  *
  *  @warning This property is only valid if the server is running and Bonjour
  *  registration has successfully completed, which can take up to a few seconds.
@@ -265,17 +269,18 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 
 /**
  *  Adds a handler to the server to handle incoming HTTP requests.
- *  Handlers are called in a LIFO queue, so the latest added handler overrides
- *  any previously added ones.
  *
- *  @warning Addling handlers while the GCDWebServer is running is not allowed.
+ *  Handlers are called in a LIFO queue, so if multiple handlers can potentially
+ *  respond to a given request, the latest added one wins.
+ *
+ *  @warning Addling handlers while the server is running is not allowed.
  */
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
 
 /**
  *  Removes all handlers previously added to the server.
  *
- *  @warning Removing handlers while the GCDWebServer is running is not allowed.
+ *  @warning Removing handlers while the server is running is not allowed.
  */
 - (void)removeAllHandlers;
 
@@ -308,8 +313,8 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *  Stops the server and prevents it to accepts new HTTP requests.
  *
  *  @warning Stopping the server does not abort GCDWebServerConnection instances
- *  handling already received HTTP requests. These connections will continue to
- *  execute until the corresponding requests and responses are completed.
+ *  currently handling already received HTTP requests. These connections will
+ *  continue to execute normally until completion.
  */
 - (void)stop;
 

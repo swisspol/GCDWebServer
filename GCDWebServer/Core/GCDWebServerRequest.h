@@ -106,8 +106,8 @@
 @property(nonatomic, readonly) NSDictionary* query;
 
 /**
- *  Returns the content type for the body of the request (this property is
- *  automatically parsed from the HTTP headers).
+ *  Returns the content type for the body of the request parsed from the
+ *  "Content-Type" header.
  *
  *  This property will be nil if the request has no body or set to
  *  "application/octet-stream" if a body is present but there was no
@@ -116,8 +116,8 @@
 @property(nonatomic, readonly) NSString* contentType;
 
 /**
- *  Returns the content length for the body of the request (this property is
- *  automatically parsed from the HTTP headers).
+ *  Returns the content length for the body of the request parsed from the
+ *  "Content-Length" header.
  *
  *  This property will be set to "NSNotFound" if the request has no body or
  *  if there is a body but no "Content-Length" header, typically because
@@ -138,13 +138,13 @@
 /**
  *  Returns the parsed "Range" header or (NSNotFound, 0) if absent or malformed.
  *  The range will be set to (offset, length) if expressed from the beginning
- *  of the body, or (NSNotFound, -length) if expressed from the end of the body.
+ *  of the entity body, or (NSNotFound, -length) if expressed from its end.
  */
 @property(nonatomic, readonly) NSRange byteRange;
 
 /**
- *  Indicates if the client supports gzip content encoding (this property is
- *  automatically parsed from the HTTP headers).
+ *  Returns YES if the client supports gzip content encoding according to the
+ *  "Accept-Encoding" header.
  */
 @property(nonatomic, readonly) BOOL acceptsGzipContentEncoding;
 

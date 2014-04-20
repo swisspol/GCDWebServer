@@ -38,8 +38,8 @@
  *  subclass it to override some hooks. Use the GCDWebServerOption_ConnectionClass
  *  option for GCDWebServer to install your custom subclass.
  *
- *  @warning The GCDWebServerConnection retains the GCDWebServer
- *  until the connection is closed.
+ *  @warning The GCDWebServerConnection retains the GCDWebServer until the
+ *  connection is closed.
  */
 @interface GCDWebServerConnection : NSObject
 
@@ -95,6 +95,7 @@
 
 /**
  *  This method is called when the connection is opened.
+ *
  *  Return NO to reject the connection e.g. after validating the local
  *  or remote address.
  */
@@ -103,17 +104,21 @@
 /**
  *  This method is called whenever data has been received
  *  from the remote peer (i.e. client).
+ *
+ *  @warning Do not attempt to modify this data.
  */
 - (void)didReadBytes:(const void*)bytes length:(NSUInteger)length;
 
 /**
  *  This method is called whenever data has been sent
  *  to the remote peer (i.e. client).
+ *
+ *  @warning Do not attempt to modify this data.
  */
 - (void)didWriteBytes:(const void*)bytes length:(NSUInteger)length;
 
 /**
- *  Assuming a valid request was received, this method is called before
+ *  Assuming a valid HTTP request was received, this method is called before
  *  the request is processed.
  *
  *  Return a non-nil GCDWebServerResponse to bypass the request processing entirely.
@@ -124,18 +129,18 @@
 - (GCDWebServerResponse*)preflightRequest:(GCDWebServerRequest*)request;
 
 /**
- *  Assuming a valid request was received and -preflightRequest: returned nil,
+ *  Assuming a valid HTTP request was received and -preflightRequest: returned nil,
  *  this method is called to process the request.
  */
 - (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block;
 
 /**
- *  Assuming a valid request was received and either -preflightRequest:
+ *  Assuming a valid HTTP request was received and either -preflightRequest:
  *  or -processRequest:withBlock: returned a non-nil GCDWebServerResponse,
  *  this method is called to override the response.
  *
  *  You can either modify the current response and return it, or return a
- *  completely different one.
+ *  completely new one.
  *
  *  The default implementation replaces any response matching the "ETag" or
  *  "Last-Modified-Date" header of the request by a barebone "Not-Modified" (304)
@@ -145,7 +150,7 @@
 
 /**
  *  This method is called if any error happens while validing or processing
- *  the request or no GCDWebServerResponse is generated.
+ *  the request or if no GCDWebServerResponse was generated during processing.
  *
  *  @warning If the request was invalid (e.g. the HTTP headers were malformed),
  *  the "request" argument will be nil.

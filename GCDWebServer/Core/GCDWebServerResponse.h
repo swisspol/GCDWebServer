@@ -29,7 +29,7 @@
 
 /**
  *  This protocol is used by the GCDWebServerConnection to communicate with
- *  the GCDWebServerResponse and read the sent HTTP body data.
+ *  the GCDWebServerResponse and read the HTTP body data to send.
  *
  *  Note that multiple GCDWebServerBodyReader objects can be chained together
  *  internally e.g. to automatically apply gzip encoding to the content before
@@ -48,7 +48,7 @@
 - (BOOL)open:(NSError**)error;
 
 /**
- *  This method is called whenever body data is ready to be sent.
+ *  This method is called whenever body data is sent.
  *
  *  It should return a non-empty NSData if there is body data available,
  *  or an empty NSData there is no more body data, or nil on error and set
@@ -67,7 +67,7 @@
  *  The GCDWebServerResponse class is used to wrap a single HTTP response.
  *  It is instantiated by the handler of the GCDWebServer that handled the request.
  *  If a body is present, the methods from the GCDWebServerBodyReader protocol
- *  will be called by the GCDWebServerConnection to retrieve it.
+ *  will be called by the GCDWebServerConnection to send it.
  *
  *  The default implementation of the GCDWebServerBodyReader protocol
  *  on the class simply returns an empty body.
@@ -78,16 +78,17 @@
 
 /**
  *  Sets the content type for the body of the response.
- *  This property must be set if a body is present.
  *
  *  The default value is nil i.e. the response has no body.
+ *
+ *  @warning This property must be set if a body is present.
  */
 @property(nonatomic, copy) NSString* contentType;
 
 /**
  *  Sets the content length for the body of the response. If a body is present
  *  but this property is set to "NSNotFound", this means the length of the body
- *  cannot be known ahead of time and chunked transfer encoding will be
+ *  cannot be known ahead of time. Chunked transfer encoding will be
  *  automatically enabled by the GCDWebServerConnection to comply with HTTP/1.1
  *  specifications.
  *
@@ -152,7 +153,7 @@
  *  Pass a nil value to remove an additional header.
  *
  *  @warning Do not attempt to override the primary headers used
- *  by GCDWebServerResponse e.g. "Content-Type" or "ETag".
+ *  by GCDWebServerResponse like "Content-Type", "ETag", etc...
  */
 - (void)setValue:(NSString*)value forAdditionalHeader:(NSString*)header;
 

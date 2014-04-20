@@ -50,17 +50,18 @@ NSString* GCDWebServerEscapeURLString(NSString* string);
 NSString* GCDWebServerUnescapeURLString(NSString* string);
 
 /**
- *  Extracts the unescaped names and values
- *  from a "application/x-www-form-urlencoded" form.
+ *  Extracts the unescaped names and values from an
+ *  "application/x-www-form-urlencoded" form.
  *  http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4.1
  */
 NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form);
 
 /**
- *  OS X: Returns the IPv4 address as a dotted string of the primary connected
- *        service or nil if not available.
- *  iOS: Returns the IPv4 address as a dotted string of the WiFi interface
- *       if connected or nil otherwise.
+ *  On OS X, returns the IPv4 address as a dotted string of the primary connected
+ *  service or nil if not available.
+ *  
+ *  On iOS, returns the IPv4 address as a dotted string of the WiFi interface
+ *  if connected or nil otherwise.
  */
 NSString* GCDWebServerGetPrimaryIPv4Address();
 
@@ -76,7 +77,7 @@ NSString* GCDWebServerFormatRFC822(NSDate* date);
  *  https://tools.ietf.org/html/rfc822#section-5
  *  https://tools.ietf.org/html/rfc1123#section-5.2.14
  *
- *  @warning Timezones are not supported at this time.
+ *  @warning Timezones other than GMT are not supported by this function.
  */
 NSDate* GCDWebServerParseRFC822(NSString* string);
 
@@ -91,7 +92,7 @@ NSString* GCDWebServerFormatISO8601(NSDate* date);
  *  http://tools.ietf.org/html/rfc3339#section-5.6
  *
  *  @warning Only "calendar" variant is supported at this time and timezones
- *  are not supported either.
+ *  other than GMT are not supported either.
  */
 NSDate* GCDWebServerParseISO8601(NSString* string);
 
