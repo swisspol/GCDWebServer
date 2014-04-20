@@ -78,7 +78,7 @@
 /**
  *  Initializes a data response from text encoded using UTF-8.
  */
-- (instancetype)initWithText:(NSString*)text;  // Encodes using UTF-8
+- (instancetype)initWithText:(NSString*)text;
 
 /**
  *  Initializes a data response from HTML encoded using UTF-8.
@@ -87,6 +87,7 @@
 
 /**
  *  Initializes a data response from an HTML template encoded using UTF-8.
+ *
  *  All occurences of "%variable%" within the HTML template are replaced with
  *  their corresponding values.
  */

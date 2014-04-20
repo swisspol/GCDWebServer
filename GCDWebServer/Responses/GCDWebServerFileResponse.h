@@ -31,20 +31,20 @@
  *  The GCDWebServerFileResponse subclass of GCDWebServerResponse reads the body
  *  of the HTTP response from a file on disk.
  *
- *  It will automatically set the lastModifiedDate and eTag properties of the
- *  GCDWebServerResponse according to the file metadata.
+ *  It will automatically set the contentType, lastModifiedDate and eTag
+ *  properties of the GCDWebServerResponse according to the file extension and
+ *  metadata.
  */
 @interface GCDWebServerFileResponse : GCDWebServerResponse
 
 /**
- *  Creates a response with the contents of a file and the content type
- *  automatically set from the file extension.
+ *  Creates a response with the contents of a file.
  */
 + (instancetype)responseWithFile:(NSString*)path;
 
 /**
- *  Creates a response like +responseWithFile: but sets the "Content-Disposition"
- *  HTTP header appropriately for a download if the "attachment" argument is YES.
+ *  Creates a response like +responseWithFile: and sets the "Content-Disposition"
+ *  HTTP header for a download if the "attachment" argument is YES.
  */
 + (instancetype)responseWithFile:(NSString*)path isAttachment:(BOOL)attachment;
 
@@ -57,21 +57,21 @@
 + (instancetype)responseWithFile:(NSString*)path byteRange:(NSRange)range;
 
 /**
- *  Creates a response like +responseWithFile:byteRange: but also sets the
- *  "Content-Disposition" HTTP header appropriately for a download if the
- *  "attachment" argument is YES.
+ *  Creates a response like +responseWithFile:byteRange: and sets the
+ *  "Content-Disposition" HTTP header for a download if the "attachment"
+ *  argument is YES.
  */
 + (instancetype)responseWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment;
 
 /**
- *  Initializes a response with the contents of a file and the content type
- *  automatically set from the file extension.
+ *  Initializes a response with the contents of a file.
  */
 - (instancetype)initWithFile:(NSString*)path;
 
 /**
- *  Initializes a response like -initWithFile: but sets the "Content-Disposition"
- *  HTTP header appropriately for a download if the "attachment" argument is YES.
+ *  Initializes a response like +responseWithFile: and sets the
+ *  "Content-Disposition" HTTP header for a download if the "attachment"
+ *  argument is YES.
  */
 - (instancetype)initWithFile:(NSString*)path isAttachment:(BOOL)attachment;
 
