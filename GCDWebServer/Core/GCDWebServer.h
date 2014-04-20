@@ -72,14 +72,14 @@ typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* r
 /**
  *  The port used by the GCDWebServer (NSNumber / NSUInteger).
  *
- *  Default value is 0 i.e. let the OS pick a random port.
+ *  The default value is 0 i.e. let the OS pick a random port.
  */
 extern NSString* const GCDWebServerOption_Port;
 
 /**
  *  The Bonjour name used by the GCDWebServer (NSString).
  *
- *  Default value is an empty string i.e. use the computer / device name.
+ *  The default value is an empty string i.e. use the computer / device name.
  */
 extern NSString* const GCDWebServerOption_BonjourName;
 
@@ -87,14 +87,14 @@ extern NSString* const GCDWebServerOption_BonjourName;
  *  The maximum number of incoming HTTP requests that can be queued waiting to
  *  be handled before new ones are dropped (NSNumber / NSUInteger).
  *
- *  Default value is 16.
+ *  The default value is 16.
  */
 extern NSString* const GCDWebServerOption_MaxPendingConnections;
 
 /**
  *  The value for "Server" HTTP header used by the GCDWebServer (NSString).
  *
- *  Default value is the GCDWebServer class name.
+ *  The default value is the GCDWebServer class name.
  */
 extern NSString* const GCDWebServerOption_ServerName;
 
@@ -102,14 +102,14 @@ extern NSString* const GCDWebServerOption_ServerName;
  *  The authentication method used by the GCDWebServer
  *  (one of "GCDWebServerAuthenticationMethod_...").
  *
- *  Default value is nil i.e. authentication disabled.
+ *  The default value is nil i.e. authentication disabled.
  */
 extern NSString* const GCDWebServerOption_AuthenticationMethod;
 
 /**
  *  The authentication realm used by the GCDWebServer (NSString).
  *
- *  Default value is the same as GCDWebServerOption_ServerName.
+ *  The default value is the same as GCDWebServerOption_ServerName.
  */
 extern NSString* const GCDWebServerOption_AuthenticationRealm;
 
@@ -117,7 +117,7 @@ extern NSString* const GCDWebServerOption_AuthenticationRealm;
  *  The authentication accounts used by the GCDWebServer
  *  (NSDictionary of username / password pairs).
  *
- *  Default value is nil i.e. no accounts.
+ *  The default value is nil i.e. no accounts.
  */
 extern NSString* const GCDWebServerOption_AuthenticationAccounts;
 
@@ -125,7 +125,7 @@ extern NSString* const GCDWebServerOption_AuthenticationAccounts;
  *  The class used by the GCDWebServer when instantiating GCDWebServerConnection
  *  (subclass of GCDWebServerConnection).
  *
- *  Default value is GCDWebServerConnection class.
+ *  The default value is GCDWebServerConnection class.
  */
 extern NSString* const GCDWebServerOption_ConnectionClass;
 
@@ -133,7 +133,7 @@ extern NSString* const GCDWebServerOption_ConnectionClass;
  *  Allow the GCDWebServer to pretend "HEAD" requests are actually "GET" ones
  *  and automatically discard the HTTP body of the response (NSNumber / BOOL).
  *
- *  Default value is YES.
+ *  The default value is YES.
  */
 extern NSString* const GCDWebServerOption_AutomaticallyMapHEADToGET;
 
@@ -142,7 +142,7 @@ extern NSString* const GCDWebServerOption_AutomaticallyMapHEADToGET;
  *  coalesce calls to -webServerDidConnect: and -webServerDidDisconnect:
  *  (NSNumber / double). Coalescing will be disabled if the interval is <= 0.0.
  *
- *  Default value is 1.0 second.
+ *  The default value is 1.0 second.
  */
 extern NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval;
 
@@ -156,7 +156,7 @@ extern NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval;
  *
  *  See the README.md file for more information about this option.
  *
- *  Default value is YES.
+ *  The default value is YES.
  *
  *  @warning The running property will be NO while the GCDWebServer is suspended.
  */
@@ -187,7 +187,7 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 @optional
 
 /**
- *  This method is called after the server has succesfully started.
+ *  This method is called after the server has successfully started.
  */
 - (void)webServerDidStart:(GCDWebServer*)server;
 
