@@ -71,8 +71,8 @@
 
 /**
  *  The GCDWebDAVServer subclass of GCDWebServer implements a class 1 compliant
- *  WebDAV server. It is also partially class 2 compliant (but only when the
- *  client is the OS X WebDAV implementation), so it can work with the OS X Finder.
+ *  WebDAV server. It is also partially class 2 compliant but only when the
+ *  client is the OS X WebDAV implementation (so it can work with the OS X Finder).
  *
  *  See the README.md file for more information about the features of GCDWebDAVServer.
  */
@@ -89,16 +89,15 @@
 @property(nonatomic, assign) id<GCDWebDAVServerDelegate> delegate;
 
 /**
- *  Restricts which files should be listed and allowed to be uploaded, downloaded,
- *  moved, copied or deleted depending on their extensions.
+ *  Sets which files are allowed to be operated on depending on their extension.
  *
  *  The default value is nil i.e. all file extensions are allowed.
  */
 @property(nonatomic, copy) NSArray* allowedFileExtensions;
 
 /**
- *  Sets if files and directories whose name start with a period should be
- *  listed and allowed to be uploaded, downloaded, moved, copied or deleted.
+ *  Sets if files and directories whose name start with a period are allowed to
+ *  be operated on.
  *
  *  The default value is NO.
  */
@@ -119,7 +118,7 @@
 @interface GCDWebDAVServer (Subclassing)
 
 /**
- *  This method is called to check if a file is allowed to be uploaded.
+ *  This method is called to check if a file upload is allowed to complete.
  *  The uploaded file is available for inspection at "tempPath".
  *
  *  The default implementation returns YES.

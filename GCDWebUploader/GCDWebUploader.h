@@ -30,7 +30,7 @@
 @class GCDWebUploader;
 
 /**
- *  Delegate methods for GCDWebUploaderDelegate.
+ *  Delegate methods for GCDWebUploader.
  *
  *  @warning These methods are always called on the main thread in a serialized way.
  */
@@ -70,37 +70,39 @@
  *  or directories.
  *
  *  See the README.md file for more information about the features of GCDWebUploader.
+ *
+ *  @warning For GCDWebUploader to work, "GCDWebUploader.bundle" must be added
+ *  to the resources of the Xcode target.
  */
 @interface GCDWebUploader : GCDWebServer
 
 /**
- *  Returns the upload directory as specified when the server was initialized.
+ *  Returns the upload directory as specified when the uploader was initialized.
  */
 @property(nonatomic, readonly) NSString* uploadDirectory;
 
 /**
- *  Sets the delegate for the server.
+ *  Sets the delegate for the uploader.
  */
 @property(nonatomic, assign) id<GCDWebUploaderDelegate> delegate;
 
 /**
- *  Restricts which files should be listed and allowed to be uploaded, downloaded,
- *  moved or deleted depending on their extensions.
+ *  Sets which files are allowed to be operated on depending on their extension.
  *
  *  The default value is nil i.e. all file extensions are allowed.
  */
 @property(nonatomic, copy) NSArray* allowedFileExtensions;
 
 /**
- *  Sets if files and directories whose name start with a period should be
- *  listed and allowed to be uploaded, downloaded, moved or deleted.
+ *  Sets if files and directories whose name start with a period are allowed to
+ *  be operated on.
  *
  *  The default value is NO.
  */
 @property(nonatomic) BOOL allowHiddenItems;
 
 /**
- *  Sets the title for the uploader interface.
+ *  Sets the title for the uploader web interface.
  *
  *  The default value is the application name.
  *
@@ -110,7 +112,7 @@
 @property(nonatomic, copy) NSString* title;
 
 /**
- *  Sets the header for the uploader interface.
+ *  Sets the header for the uploader web interface.
  *
  *  The default value is the same as the title property.
  *
@@ -120,7 +122,7 @@
 @property(nonatomic, copy) NSString* header;
 
 /**
- *  Sets the prologue for the uploader interface.
+ *  Sets the prologue for the uploader web interface.
  *
  *  The default value is a short help text.
  *
@@ -130,7 +132,7 @@
 @property(nonatomic, copy) NSString* prologue;
 
 /**
- *  Sets the epilogue for the uploader interface.
+ *  Sets the epilogue for the uploader web interface.
  *
  *  The default value is nil i.e. no epilogue.
  *
@@ -140,7 +142,7 @@
 @property(nonatomic, copy) NSString* epilogue;
 
 /**
- *  Sets the footer for the uploader interface.
+ *  Sets the footer for the uploader web interface.
  *
  *  The default value is the application name and version.
  *
@@ -164,7 +166,7 @@
 @interface GCDWebUploader (Subclassing)
 
 /**
- *  This method is called to check if a file is allowed to be uploaded.
+ *  This method is called to check if a file upload is allowed to complete.
  *  The uploaded file is available for inspection at "tempPath".
  *
  *  The default implementation returns YES.
