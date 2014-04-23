@@ -528,17 +528,6 @@ static inline NSString* _EncodeBase64(NSString* string) {
   }
 }
 
-- (BOOL)start {
-  return [self startWithPort:kDefaultPort bonjourName:@""];
-}
-
-- (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name {
-  NSMutableDictionary* options = [NSMutableDictionary dictionary];
-  [options setObject:[NSNumber numberWithInteger:port] forKey:GCDWebServerOption_Port];
-  [options setValue:name forKey:GCDWebServerOption_BonjourName];
-  return [self startWithOptions:options];
-}
-
 #if TARGET_OS_IPHONE
 
 - (void)_didEnterBackground:(NSNotification*)notification {
@@ -638,6 +627,17 @@ static inline NSString* _EncodeBase64(NSString* string) {
     }
   }
   return nil;
+}
+
+- (BOOL)start {
+  return [self startWithPort:kDefaultPort bonjourName:@""];
+}
+
+- (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name {
+  NSMutableDictionary* options = [NSMutableDictionary dictionary];
+  [options setObject:[NSNumber numberWithInteger:port] forKey:GCDWebServerOption_Port];
+  [options setValue:name forKey:GCDWebServerOption_BonjourName];
+  return [self startWithOptions:options];
 }
 
 #if !TARGET_OS_IPHONE

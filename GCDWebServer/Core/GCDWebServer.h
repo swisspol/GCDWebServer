@@ -285,23 +285,6 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 - (void)removeAllHandlers;
 
 /**
- *  Starts the server on port 8080 (OS X & iOS Simulator) or port 80 (iOS)
- *  using the computer / device name for as the Bonjour name.
- *
- *  Returns NO if the server failed to start.
- */
-- (BOOL)start;
-
-/**
- *  Starts the server on a given port and with a specific Bonjour name.
- *  Pass a nil Bonjour name to disable Bonjour entirely or an empty string to
- *  use the computer / device name.
- *
- *  Returns NO if the server failed to start.
- */
-- (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name;
-
-/**
  *  Starts the server with explicit options. This method is the designated way
  *  to start the server.
  *
@@ -336,6 +319,23 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *  registration has successfully completed, which can take up to a few seconds.
  */
 @property(nonatomic, readonly) NSURL* bonjourServerURL;
+
+/**
+ *  Starts the server on port 8080 (OS X & iOS Simulator) or port 80 (iOS)
+ *  using the computer / device name for as the Bonjour name.
+ *
+ *  Returns NO if the server failed to start.
+ */
+- (BOOL)start;
+
+/**
+ *  Starts the server on a given port and with a specific Bonjour name.
+ *  Pass a nil Bonjour name to disable Bonjour entirely or an empty string to
+ *  use the computer / device name.
+ *
+ *  Returns NO if the server failed to start.
+ */
+- (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name;
 
 #if !TARGET_OS_IPHONE
 
