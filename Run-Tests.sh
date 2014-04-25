@@ -45,6 +45,8 @@ xcodebuild -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION"
 # Run tests
 runTests $MRC_PRODUCT "htmlForm" "Tests/HTMLForm"
 runTests $ARC_PRODUCT "htmlForm" "Tests/HTMLForm"
+runTests $MRC_PRODUCT "htmlFileUpload" "Tests/HTMLFileUpload"
+runTests $ARC_PRODUCT "htmlFileUpload" "Tests/HTMLFileUpload"
 runTests $MRC_PRODUCT "webServer" "Tests/WebServer"
 runTests $ARC_PRODUCT "webServer" "Tests/WebServer"
 runTests $MRC_PRODUCT "webDAV" "Tests/WebDAV-Transmit"
