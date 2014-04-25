@@ -31,6 +31,7 @@
 
 #import "GCDWebServerDataRequest.h"
 #import "GCDWebServerURLEncodedFormRequest.h"
+#import "GCDWebServerMultiPartFormRequest.h"
 
 #import "GCDWebServerDataResponse.h"
 #import "GCDWebServerStreamedResponse.h"
@@ -47,9 +48,10 @@ typedef enum {
   kMode_WebServer = 0,
   kMode_HTMLPage,
   kMode_HTMLForm,
+  kMode_HTMLFileUpload,
   kMode_WebDAV,
   kMode_WebUploader,
-  kMode_StreamingResponse
+  kMode_StreamingResponse,
 } Mode;
 
 @interface Delegate : NSObject <GCDWebServerDelegate, GCDWebDAVServerDelegate, GCDWebUploaderDelegate>
@@ -140,7 +142,7 @@ int main(int argc, const char* argv[]) {
     NSString* authenticationPassword = nil;
     
     if (argc == 1) {
-      fprintf(stdout, "Usage: %s [-mode webServer | htmlPage | htmlForm | webDAV | webUploader | streamingResponse] [-record] [-root directory] [-tests directory] [-authenticationMethod Basic | Digest] [-authenticationRealm realm] [-authenticationUser user] [-authenticationPassword password]\n\n", basename((char*)argv[0]));
+      fprintf(stdout, "Usage: %s [-mode webServer | htmlPage | htmlForm | htmlFileUpload | webDAV | webUploader | streamingResponse] [-record] [-root directory] [-tests directory] [-authenticationMethod Basic | Digest] [-authenticationRealm realm] [-authenticationUser user] [-authenticationPassword password]\n\n", basename((char*)argv[0]));
     } else {
       for (int i = 1; i < argc; ++i) {
         if (argv[i][0] != '-') {
@@ -154,6 +156,8 @@ int main(int argc, const char* argv[]) {
             mode = kMode_HTMLPage;
           } else if (!strcmp(argv[i], "htmlForm")) {
             mode = kMode_HTMLForm;
+          } else if (!strcmp(argv[i], "htmlFileUpload")) {
+            mode = kMode_HTMLFileUpload;
           } else if (!strcmp(argv[i], "webDAV")) {
             mode = kMode_WebDAV;
           } else if (!strcmp(argv[i], "webUploader")) {
@@ -237,6 +241,46 @@ int main(int argc, const char* argv[]) {
           
           NSString* value = [[(GCDWebServerURLEncodedFormRequest*)request arguments] objectForKey:@"value"];
           NSString* html = [NSString stringWithFormat:@"<html><body><p>%@</p></body></html>", value];
+          return [GCDWebServerDataResponse responseWithHTML:html];
+          
+        }];
+        break;
+      }
+      
+      // Implements HTML file upload
+      case kMode_HTMLFileUpload: {
+        fprintf(stdout, "Running in HTML File Upload mode");
+        webServer = [[GCDWebServer alloc] init];
+        NSString* formHTML = @" \
+          <form name=\"input\" action=\"/\" method=\"post\" enctype=\"multipart/form-data\"> \
+          <input type=\"hidden\" name=\"secret\" value=\"42\"> \
+          <input type=\"file\" name=\"files\" multiple><br/> \
+          <input type=\"submit\" value=\"Submit\"> \
+          </form> \
+        ";
+        [webServer addHandlerForMethod:@"GET"
+                                  path:@"/"
+                          requestClass:[GCDWebServerRequest class]
+                          processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+          
+          NSString* html = [NSString stringWithFormat:@"<html><body>%@</body></html>", formHTML];
+          return [GCDWebServerDataResponse responseWithHTML:html];
+          
+        }];
+        [webServer addHandlerForMethod:@"POST"
+                                  path:@"/"
+                          requestClass:[GCDWebServerMultiPartFormRequest class]
+                          processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+          
+          NSMutableString* string = [NSMutableString string];
+          for (GCDWebServerMultiPartArgument* argument in [(GCDWebServerMultiPartFormRequest*)request arguments]) {
+            [string appendFormat:@"%@ = %@<br>", argument.controlName, argument.string];
+          }
+          for (GCDWebServerMultiPartFile* file in [(GCDWebServerMultiPartFormRequest*)request files]) {
+            NSDictionary* attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:file.temporaryPath error:NULL];
+            [string appendFormat:@"%@ = &quot;%@&quot; (%@ | %llu KB)<br>", file.controlName, file.fileName, file.mimeType, attributes.fileSize / 1000];
+          };
+          NSString* html = [NSString stringWithFormat:@"<html><body><p>%@</p><hr>%@</body></html>", string, formHTML];
           return [GCDWebServerDataResponse responseWithHTML:html];
           
         }];
