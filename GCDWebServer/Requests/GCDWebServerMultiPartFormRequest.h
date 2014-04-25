@@ -34,6 +34,11 @@
 @interface GCDWebServerMultiPart : NSObject
 
 /**
+ *  Returns the control name retrieved from the part headers.
+ */
+@property(nonatomic, readonly) NSString* controlName;
+
+/**
  *  Returns the content type retrieved from the part headers or "text/plain"
  *  if not available (per HTTP specifications).
  */
@@ -100,18 +105,28 @@
  *  Returns the argument parts from the multipart encoded form as
  *  name / GCDWebServerMultiPartArgument pairs.
  */
-@property(nonatomic, readonly) NSDictionary* arguments;
+@property(nonatomic, readonly) NSArray* arguments;
 
 /**
  *  Returns the files parts from the multipart encoded form as
  *  name / GCDWebServerMultiPartFile pairs.
  */
-@property(nonatomic, readonly) NSDictionary* files;
+@property(nonatomic, readonly) NSArray* files;
 
 /**
  *  Returns the MIME type for multipart encoded forms
  *  i.e. "multipart/form-data".
  */
 + (NSString*)mimeType;
+
+/**
+ *  Returns the first argument for a given control name or nil if not found.
+ */
+- (GCDWebServerMultiPartArgument*)firstArgumentForControlName:(NSString*)name;
+
+/**
+ *  Returns the first file for a given control name or nil if not found.
+ */
+- (GCDWebServerMultiPartFile*)firstFileForControlName:(NSString*)name;
 
 @end

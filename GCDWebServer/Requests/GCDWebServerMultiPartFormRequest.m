@@ -38,7 +38,7 @@ typedef enum {
 } ParserState;
 
 @interface GCDWebServerMIMEStreamParser : NSObject
-- (instancetype)initWithBoundary:(NSString*)boundary arguments:(NSMutableDictionary*)arguments files:(NSMutableDictionary*)files;
+- (instancetype)initWithBoundary:(NSString*)boundary arguments:(NSMutableArray*)arguments files:(NSMutableArray*)files;
 - (BOOL)appendData:(NSData*)data;
 - (BOOL)isAtEnd;
 @end
@@ -49,6 +49,7 @@ static NSData* _dashNewlineData = nil;
 
 @interface GCDWebServerMultiPart () {
 @private
+  NSString* _controlName;
   NSString* _contentType;
   NSString* _mimeType;
 }
@@ -56,17 +57,19 @@ static NSData* _dashNewlineData = nil;
 
 @implementation GCDWebServerMultiPart
 
-@synthesize contentType=_contentType, mimeType=_mimeType;
+@synthesize controlName=_controlName, contentType=_contentType, mimeType=_mimeType;
 
-- (id)initWithContentType:(NSString*)contentType {
+- (id)initWithControlName:(NSString*)name contentType:(NSString*)type {
   if ((self = [super init])) {
-    _contentType = [contentType copy];
+    _controlName = [name copy];
+    _contentType = [type copy];
     _mimeType = ARC_RETAIN(GCDWebServerTruncateHeaderValue(_contentType));
   }
   return self;
 }
 
 - (void)dealloc {
+  ARC_RELEASE(_controlName);
   ARC_RELEASE(_contentType);
   ARC_RELEASE(_mimeType);
   
@@ -86,8 +89,8 @@ static NSData* _dashNewlineData = nil;
 
 @synthesize data=_data, string=_string;
 
-- (id)initWithContentType:(NSString*)contentType data:(NSData*)data {
-  if ((self = [super initWithContentType:contentType])) {
+- (id)initWithControlName:(NSString*)name contentType:(NSString*)type data:(NSData*)data {
+  if ((self = [super initWithControlName:name contentType:type])) {
     _data = ARC_RETAIN(data);
     
     if ([self.contentType hasPrefix:@"text/"]) {
@@ -122,8 +125,8 @@ static NSData* _dashNewlineData = nil;
 
 @synthesize fileName=_fileName, temporaryPath=_temporaryPath;
 
-- (id)initWithContentType:(NSString*)contentType fileName:(NSString*)fileName temporaryPath:(NSString*)temporaryPath {
-  if ((self = [super initWithContentType:contentType])) {
+- (id)initWithControlName:(NSString*)name contentType:(NSString*)type fileName:(NSString*)fileName temporaryPath:(NSString*)temporaryPath {
+  if ((self = [super initWithControlName:name contentType:type])) {
     _fileName = [fileName copy];
     _temporaryPath = [temporaryPath copy];
   }
@@ -150,8 +153,8 @@ static NSData* _dashNewlineData = nil;
   NSData* _boundary;
   ParserState _state;
   NSMutableData* _data;
-  NSMutableDictionary* _arguments;
-  NSMutableDictionary* _files;
+  NSMutableArray* _arguments;
+  NSMutableArray* _files;
   
   NSString* _controlName;
   NSString* _fileName;
@@ -178,7 +181,7 @@ static NSData* _dashNewlineData = nil;
   }
 }
 
-- (instancetype)initWithBoundary:(NSString*)boundary arguments:(NSMutableDictionary*)arguments files:(NSMutableDictionary*)files {
+- (instancetype)initWithBoundary:(NSString*)boundary arguments:(NSMutableArray*)arguments files:(NSMutableArray*)files {
   NSData* data = boundary.length ? [[NSString stringWithFormat:@"--%@", boundary] dataUsingEncoding:NSASCIIStringEncoding] : nil;
   if (data == nil) {
     DNOT_REACHED();
@@ -294,8 +297,8 @@ static NSData* _dashNewlineData = nil;
             if (result == (ssize_t)dataLength) {
               if (close(_tmpFile) == 0) {
                 _tmpFile = 0;
-                GCDWebServerMultiPartFile* file = [[GCDWebServerMultiPartFile alloc] initWithContentType:_contentType fileName:_fileName temporaryPath:_tmpPath];
-                [_files setObject:file forKey:_controlName];
+                GCDWebServerMultiPartFile* file = [[GCDWebServerMultiPartFile alloc] initWithControlName:_controlName contentType:_contentType fileName:_fileName temporaryPath:_tmpPath];
+                [_files addObject:file];
                 ARC_RELEASE(file);
               } else {
                 DNOT_REACHED();
@@ -309,8 +312,8 @@ static NSData* _dashNewlineData = nil;
             _tmpPath = nil;
           } else {
             NSData* data = [[NSData alloc] initWithBytes:(void*)dataBytes length:dataLength];
-            GCDWebServerMultiPartArgument* argument = [[GCDWebServerMultiPartArgument alloc] initWithContentType:_contentType data:data];
-            [_arguments setObject:argument forKey:_controlName];
+            GCDWebServerMultiPartArgument* argument = [[GCDWebServerMultiPartArgument alloc] initWithControlName:_controlName contentType:_contentType data:data];
+            [_arguments addObject:argument];
             ARC_RELEASE(argument);
             ARC_RELEASE(data);
           }
@@ -356,8 +359,8 @@ static NSData* _dashNewlineData = nil;
 @interface GCDWebServerMultiPartFormRequest () {
 @private
   GCDWebServerMIMEStreamParser* _parser;
-  NSMutableDictionary* _arguments;
-  NSMutableDictionary* _files;
+  NSMutableArray* _arguments;
+  NSMutableArray* _files;
 }
 @end
 
@@ -371,8 +374,8 @@ static NSData* _dashNewlineData = nil;
 
 - (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
   if ((self = [super initWithMethod:method url:url headers:headers path:path query:query])) {
-    _arguments = [[NSMutableDictionary alloc] init];
-    _files = [[NSMutableDictionary alloc] init];
+    _arguments = [[NSMutableArray alloc] init];
+    _files = [[NSMutableArray alloc] init];
   }
   return self;
 }
@@ -413,21 +416,37 @@ static NSData* _dashNewlineData = nil;
   return YES;
 }
 
+- (GCDWebServerMultiPartArgument*)firstArgumentForControlName:(NSString*)name {
+  for (GCDWebServerMultiPartArgument* argument in _arguments) {
+    if ([argument.controlName isEqualToString:name]) {
+      return argument;
+    }
+  }
+  return nil;
+}
+
+- (GCDWebServerMultiPartFile*)firstFileForControlName:(NSString*)name {
+  for (GCDWebServerMultiPartFile* file in _files) {
+    if ([file.controlName isEqualToString:name]) {
+      return file;
+    }
+  }
+  return nil;
+}
+
 - (NSString*)description {
   NSMutableString* description = [NSMutableString stringWithString:[super description]];
   if (_arguments.count) {
     [description appendString:@"\n"];
-    for (NSString* key in [[_arguments allKeys] sortedArrayUsingSelector:@selector(compare:)]) {
-      GCDWebServerMultiPartArgument* argument = [_arguments objectForKey:key];
-      [description appendFormat:@"\n%@ (%@)\n", key, argument.contentType];
+    for (GCDWebServerMultiPartArgument* argument in _arguments) {
+      [description appendFormat:@"\n%@ (%@)\n", argument.controlName, argument.contentType];
       [description appendString:GCDWebServerDescribeData(argument.data, argument.contentType)];
     }
   }
   if (_files.count) {
     [description appendString:@"\n"];
-    for (NSString* key in [[_files allKeys] sortedArrayUsingSelector:@selector(compare:)]) {
-      GCDWebServerMultiPartFile* file = [_files objectForKey:key];
-      [description appendFormat:@"\n%@ (%@): %@\n{%@}", key, file.contentType, file.fileName, file.temporaryPath];
+    for (GCDWebServerMultiPartFile* file in _files) {
+      [description appendFormat:@"\n%@ (%@): %@\n{%@}", file.controlName, file.contentType, file.fileName, file.temporaryPath];
     }
   }
   return description;

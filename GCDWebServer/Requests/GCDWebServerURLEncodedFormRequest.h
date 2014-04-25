@@ -35,7 +35,7 @@
 @interface GCDWebServerURLEncodedFormRequest : GCDWebServerDataRequest
 
 /**
- *  Returns the unescaped names and values for the URL encoded form.
+ *  Returns the unescaped control names and values for the URL encoded form.
  *
  *  The text encoding used to interpret the data is extracted from the
  *  "Content-Type" header or defaults to UTF-8.

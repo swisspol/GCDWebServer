@@ -154,11 +154,11 @@
   NSRange range = [[request.headers objectForKey:@"Accept"] rangeOfString:@"application/json" options:NSCaseInsensitiveSearch];
   NSString* contentType = (range.location != NSNotFound ? @"application/json" : @"text/plain; charset=utf-8");  // Required when using iFrame transport (see https://github.com/blueimp/jQuery-File-Upload/wiki/Setup)
   
-  GCDWebServerMultiPartFile* file = [request.files objectForKey:@"files[]"];
+  GCDWebServerMultiPartFile* file = [request firstFileForControlName:@"files[]"];
   if ((!_allowHidden && [file.fileName hasPrefix:@"."]) || ![self _checkFileExtension:file.fileName]) {
     return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Uploaded file name \"%@\" is not allowed", file.fileName];
   }
-  NSString* relativePath = [(GCDWebServerMultiPartArgument*)[request.arguments objectForKey:@"path"] string];
+  NSString* relativePath = [[request firstArgumentForControlName:@"path"] string];
   NSString* absolutePath = [self _uniquePathForPath:[[_uploadDirectory stringByAppendingPathComponent:relativePath] stringByAppendingPathComponent:file.fileName]];
   
   if (![self shouldUploadFileAtPath:absolutePath withTemporaryFile:file.temporaryPath]) {
