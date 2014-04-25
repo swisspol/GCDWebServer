@@ -43,6 +43,8 @@ rm -rf "$ARC_BUILD_DIR"
 xcodebuild -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$ARC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=YES" > /dev/null
 
 # Run tests
+runTests $MRC_PRODUCT "htmlForm" "Tests/HTMLForm"
+runTests $ARC_PRODUCT "htmlForm" "Tests/HTMLForm"
 runTests $MRC_PRODUCT "webServer" "Tests/WebServer"
 runTests $ARC_PRODUCT "webServer" "Tests/WebServer"
 runTests $MRC_PRODUCT "webDAV" "Tests/WebDAV-Transmit"
