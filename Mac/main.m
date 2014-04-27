@@ -278,7 +278,9 @@ int main(int argc, const char* argv[]) {
           }
           for (GCDWebServerMultiPartFile* file in [(GCDWebServerMultiPartFormRequest*)request files]) {
             NSDictionary* attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:file.temporaryPath error:NULL];
-            [string appendFormat:@"%@ = &quot;%@&quot; (%@ | %llu KB)<br>", file.controlName, file.fileName, file.mimeType, attributes.fileSize / 1000];
+            [string appendFormat:@"%@ = &quot;%@&quot; (%@ | %llu %@)<br>", file.controlName, file.fileName, file.mimeType,
+                                 attributes.fileSize >= 1000 ? attributes.fileSize / 1000 : attributes.fileSize,
+                                 attributes.fileSize >= 1000 ? @"KB" : @"Bytes"];
           };
           NSString* html = [NSString stringWithFormat:@"<html><body><p>%@</p><hr>%@</body></html>", string, formHTML];
           return [GCDWebServerDataResponse responseWithHTML:html];
