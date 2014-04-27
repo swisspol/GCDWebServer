@@ -363,6 +363,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 #endif
   return ARC_AUTORELEASE([[NSString alloc] initWithData:[data base64EncodedDataWithOptions:0] encoding:NSASCIIStringEncoding]);
 }
+
 - (BOOL)_start {
   DCHECK(_source == NULL);
   NSUInteger port = [_GetOption(_options, GCDWebServerOption_Port, @0) unsignedIntegerValue];
