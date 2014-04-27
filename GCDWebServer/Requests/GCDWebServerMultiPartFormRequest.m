@@ -38,8 +38,8 @@ typedef enum {
 } ParserState;
 
 @interface GCDWebServerMIMEStreamParser : NSObject
-- (instancetype)initWithBoundary:(NSString*)boundary arguments:(NSMutableArray*)arguments files:(NSMutableArray*)files;
-- (BOOL)appendData:(NSData*)data;
+- (id)initWithBoundary:(NSString*)boundary defaultControlName:(NSString*)name arguments:(NSMutableArray*)arguments files:(NSMutableArray*)files;
+- (BOOL)appendBytes:(const void*)bytes length:(NSUInteger)length;
 - (BOOL)isAtEnd;
 @end
 
@@ -151,6 +151,7 @@ static NSData* _dashNewlineData = nil;
 @interface GCDWebServerMIMEStreamParser () {
 @private
   NSData* _boundary;
+  NSString* _defaultcontrolName;
   ParserState _state;
   NSMutableData* _data;
   NSMutableArray* _arguments;
@@ -161,6 +162,7 @@ static NSData* _dashNewlineData = nil;
   NSString* _contentType;
   NSString* _tmpPath;
   int _tmpFile;
+  GCDWebServerMIMEStreamParser* _subParser;
 }
 @end
 
@@ -181,7 +183,7 @@ static NSData* _dashNewlineData = nil;
   }
 }
 
-- (instancetype)initWithBoundary:(NSString*)boundary arguments:(NSMutableArray*)arguments files:(NSMutableArray*)files {
+- (id)initWithBoundary:(NSString*)boundary defaultControlName:(NSString*)name arguments:(NSMutableArray*)arguments files:(NSMutableArray*)files {
   NSData* data = boundary.length ? [[NSString stringWithFormat:@"--%@", boundary] dataUsingEncoding:NSASCIIStringEncoding] : nil;
   if (data == nil) {
     DNOT_REACHED();
@@ -190,9 +192,10 @@ static NSData* _dashNewlineData = nil;
   }
   if ((self = [super init])) {
     _boundary = ARC_RETAIN(data);
-    _data = [[NSMutableData alloc] initWithCapacity:kMultiPartBufferSize];
+    _defaultcontrolName = ARC_RETAIN(name);
     _arguments = ARC_RETAIN(arguments);
     _files = ARC_RETAIN(files);
+    _data = [[NSMutableData alloc] initWithCapacity:kMultiPartBufferSize];
     _state = kParserState_Start;
   }
   return self;
@@ -200,6 +203,7 @@ static NSData* _dashNewlineData = nil;
 
 - (void)dealloc {
   ARC_RELEASE(_boundary);
+  ARC_RELEASE(_defaultcontrolName);
   ARC_RELEASE(_data);
   ARC_RELEASE(_arguments);
   ARC_RELEASE(_files);
@@ -212,6 +216,7 @@ static NSData* _dashNewlineData = nil;
     unlink([_tmpPath fileSystemRepresentation]);
   }
   ARC_RELEASE(_tmpPath);
+  ARC_RELEASE(_subParser);
   
   ARC_DEALLOC(super);
 }
@@ -232,6 +237,8 @@ static NSData* _dashNewlineData = nil;
       _contentType = nil;
       ARC_RELEASE(_tmpPath);
       _tmpPath = nil;
+      ARC_RELEASE(_subParser);
+      _subParser = nil;
       NSString* headers = [[NSString alloc] initWithData:[_data subdataWithRange:NSMakeRange(0, range.location)] encoding:NSUTF8StringEncoding];
       if (headers) {
         for (NSString* header in [headers componentsSeparatedByString:@"\r\n"]) {
@@ -245,6 +252,9 @@ static NSData* _dashNewlineData = nil;
               NSString* contentDisposition = GCDWebServerNormalizeHeaderValue(value);
               if ([GCDWebServerTruncateHeaderValue(contentDisposition) isEqualToString:@"form-data"]) {
                 _controlName = ARC_RETAIN(GCDWebServerExtractHeaderValueParameter(contentDisposition, @"name"));
+                _fileName = ARC_RETAIN(GCDWebServerExtractHeaderValueParameter(contentDisposition, @"filename"));
+              } else if ([GCDWebServerTruncateHeaderValue(contentDisposition) isEqualToString:@"file"]) {
+                _controlName = ARC_RETAIN(_defaultcontrolName);
                 _fileName = ARC_RETAIN(GCDWebServerExtractHeaderValueParameter(contentDisposition, @"filename"));
               }
             }
@@ -261,7 +271,14 @@ static NSData* _dashNewlineData = nil;
         DNOT_REACHED();
       }
       if (_controlName) {
-        if (_fileName) {
+        if ([GCDWebServerTruncateHeaderValue(_contentType) isEqualToString:@"multipart/mixed"]) {
+          NSString* boundary = GCDWebServerExtractHeaderValueParameter(_contentType, @"boundary");
+          _subParser = [[GCDWebServerMIMEStreamParser alloc] initWithBoundary:boundary defaultControlName:_controlName arguments:_arguments files:_files];
+          if (_subParser == nil) {
+            DNOT_REACHED();
+            success = NO;
+          }
+        } else if (_fileName) {
           NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]];
           _tmpFile = open([path fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
           if (_tmpFile > 0) {
@@ -292,7 +309,14 @@ static NSData* _dashNewlineData = nil;
         if (_state == kParserState_Content) {
           const void* dataBytes = _data.bytes;
           NSUInteger dataLength = range.location - 2;
-          if (_tmpPath) {
+          if (_subParser) {
+            if (![_subParser appendBytes:dataBytes length:(dataLength + 2)] || ![_subParser isAtEnd]) {
+              DNOT_REACHED();
+              success = NO;
+            }
+            ARC_RELEASE(_subParser);
+            _subParser = nil;
+          } else if (_tmpPath) {
             ssize_t result = write(_tmpFile, dataBytes, dataLength);
             if (result == (ssize_t)dataLength) {
               if (close(_tmpFile) == 0) {
@@ -329,14 +353,23 @@ static NSData* _dashNewlineData = nil;
       }
     } else {
       NSUInteger margin = 2 * _boundary.length;
-      if (_tmpPath && (_data.length > margin)) {
+      if (_data.length > margin) {
         NSUInteger length = _data.length - margin;
-        ssize_t result = write(_tmpFile, _data.bytes, length);
-        if (result == (ssize_t)length) {
-          [_data replaceBytesInRange:NSMakeRange(0, length) withBytes:NULL length:0];
-        } else {
-          DNOT_REACHED();
-          success = NO;
+        if (_subParser) {
+          if ([_subParser appendBytes:_data.bytes length:length]) {
+            [_data replaceBytesInRange:NSMakeRange(0, length) withBytes:NULL length:0];
+          } else {
+            DNOT_REACHED();
+            success = NO;
+          }
+        } else if (_tmpPath) {
+          ssize_t result = write(_tmpFile, _data.bytes, length);
+          if (result == (ssize_t)length) {
+            [_data replaceBytesInRange:NSMakeRange(0, length) withBytes:NULL length:0];
+          } else {
+            DNOT_REACHED();
+            success = NO;
+          }
         }
       }
     }
@@ -345,8 +378,8 @@ static NSData* _dashNewlineData = nil;
   return success;
 }
 
-- (BOOL)appendData:(NSData*)data {
-  [_data appendBytes:data.bytes length:data.length];
+- (BOOL)appendBytes:(const void*)bytes length:(NSUInteger)length {
+  [_data appendBytes:bytes length:length];
   return [self _parseData];
 }
 
@@ -389,7 +422,7 @@ static NSData* _dashNewlineData = nil;
 
 - (BOOL)open:(NSError**)error {
   NSString* boundary = GCDWebServerExtractHeaderValueParameter(self.contentType, @"boundary");
-  _parser = [[GCDWebServerMIMEStreamParser alloc] initWithBoundary:boundary arguments:_arguments files:_files];
+  _parser = [[GCDWebServerMIMEStreamParser alloc] initWithBoundary:boundary defaultControlName:nil arguments:_arguments files:_files];
   if (_parser == nil) {
     *error = [NSError errorWithDomain:kGCDWebServerErrorDomain code:-1 userInfo:@{NSLocalizedDescriptionKey: @"Failed starting to parse multipart form data"}];
     return NO;
@@ -398,7 +431,7 @@ static NSData* _dashNewlineData = nil;
 }
 
 - (BOOL)writeData:(NSData*)data error:(NSError**)error {
-  if (![_parser appendData:data]) {
+  if (![_parser appendBytes:data.bytes length:data.length]) {
     *error = [NSError errorWithDomain:kGCDWebServerErrorDomain code:-1 userInfo:@{NSLocalizedDescriptionKey: @"Failed continuing to parse multipart form data"}];
     return NO;
   }
