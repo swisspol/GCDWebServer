@@ -43,44 +43,6 @@
 #define kDefaultPort 8080
 #endif
 
-@interface GCDWebServer () {
-@private
-  id<GCDWebServerDelegate> __unsafe_unretained _delegate;
-  dispatch_queue_t _syncQueue;
-  dispatch_semaphore_t _sourceSemaphore;
-  NSMutableArray* _handlers;
-  NSInteger _activeConnections;  // Accessed only with _syncQueue
-  BOOL _connected;
-  CFRunLoopTimerRef _connectedTimer;
-  
-  NSDictionary* _options;
-  NSString* _serverName;
-  NSString* _authenticationRealm;
-  NSMutableDictionary* _authenticationBasicAccounts;
-  NSMutableDictionary* _authenticationDigestAccounts;
-  Class _connectionClass;
-  BOOL _mapHEADToGET;
-  CFTimeInterval _disconnectDelay;
-  NSUInteger _port;
-  dispatch_source_t _source;
-  CFNetServiceRef _service;
-#if TARGET_OS_IPHONE
-  BOOL _suspendInBackground;
-  UIBackgroundTaskIdentifier _backgroundTask;
-#endif
-#ifdef __GCDWEBSERVER_ENABLE_TESTING__
-  BOOL _recording;
-#endif
-}
-@end
-
-@interface GCDWebServerHandler () {
-@private
-  GCDWebServerMatchBlock _matchBlock;
-  GCDWebServerProcessBlock _processBlock;
-}
-@end
-
 NSString* const GCDWebServerOption_Port = @"Port";
 NSString* const GCDWebServerOption_BonjourName = @"BonjourName";
 NSString* const GCDWebServerOption_MaxPendingConnections = @"MaxPendingConnections";
@@ -133,6 +95,13 @@ static void _SignalHandler(int signal) {
 
 #endif
 
+@interface GCDWebServerHandler () {
+@private
+  GCDWebServerMatchBlock _matchBlock;
+  GCDWebServerProcessBlock _processBlock;
+}
+@end
+
 @implementation GCDWebServerHandler
 
 @synthesize matchBlock=_matchBlock, processBlock=_processBlock;
@@ -152,6 +121,37 @@ static void _SignalHandler(int signal) {
   ARC_DEALLOC(super);
 }
 
+@end
+
+@interface GCDWebServer () {
+@private
+  id<GCDWebServerDelegate> __unsafe_unretained _delegate;
+  dispatch_queue_t _syncQueue;
+  dispatch_semaphore_t _sourceSemaphore;
+  NSMutableArray* _handlers;
+  NSInteger _activeConnections;  // Accessed only with _syncQueue
+  BOOL _connected;
+  CFRunLoopTimerRef _connectedTimer;
+  
+  NSDictionary* _options;
+  NSString* _serverName;
+  NSString* _authenticationRealm;
+  NSMutableDictionary* _authenticationBasicAccounts;
+  NSMutableDictionary* _authenticationDigestAccounts;
+  Class _connectionClass;
+  BOOL _mapHEADToGET;
+  CFTimeInterval _disconnectDelay;
+  NSUInteger _port;
+  dispatch_source_t _source;
+  CFNetServiceRef _service;
+#if TARGET_OS_IPHONE
+  BOOL _suspendInBackground;
+  UIBackgroundTaskIdentifier _backgroundTask;
+#endif
+#ifdef __GCDWEBSERVER_ENABLE_TESTING__
+  BOOL _recording;
+#endif
+}
 @end
 
 @implementation GCDWebServer
