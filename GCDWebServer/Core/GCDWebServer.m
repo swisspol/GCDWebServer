@@ -367,7 +367,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
   return ARC_AUTORELEASE([[NSString alloc] initWithData:[data base64EncodedDataWithOptions:0] encoding:NSASCIIStringEncoding]);
 }
 
-- (BOOL)_start {
+- (BOOL)_start:(NSError**)error {
   DCHECK(_source == NULL);
   NSUInteger port = [_GetOption(_options, GCDWebServerOption_Port, @0) unsignedIntegerValue];
   NSString* name = _GetOption(_options, GCDWebServerOption_BonjourName, @"");
@@ -473,8 +473,8 @@ static inline NSString* _EncodeBase64(NSString* string) {
             CFNetServiceClientContext context = {0, (ARC_BRIDGE void*)self, NULL, NULL, NULL};
             CFNetServiceSetClient(_service, _NetServiceClientCallBack, &context);
             CFNetServiceScheduleWithRunLoop(_service, CFRunLoopGetMain(), kCFRunLoopCommonModes);
-            CFStreamError error = {0};
-            CFNetServiceRegisterWithOptions(_service, 0, &error);
+            CFStreamError streamError = {0};
+            CFNetServiceRegisterWithOptions(_service, 0, &streamError);
           } else {
             LOG_ERROR(@"Failed creating CFNetService");
           }
@@ -488,15 +488,24 @@ static inline NSString* _EncodeBase64(NSString* string) {
           });
         }
       } else {
-        LOG_ERROR(@"Failed listening on socket: %s (%i)", strerror(errno), errno);
+        LOG_ERROR(@"Failed starting listening socket: %s (%i)", strerror(errno), errno);
+        if (error) {
+          *error = GCDWebServerMakePosixError(errno);
+        }
         close(listeningSocket);
       }
     } else {
-      LOG_ERROR(@"Failed binding socket: %s (%i)", strerror(errno), errno);
+      LOG_ERROR(@"Failed binding listening socket: %s (%i)", strerror(errno), errno);
+      if (error) {
+        *error = GCDWebServerMakePosixError(errno);
+      }
       close(listeningSocket);
     }
   } else {
-    LOG_ERROR(@"Failed creating socket: %s (%i)", strerror(errno), errno);
+    LOG_ERROR(@"Failed creating listening socket: %s (%i)", strerror(errno), errno);
+    if (error) {
+      *error = GCDWebServerMakePosixError(errno);
+    }
   }
   return (_source ? YES : NO);
 }
@@ -548,20 +557,20 @@ static inline NSString* _EncodeBase64(NSString* string) {
   DCHECK([NSThread isMainThread]);
   LOG_DEBUG(@"Will enter foreground");
   if (!_source) {
-    [self _start];  // TODO: There's probably nothing we can do on failure
+    [self _start:NULL];  // TODO: There's probably nothing we can do on failure
   }
 }
 
 #endif
 
-- (BOOL)startWithOptions:(NSDictionary*)options {
+- (BOOL)startWithOptions:(NSDictionary*)options error:(NSError**)error {
   if (_options == nil) {
     _options = [options copy];
 #if TARGET_OS_IPHONE
     _suspendInBackground = [_GetOption(_options, GCDWebServerOption_AutomaticallySuspendInBackground, @YES) boolValue];
-    if (((_suspendInBackground == NO) || ([[UIApplication sharedApplication] applicationState] != UIApplicationStateBackground)) && ![self _start])
+    if (((_suspendInBackground == NO) || ([[UIApplication sharedApplication] applicationState] != UIApplicationStateBackground)) && ![self _start:error])
 #else
-    if (![self _start])
+    if (![self _start:error])
 #endif
     {
       ARC_RELEASE(_options);
@@ -643,7 +652,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
   NSMutableDictionary* options = [NSMutableDictionary dictionary];
   [options setObject:[NSNumber numberWithInteger:port] forKey:GCDWebServerOption_Port];
   [options setValue:name forKey:GCDWebServerOption_BonjourName];
-  return [self startWithOptions:options];
+  return [self startWithOptions:options error:NULL];
 }
 
 #if !TARGET_OS_IPHONE
@@ -652,16 +661,16 @@ static inline NSString* _EncodeBase64(NSString* string) {
   NSMutableDictionary* options = [NSMutableDictionary dictionary];
   [options setObject:[NSNumber numberWithInteger:port] forKey:GCDWebServerOption_Port];
   [options setValue:name forKey:GCDWebServerOption_BonjourName];
-  return [self runWithOptions:options];
+  return [self runWithOptions:options error:NULL];
 }
 
-- (BOOL)runWithOptions:(NSDictionary*)options {
+- (BOOL)runWithOptions:(NSDictionary*)options error:(NSError**)error {
   DCHECK([NSThread isMainThread]);
   BOOL success = NO;
   _run = YES;
   void (*handler)(int) = signal(SIGINT, _SignalHandler);
   if (handler != SIG_ERR) {
-    if ([self startWithOptions:options]) {
+    if ([self startWithOptions:options error:error]) {
       while (_run) {
         CFRunLoopRunInMode(kCFRunLoopDefaultMode, 1.0, true);
       }
@@ -957,7 +966,7 @@ static void _LogResult(NSString* format, ...) {
 - (NSInteger)runTestsWithOptions:(NSDictionary*)options inDirectory:(NSString*)path {
   NSArray* ignoredHeaders = @[@"Date", @"Etag"];  // Dates are always different by definition and ETags depend on file system node IDs
   NSInteger result = -1;
-  if ([self startWithOptions:options]) {
+  if ([self startWithOptions:options error:NULL]) {
     
     result = 0;
     NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:path error:NULL];

@@ -288,9 +288,9 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *  Starts the server with explicit options. This method is the designated way
  *  to start the server.
  *
- *  Returns NO if the server failed to start.
+ *  Returns NO if the server failed to start and sets "error" argument if not NULL.
  */
-- (BOOL)startWithOptions:(NSDictionary*)options;
+- (BOOL)startWithOptions:(NSDictionary*)options error:(NSError**)error;
 
 /**
  *  Stops the server and prevents it to accepts new HTTP requests.
@@ -355,11 +355,11 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *  is received i.e. Ctrl-C. This method is intended to be used by command line
  *  tools.
  *
- *  Returns NO if the server failed to start.
+ *  Returns NO if the server failed to start and sets "error" argument if not NULL.
  *
  *  @warning This method must be used from the main thread only.
  */
-- (BOOL)runWithOptions:(NSDictionary*)options;
+- (BOOL)runWithOptions:(NSDictionary*)options error:(NSError**)error;
 
 #endif
 

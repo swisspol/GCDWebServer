@@ -40,10 +40,6 @@
 }
 @end
 
-static inline NSError* _MakePosixError(int code) {
-  return [NSError errorWithDomain:NSPOSIXErrorDomain code:code userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"%s", strerror(code)]}];
-}
-
 @implementation GCDWebServerFileResponse
 
 + (instancetype)responseWithFile:(NSString*)path {
@@ -142,11 +138,11 @@ static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
 - (BOOL)open:(NSError**)error {
   _file = open([_path fileSystemRepresentation], O_NOFOLLOW | O_RDONLY);
   if (_file <= 0) {
-    *error = _MakePosixError(errno);
+    *error = GCDWebServerMakePosixError(errno);
     return NO;
   }
   if (lseek(_file, _offset, SEEK_SET) != (off_t)_offset) {
-    *error = _MakePosixError(errno);
+    *error = GCDWebServerMakePosixError(errno);
     close(_file);
     return NO;
   }
@@ -158,7 +154,7 @@ static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
   NSMutableData* data = [[NSMutableData alloc] initWithLength:length];
   ssize_t result = read(_file, data.mutableBytes, length);
   if (result < 0) {
-    *error = _MakePosixError(errno);
+    *error = GCDWebServerMakePosixError(errno);
     return nil;
   }
   if (result > 0) {

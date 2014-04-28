@@ -34,10 +34,6 @@
 }
 @end
 
-static inline NSError* _MakePosixError(int code) {
-  return [NSError errorWithDomain:NSPOSIXErrorDomain code:code userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:@"%s", strerror(code)]}];
-}
-
 @implementation GCDWebServerFileRequest
 
 @synthesize temporaryPath=_temporaryPath;
@@ -59,7 +55,7 @@ static inline NSError* _MakePosixError(int code) {
 - (BOOL)open:(NSError**)error {
   _file = open([_temporaryPath fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
   if (_file <= 0) {
-    *error = _MakePosixError(errno);
+    *error = GCDWebServerMakePosixError(errno);
     return NO;
   }
   return YES;
@@ -67,7 +63,7 @@ static inline NSError* _MakePosixError(int code) {
 
 - (BOOL)writeData:(NSData*)data error:(NSError**)error {
   if (write(_file, data.bytes, data.length) != (ssize_t)data.length) {
-    *error = _MakePosixError(errno);
+    *error = GCDWebServerMakePosixError(errno);
     return NO;
   }
   return YES;
@@ -75,7 +71,7 @@ static inline NSError* _MakePosixError(int code) {
 
 - (BOOL)close:(NSError**)error {
   if (close(_file) < 0) {
-    *error = _MakePosixError(errno);
+    *error = GCDWebServerMakePosixError(errno);
     return NO;
   }
 #ifdef __GCDWEBSERVER_ENABLE_TESTING__

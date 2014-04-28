@@ -359,7 +359,7 @@ int main(int argc, const char* argv[]) {
             [options setObject:GCDWebServerAuthenticationMethod_DigestAccess forKey:GCDWebServerOption_AuthenticationMethod];
           }
         }
-        if ([webServer runWithOptions:options]) {
+        if ([webServer runWithOptions:options error:NULL]) {
           result = 0;
         }
       }
