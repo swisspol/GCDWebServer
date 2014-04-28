@@ -118,6 +118,14 @@
 - (void)didWriteBytes:(const void*)bytes length:(NSUInteger)length;
 
 /**
+ *  This method is called after the HTTP headers have been received to
+ *  allow replacing the request URL by another one.
+ *
+ *  The default implementation returns the original URL.
+ */
+- (NSURL*)rewriteRequestURL:(NSURL*)url withMethod:(NSString*)method headers:(NSDictionary*)headers;
+
+/**
  *  Assuming a valid HTTP request was received, this method is called before
  *  the request is processed.
  *
