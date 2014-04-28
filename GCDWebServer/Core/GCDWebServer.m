@@ -47,6 +47,7 @@
 @private
   id<GCDWebServerDelegate> __unsafe_unretained _delegate;
   dispatch_queue_t _syncQueue;
+  dispatch_semaphore_t _sourceSemaphore;
   NSMutableArray* _handlers;
   NSInteger _activeConnections;  // Accessed only with _syncQueue
   BOOL _connected;
@@ -183,6 +184,7 @@ static void _ConnectedTimerCallBack(CFRunLoopTimerRef timer, void* info) {
 - (instancetype)init {
   if ((self = [super init])) {
     _syncQueue = dispatch_queue_create([NSStringFromClass([self class]) UTF8String], DISPATCH_QUEUE_SERIAL);
+    _sourceSemaphore = dispatch_semaphore_create(0);
     _handlers = [[NSMutableArray alloc] init];
     CFRunLoopTimerContext context = {0, (ARC_BRIDGE void*)self, NULL, NULL, NULL};
     _connectedTimer = CFRunLoopTimerCreate(kCFAllocatorDefault, HUGE_VAL, HUGE_VAL, 0, 0, _ConnectedTimerCallBack, &context);
@@ -206,6 +208,7 @@ static void _ConnectedTimerCallBack(CFRunLoopTimerRef timer, void* info) {
   CFRunLoopTimerInvalidate(_connectedTimer);
   CFRelease(_connectedTimer);
   ARC_RELEASE(_handlers);
+  ARC_DISPATCH_RELEASE(_sourceSemaphore);
   ARC_DISPATCH_RELEASE(_syncQueue);
   
   ARC_DEALLOC(super);
@@ -414,6 +417,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
               LOG_DEBUG(@"Did close listening socket %i", listeningSocket);
             }
           }
+          dispatch_semaphore_signal(_sourceSemaphore);
           
         });
         dispatch_source_set_event_handler(_source, ^{
@@ -507,7 +511,8 @@ static inline NSString* _EncodeBase64(NSString* string) {
     _service = NULL;
   }
   
-  dispatch_source_cancel(_source);  // This will close the socket
+  dispatch_source_cancel(_source);
+  dispatch_semaphore_wait(_sourceSemaphore, DISPATCH_TIME_FOREVER);  // Wait until the cancellation handler has been called which guarantees the listening socket is closed
   ARC_DISPATCH_RELEASE(_source);
   _source = NULL;
   _port = 0;
