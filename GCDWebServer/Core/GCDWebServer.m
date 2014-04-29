@@ -668,8 +668,9 @@ static inline NSString* _EncodeBase64(NSString* string) {
   DCHECK([NSThread isMainThread]);
   BOOL success = NO;
   _run = YES;
-  void (*handler)(int) = signal(SIGINT, _SignalHandler);
-  if (handler != SIG_ERR) {
+  void (*termHandler)(int) = signal(SIGTERM, _SignalHandler);
+  void (*intHandler)(int) = signal(SIGINT, _SignalHandler);
+  if ((termHandler != SIG_ERR) && (intHandler != SIG_ERR)) {
     if ([self startWithOptions:options error:error]) {
       while (_run) {
         CFRunLoopRunInMode(kCFRunLoopDefaultMode, 1.0, true);
@@ -677,7 +678,8 @@ static inline NSString* _EncodeBase64(NSString* string) {
       [self stop];
       success = YES;
     }
-    signal(SIGINT, handler);
+    signal(SIGINT, intHandler);
+    signal(SIGTERM, termHandler);
   }
   return success;
 }

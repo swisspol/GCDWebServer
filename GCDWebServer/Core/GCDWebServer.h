@@ -351,9 +351,9 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 - (BOOL)runWithPort:(NSUInteger)port bonjourName:(NSString*)name;
 
 /**
- *  Runs the server synchronously using -startWithOptions: until a SIGINT signal
- *  is received i.e. Ctrl-C. This method is intended to be used by command line
- *  tools.
+ *  Runs the server synchronously using -startWithOptions: until a SIGTERM or
+ *  SIGINT signal is received i.e. Ctrl-C in Terminal. This method is intended to
+ *  be used by command line tools.
  *
  *  Returns NO if the server failed to start and sets "error" argument if not NULL.
  *
