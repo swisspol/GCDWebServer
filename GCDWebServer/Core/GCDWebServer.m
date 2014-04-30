@@ -199,11 +199,7 @@ static void _ConnectedTimerCallBack(CFRunLoopTimerRef timer, void* info) {
 - (void)dealloc {
   DCHECK(_connected == NO);
   DCHECK(_activeConnections == 0);
-  
-  _delegate = nil;
-  if (_options) {
-    [self stop];
-  }
+  DCHECK(_options == nil);  // The server can never be dealloc'ed while running because of the retain-cycle with the dispatch source
   
   CFRunLoopTimerInvalidate(_connectedTimer);
   CFRelease(_connectedTimer);
