@@ -337,11 +337,11 @@ int main(int argc, const char* argv[]) {
     
     if (webServer) {
       Delegate* delegate = [[Delegate alloc] init];
-      webServer.delegate = delegate;
       if (testDirectory) {
         fprintf(stdout, "<RUNNING TESTS FROM \"%s\">\n\n", [testDirectory UTF8String]);
         result = (int)[webServer runTestsWithOptions:@{GCDWebServerOption_Port: @8080} inDirectory:testDirectory];
       } else {
+        webServer.delegate = delegate;
         if (recording) {
           fprintf(stdout, "<RECORDING ENABLED>\n");
           webServer.recordingEnabled = YES;
