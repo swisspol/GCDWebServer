@@ -678,6 +678,11 @@ static inline NSString* _EncodeBase64(NSString* string) {
       [self stop];
       success = YES;
     }
+    while (1) {
+      if (CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.1, true) == kCFRunLoopRunTimedOut) {  // Ensure pending scheduled callbacks have been executed
+        break;
+      }
+    }
     signal(SIGINT, intHandler);
     signal(SIGTERM, termHandler);
   }
@@ -966,6 +971,7 @@ static void _LogResult(NSString* format, ...) {
 }
 
 - (NSInteger)runTestsWithOptions:(NSDictionary*)options inDirectory:(NSString*)path {
+  DCHECK([NSThread isMainThread]);
   NSArray* ignoredHeaders = @[@"Date", @"Etag"];  // Dates are always different by definition and ETags depend on file system node IDs
   NSInteger result = -1;
   if ([self startWithOptions:options error:NULL]) {
@@ -1069,6 +1075,12 @@ static void _LogResult(NSString* format, ...) {
     }
     
     [self stop];
+    
+    while (1) {
+      if (CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.1, true) == kCFRunLoopRunTimedOut) {  // Ensure pending scheduled callbacks have been executed
+        break;
+      }
+    }
   }
   return result;
 }
