@@ -187,14 +187,14 @@
       if (_type == nil) {
         _type = kGCDWebServerDefaultMimeType;
       }
-      _length = NSNotFound;
+      _length = NSUIntegerMax;
     } else {
       if (_type) {
         DNOT_REACHED();
         ARC_RELEASE(self);
         return nil;
       }
-      _length = NSNotFound;
+      _length = NSUIntegerMax;
     }
     
     NSString* modifiedHeader = [_headers objectForKey:@"If-Modified-Since"];
@@ -203,7 +203,7 @@
     }
     _noneMatch = ARC_RETAIN([_headers objectForKey:@"If-None-Match"]);
     
-    _range = NSMakeRange(NSNotFound, 0);
+    _range = NSMakeRange(NSUIntegerMax, 0);
     NSString* rangeHeader = GCDWebServerNormalizeHeaderValue([_headers objectForKey:@"Range"]);
     if (rangeHeader) {
       if ([rangeHeader hasPrefix:@"bytes="]) {
@@ -222,13 +222,13 @@
               _range.location = startValue;
               _range.length = NSUIntegerMax;
             } else if (endString.length && (endValue > 0)) {  // The final 500 bytes: "-500"
-              _range.location = NSNotFound;
+              _range.location = NSUIntegerMax;
               _range.length = endValue;
             }
           }
         }
       }
-      if ((_range.location == NSNotFound) && (_range.length == 0)) {  // Ignore "Range" header if syntactically invalid
+      if ((_range.location == NSUIntegerMax) && (_range.length == 0)) {  // Ignore "Range" header if syntactically invalid
         LOG_WARNING(@"Failed to parse 'Range' header \"%@\" for url: %@", rangeHeader, url);
       }
     }

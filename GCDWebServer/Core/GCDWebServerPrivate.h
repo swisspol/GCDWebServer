@@ -111,7 +111,7 @@ extern void GCDLogMessage(GCDWebServerLogLevel level, NSString* format, ...) NS_
 #define kGCDWebServerErrorDomain @"GCDWebServerErrorDomain"
 
 static inline BOOL GCDWebServerIsValidByteRange(NSRange range) {
-  return ((range.location != NSNotFound) || (range.length > 0));
+  return ((range.location != NSUIntegerMax) || (range.length > 0));
 }
 
 static inline NSError* GCDWebServerMakePosixError(int code) {

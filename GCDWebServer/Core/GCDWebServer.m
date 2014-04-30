@@ -937,7 +937,7 @@ static CFHTTPMessageRef _CreateHTTPMessageFromPerformingRequest(NSData* inData, 
         while (1) {
           ssize_t result = read(httpSocket, (char*)outData.mutableBytes + length, outData.length - length);
           if (result < 0) {
-            length = NSNotFound;
+            length = NSUIntegerMax;
             break;
           } else if (result == 0) {
             break;
@@ -947,7 +947,7 @@ static CFHTTPMessageRef _CreateHTTPMessageFromPerformingRequest(NSData* inData, 
             outData.length = 2 * outData.length;
           }
         }
-        if (length != NSNotFound) {
+        if (length != NSUIntegerMax) {
           outData.length = length;
           response = _CreateHTTPMessageFromData(outData, NO);
         } else {

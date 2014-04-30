@@ -49,7 +49,7 @@
 }
 
 - (BOOL)open:(NSError**)error {
-  if (self.contentLength != NSNotFound) {
+  if (self.contentLength != NSUIntegerMax) {
     _data = [[NSMutableData alloc] initWithCapacity:self.contentLength];
   } else {
     _data = [[NSMutableData alloc] init];

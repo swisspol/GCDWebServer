@@ -81,7 +81,7 @@
 
 - (id)initWithResponse:(GCDWebServerResponse*)response reader:(id<GCDWebServerBodyReader>)reader {
   if ((self = [super initWithResponse:response reader:reader])) {
-    response.contentLength = NSNotFound;  // Make sure "Content-Length" header is not set since we don't know it
+    response.contentLength = NSUIntegerMax;  // Make sure "Content-Length" header is not set since we don't know it
     [response setValue:@"gzip" forAdditionalHeader:@"Content-Encoding"];
   }
   return self;
@@ -180,7 +180,7 @@
 - (instancetype)init {
   if ((self = [super init])) {
     _type = nil;
-    _length = NSNotFound;
+    _length = NSUIntegerMax;
     _status = kGCDWebServerHTTPStatusCode_OK;
     _maxAge = 0;
     _headers = [[NSMutableDictionary alloc] init];
@@ -208,7 +208,7 @@
 }
 
 - (BOOL)usesChunkedTransferEncoding {
-  return (_type != nil) && (_length == NSNotFound);
+  return (_type != nil) && (_length == NSUIntegerMax);
 }
 
 - (BOOL)open:(NSError**)error {
@@ -259,7 +259,7 @@
   if (_type) {
     [description appendFormat:@"\nContent Type = %@", _type];
   }
-  if (_length != NSNotFound) {
+  if (_length != NSUIntegerMax) {
     [description appendFormat:@"\nContent Length = %lu", (unsigned long)_length];
   }
   [description appendFormat:@"\nCache Control Max Age = %lu", (unsigned long)_maxAge];

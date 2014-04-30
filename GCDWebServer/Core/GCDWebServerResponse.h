@@ -87,12 +87,12 @@
 
 /**
  *  Sets the content length for the body of the response. If a body is present
- *  but this property is set to "NSNotFound", this means the length of the body
+ *  but this property is set to "NSUIntegerMax", this means the length of the body
  *  cannot be known ahead of time. Chunked transfer encoding will be
  *  automatically enabled by the GCDWebServerConnection to comply with HTTP/1.1
  *  specifications.
  *
- *  The default value is "NSNotFound" i.e. the response has no body or its length
+ *  The default value is "NSUIntegerMax" i.e. the response has no body or its length
  *  is undefined.
  */
 @property(nonatomic) NSUInteger contentLength;

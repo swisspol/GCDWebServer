@@ -59,11 +59,11 @@
 }
 
 - (instancetype)initWithFile:(NSString*)path {
-  return [self initWithFile:path byteRange:NSMakeRange(NSNotFound, 0) isAttachment:NO];
+  return [self initWithFile:path byteRange:NSMakeRange(NSUIntegerMax, 0) isAttachment:NO];
 }
 
 - (instancetype)initWithFile:(NSString*)path isAttachment:(BOOL)attachment {
-  return [self initWithFile:path byteRange:NSMakeRange(NSNotFound, 0) isAttachment:attachment];
+  return [self initWithFile:path byteRange:NSMakeRange(NSUIntegerMax, 0) isAttachment:attachment];
 }
 
 - (instancetype)initWithFile:(NSString*)path byteRange:(NSRange)range {
@@ -81,31 +81,34 @@ static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
     ARC_RELEASE(self);
     return nil;
   }
-  if (GCDWebServerIsValidByteRange(range)) {
-    if (range.location != NSNotFound) {
-      range.location = MIN(range.location, (NSUInteger)info.st_size);
-      range.length = MIN(range.length, (NSUInteger)info.st_size - range.location);
+  NSUInteger fileSize = (NSUInteger)info.st_size;
+  
+  BOOL hasByteRange = GCDWebServerIsValidByteRange(range);
+  if (hasByteRange) {
+    if (range.location != NSUIntegerMax) {
+      range.location = MIN(range.location, fileSize);
+      range.length = MIN(range.length, fileSize - range.location);
     } else {
-      range.length = MIN(range.length, (NSUInteger)info.st_size);
-      range.location = (NSUInteger)info.st_size - range.length;
+      range.length = MIN(range.length, fileSize);
+      range.location = fileSize - range.length;
     }
     if (range.length == 0) {
       ARC_RELEASE(self);
       return nil;  // TODO: Return 416 status code and "Content-Range: bytes */{file length}" header
     }
+  } else {
+    range.location = 0;
+    range.length = fileSize;
   }
   
   if ((self = [super init])) {
     _path = [path copy];
-    if (range.location != NSNotFound) {
-      _offset = range.location;
-      _size = range.length;
+    _offset = range.location;
+    _size = range.length;
+    if (hasByteRange) {
       [self setStatusCode:kGCDWebServerHTTPStatusCode_PartialContent];
-      [self setValue:[NSString stringWithFormat:@"bytes %i-%i/%i", (int)range.location, (int)(range.location + range.length - 1), (int)info.st_size] forAdditionalHeader:@"Content-Range"];
-      LOG_DEBUG(@"Using content bytes range [%i-%i] for file \"%@\"", (int)range.location, (int)(range.location + range.length - 1), path);
-    } else {
-      _offset = 0;
-      _size = (NSUInteger)info.st_size;
+      [self setValue:[NSString stringWithFormat:@"bytes %lu-%lu/%lu", (unsigned long)_offset, (unsigned long)(_offset + _size - 1), (unsigned long)fileSize] forAdditionalHeader:@"Content-Range"];
+      LOG_DEBUG(@"Using content bytes range [%lu-%lu] for file \"%@\"", (unsigned long)_offset, (unsigned long)(_offset + _size - 1), path);
     }
     
     if (attachment) {
@@ -121,8 +124,8 @@ static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
       }
     }
     
-    self.contentType = GCDWebServerGetMimeTypeForExtension([path pathExtension]);
-    self.contentLength = (range.location != NSNotFound ? range.length : (NSUInteger)info.st_size);
+    self.contentType = GCDWebServerGetMimeTypeForExtension([_path pathExtension]);
+    self.contentLength = _size;
     self.lastModifiedDate = _NSDateFromTimeSpec(&info.st_mtimespec);
     self.eTag = [NSString stringWithFormat:@"%llu/%li/%li", info.st_ino, info.st_mtimespec.tv_sec, info.st_mtimespec.tv_nsec];
   }

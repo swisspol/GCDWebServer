@@ -77,9 +77,9 @@
 
 /**
  *  Initializes a response like -initWithFile: but restricts the file contents
- *  to a specific byte range. This range should be set to (NSNotFound, 0) for
+ *  to a specific byte range. This range should be set to (NSUIntegerMax, 0) for
  *  the full file, (offset, length) if expressed from the beginning of the file,
- *  or (NSNotFound, -length) if expressed from the end of the file. The "offset"
+ *  or (NSUIntegerMax, length) if expressed from the end of the file. The "offset"
  *  and "length" values will be automatically adjusted to be compatible with the
  *  actual size of the file.
  *

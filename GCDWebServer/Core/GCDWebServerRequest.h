@@ -119,7 +119,7 @@
  *  Returns the content length for the body of the request parsed from the
  *  "Content-Length" header.
  *
- *  This property will be set to "NSNotFound" if the request has no body or
+ *  This property will be set to "NSUIntegerMax" if the request has no body or
  *  if there is a body but no "Content-Length" header, typically because
  *  chunked transfer encoding is used.
  */
@@ -136,9 +136,9 @@
 @property(nonatomic, readonly) NSString* ifNoneMatch;
 
 /**
- *  Returns the parsed "Range" header or (NSNotFound, 0) if absent or malformed.
+ *  Returns the parsed "Range" header or (NSUIntegerMax, 0) if absent or malformed.
  *  The range will be set to (offset, length) if expressed from the beginning
- *  of the entity body, or (NSNotFound, -length) if expressed from its end.
+ *  of the entity body, or (NSUIntegerMax, length) if expressed from its end.
  */
 @property(nonatomic, readonly) NSRange byteRange;
 
