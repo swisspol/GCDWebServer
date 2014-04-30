@@ -95,6 +95,21 @@ static void _SignalHandler(int signal) {
 
 #endif
 
+#if !TARGET_OS_IPHONE || defined(__GCDWEBSERVER_ENABLE_TESTING__)
+
+// This utility function is used to ensure scheduled callbacks on the main thread are called when running the server synchronously
+// https://developer.apple.com/library/mac/documentation/General/Conceptual/ConcurrencyProgrammingGuide/OperationQueues/OperationQueues.html
+// The main queue works with the application’s run loop to interleave the execution of queued tasks with the execution of other event sources attached to the run loop
+// TODO: Ensure all scheduled blocks on the main queue are also executed
+static void _ExecuteMainThreadRunLoopSources() {
+  SInt32 result;
+  do {
+    result = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.0, true);
+  } while (result == kCFRunLoopRunHandledSource);
+}
+
+#endif
+
 @interface GCDWebServerHandler () {
 @private
   GCDWebServerMatchBlock _matchBlock;
@@ -129,9 +144,10 @@ static void _SignalHandler(int signal) {
   dispatch_queue_t _syncQueue;
   dispatch_semaphore_t _sourceSemaphore;
   NSMutableArray* _handlers;
-  NSInteger _activeConnections;  // Accessed only with _syncQueue
-  BOOL _connected;
-  CFRunLoopTimerRef _connectedTimer;
+  NSInteger _activeConnections;  // Accessed through _syncQueue only
+  BOOL _connected;  // Accessed on main thread only
+  BOOL _disconnecting;  // Accessed on main thread only
+  CFRunLoopTimerRef _disconnectTimer;  // Accessed on main thread only
   
   NSDictionary* _options;
   NSString* _serverName;
@@ -175,10 +191,13 @@ static void _SignalHandler(int signal) {
   GCDWebServerInitializeFunctions();
 }
 
-static void _ConnectedTimerCallBack(CFRunLoopTimerRef timer, void* info) {
+static void _DisconnectTimerCallBack(CFRunLoopTimerRef timer, void* info) {
+  DCHECK([NSThread isMainThread]);
+  GCDWebServer* server = (ARC_BRIDGE GCDWebServer*)info;
   @autoreleasepool {
-    [(ARC_BRIDGE GCDWebServer*)info _didDisconnect];
+    [server _didDisconnect];
   }
+  server->_disconnecting = NO;
 }
 
 - (instancetype)init {
@@ -187,8 +206,8 @@ static void _ConnectedTimerCallBack(CFRunLoopTimerRef timer, void* info) {
     _sourceSemaphore = dispatch_semaphore_create(0);
     _handlers = [[NSMutableArray alloc] init];
     CFRunLoopTimerContext context = {0, (ARC_BRIDGE void*)self, NULL, NULL, NULL};
-    _connectedTimer = CFRunLoopTimerCreate(kCFAllocatorDefault, HUGE_VAL, HUGE_VAL, 0, 0, _ConnectedTimerCallBack, &context);
-    CFRunLoopAddTimer(CFRunLoopGetMain(), _connectedTimer, kCFRunLoopCommonModes);
+    _disconnectTimer = CFRunLoopTimerCreate(kCFAllocatorDefault, HUGE_VAL, HUGE_VAL, 0, 0, _DisconnectTimerCallBack, &context);
+    CFRunLoopAddTimer(CFRunLoopGetMain(), _disconnectTimer, kCFRunLoopCommonModes);
 #if TARGET_OS_IPHONE
     _backgroundTask = UIBackgroundTaskInvalid;
 #endif
@@ -201,8 +220,8 @@ static void _ConnectedTimerCallBack(CFRunLoopTimerRef timer, void* info) {
   DCHECK(_activeConnections == 0);
   DCHECK(_options == nil);  // The server can never be dealloc'ed while running because of the retain-cycle with the dispatch source
   
-  CFRunLoopTimerInvalidate(_connectedTimer);
-  CFRelease(_connectedTimer);
+  CFRunLoopTimerInvalidate(_disconnectTimer);
+  CFRelease(_disconnectTimer);
   ARC_RELEASE(_handlers);
   ARC_DISPATCH_RELEASE(_sourceSemaphore);
   ARC_DISPATCH_RELEASE(_syncQueue);
@@ -252,8 +271,9 @@ static void _ConnectedTimerCallBack(CFRunLoopTimerRef timer, void* info) {
     DCHECK(_activeConnections >= 0);
     if (_activeConnections == 0) {
       dispatch_async(dispatch_get_main_queue(), ^{
-        if (_disconnectDelay > 0.0) {
-          CFRunLoopTimerSetNextFireDate(_connectedTimer, HUGE_VAL);
+        if (_disconnecting) {
+          CFRunLoopTimerSetNextFireDate(_disconnectTimer, HUGE_VAL);
+          _disconnecting = NO;
         }
         if (_connected == NO) {
           [self _didConnect];
@@ -307,7 +327,8 @@ static void _ConnectedTimerCallBack(CFRunLoopTimerRef timer, void* info) {
     if (_activeConnections == 0) {
       dispatch_async(dispatch_get_main_queue(), ^{
         if ((_disconnectDelay > 0.0) && (_source != NULL)) {
-          CFRunLoopTimerSetNextFireDate(_connectedTimer, CFAbsoluteTimeGetCurrent() + _disconnectDelay);
+          CFRunLoopTimerSetNextFireDate(_disconnectTimer, CFAbsoluteTimeGetCurrent() + _disconnectDelay);
+          _disconnecting = YES;
         } else {
           [self _didDisconnect];
         }
@@ -531,6 +552,14 @@ static inline NSString* _EncodeBase64(NSString* string) {
   ARC_RELEASE(_authenticationDigestAccounts);
   _authenticationDigestAccounts = nil;
   
+  dispatch_async(dispatch_get_main_queue(), ^{
+    if (_disconnecting) {
+      CFRunLoopTimerSetNextFireDate(_disconnectTimer, HUGE_VAL);
+      _disconnecting = NO;
+      [self _didDisconnect];
+    }
+  });
+  
   LOG_INFO(@"%@ stopped", [self class]);
   if ([_delegate respondsToSelector:@selector(webServerDidStop:)]) {
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -674,11 +703,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
       [self stop];
       success = YES;
     }
-    while (1) {
-      if (CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.1, true) == kCFRunLoopRunTimedOut) {  // Ensure pending scheduled callbacks have been executed
-        break;
-      }
-    }
+    _ExecuteMainThreadRunLoopSources();
     signal(SIGINT, intHandler);
     signal(SIGTERM, termHandler);
   }
@@ -971,6 +996,7 @@ static void _LogResult(NSString* format, ...) {
   NSArray* ignoredHeaders = @[@"Date", @"Etag"];  // Dates are always different by definition and ETags depend on file system node IDs
   NSInteger result = -1;
   if ([self startWithOptions:options error:NULL]) {
+    _ExecuteMainThreadRunLoopSources();
     
     result = 0;
     NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:path error:NULL];
@@ -1073,15 +1099,12 @@ static void _LogResult(NSString* format, ...) {
           ++result;
         }
       }
+      _ExecuteMainThreadRunLoopSources();
     }
     
     [self stop];
     
-    while (1) {
-      if (CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.1, true) == kCFRunLoopRunTimedOut) {  // Ensure pending scheduled callbacks have been executed
-        break;
-      }
-    }
+    _ExecuteMainThreadRunLoopSources();
   }
   return result;
 }
