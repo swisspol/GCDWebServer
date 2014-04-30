@@ -233,6 +233,10 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *  then passes each one to a "handler" capable of generating an HTTP response
  *  for it, which is then sent back to the client.
  *
+ *  GCDWebServer instances can be created and used from any thread but it's
+ *  recommended to have the main thread's runloop be running so internal callbacks
+ *  can be handled e.g. for Bonjour registration.
+ *
  *  See the README.md file for more information about the architecture of GCDWebServer.
  */
 @interface GCDWebServer : NSObject
