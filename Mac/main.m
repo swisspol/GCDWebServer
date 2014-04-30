@@ -338,6 +338,9 @@ int main(int argc, const char* argv[]) {
     if (webServer) {
       Delegate* delegate = [[Delegate alloc] init];
       if (testDirectory) {
+#ifndef NDEBUG
+        webServer.delegate = delegate;
+#endif
         fprintf(stdout, "<RUNNING TESTS FROM \"%s\">\n\n", [testDirectory UTF8String]);
         result = (int)[webServer runTestsWithOptions:@{GCDWebServerOption_Port: @8080} inDirectory:testDirectory];
       } else {
@@ -363,9 +366,10 @@ int main(int argc, const char* argv[]) {
           result = 0;
         }
       }
+      webServer.delegate = nil;
 #if !__has_feature(objc_arc)
-      [webServer release];
       [delegate release];
+      [webServer release];
 #endif
     }
   }
