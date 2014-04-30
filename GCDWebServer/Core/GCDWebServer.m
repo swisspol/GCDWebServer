@@ -310,7 +310,7 @@ static void _ConnectedTimerCallBack(CFRunLoopTimerRef timer, void* info) {
     _activeConnections -= 1;
     if (_activeConnections == 0) {
       dispatch_async(dispatch_get_main_queue(), ^{
-        if (_disconnectDelay > 0.0) {
+        if ((_disconnectDelay > 0.0) && (_source != NULL)) {
           CFRunLoopTimerSetNextFireDate(_connectedTimer, CFAbsoluteTimeGetCurrent() + _disconnectDelay);
         } else {
           [self _didDisconnect];
