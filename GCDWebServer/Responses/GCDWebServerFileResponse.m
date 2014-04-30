@@ -81,6 +81,13 @@ static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
     ARC_RELEASE(self);
     return nil;
   }
+#ifndef __LP64__
+  if (info.st_size >= (off_t)4294967295) {  // In 32 bit mode, we can't handle files greater than 4 GiBs (don't use "NSUIntegerMax" here to avoid potential unsigned to signed conversion issues)
+    DNOT_REACHED();
+    ARC_RELEASE(self);
+    return nil;
+  }
+#endif
   NSUInteger fileSize = (NSUInteger)info.st_size;
   
   BOOL hasByteRange = GCDWebServerIsValidByteRange(range);
