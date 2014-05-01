@@ -198,8 +198,9 @@ NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
     [scanner setScanLocation:([scanner scanLocation] + 1)];
     
     NSString* value = nil;
-    if (![scanner scanUpToString:@"&" intoString:&value]) {
-      break;
+    [scanner scanUpToString:@"&" intoString:&value];
+    if (value == nil) {
+      value = @"";
     }
     
     key = [key stringByReplacingOccurrencesOfString:@"+" withString:@" "];
