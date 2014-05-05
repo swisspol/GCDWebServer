@@ -244,6 +244,25 @@ Fortunately, GCDWebServer does all of this automatically for you:
 
 HTTP connections are often initiated in batches (or bursts), for instance when loading a web page with multiple resources. This makes it difficult to accurately detect when the *very last* HTTP connection has been closed: it's possible 2 consecutive HTTP connections part of the same batch would be separated by a small delay instead of overlapping. It would be bad for the client if GCDWebServer suspended itself right in between. The ```GCDWebServerOption_ConnectedStateCoalescingInterval``` option solves this problem elegantly by forcing GCDWebServer to wait some extra delay before performing any action after the last HTTP connection has been closed, just in case a new HTTP connection is initiated within this delay.
 
+Debug Builds & Custom Logging
+=============================
+
+When building GCDWebServer in "Debug" mode versus "Release" mode, GCDWebServer logs a lot more information and also performs a number of internal consistency checks. To disable this behavior, make sure to define the preprocessor constant ```NDEBUG``` when compiling GCDWebServer. In Xcode target settings, this can be done by adding ```NDEBUG``` to the build setting ```GCC_PREPROCESSOR_DEFINITIONS``` when building in Release configuration (this is done automatically for you if you use CocoaPods).
+
+It's also possible to replace the logging system used by GCDWebServer by a custom one. Simply define the preprocessor constant ```__GCDWEBSERVER_LOGGING_HEADER__``` to the name of a header file (e.g. "MyLogging.h") that defines these macros:
+
+```
+#define LOG_DEBUG(...)  // Should not do anything if NDEBUG is defined
+#define LOG_VERBOSE(...)
+#define LOG_INFO(...)
+#define LOG_WARNING(...)
+#define LOG_ERROR(...)
+#define LOG_EXCEPTION(__EXCEPTION__)
+
+#define DCHECK(__CONDITION__)  // Should not do anything if NDEBUG is defined or abort if __CONDITION__ is false
+#define DNOT_REACHED()  // Should not do anything if NDEBUG is defined
+```
+
 Advanced Example 1: Implementing HTTP Redirects
 ===============================================
 
