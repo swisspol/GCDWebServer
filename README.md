@@ -77,8 +77,10 @@ int main(int argc, const char* argv[]) {
       
     }];
     
-    // Use convenience method that runs server on port 8080 until SIGINT received (i.e. Ctrl-C in Terminal)
+    // Use convenience method that runs server on port 8080
+    // until SIGINT (Ctrl-C in Terminal) or SIGTERM is received
     [webServer runWithPort:8080 bonjourName:nil];
+    NSLog(@"Visit %@ in your web browser", webServer.serverURL);
     
   }
   return 0;
@@ -90,7 +92,12 @@ int main(int argc, const char* argv[]) {
 #import "GCDWebServer.h"
 #import "GCDWebServerDataResponse.h"
 
-static GCDWebServer* _webServer = nil;  // This should really be an ivar of your application's delegate class
+@interface AppDelegate : NSObject <UIApplicationDelegate> {
+  GCDWebServer* _webServer;
+}
+@end
+
+@implementation AppDelegate
 
 - (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
   
@@ -108,9 +115,12 @@ static GCDWebServer* _webServer = nil;  // This should really be an ivar of your
   
   // Start server on port 8080
   [_webServer startWithPort:8080 bonjourName:nil];
+  NSLog(@"Visit %@ in your web browser", _webServer.serverURL);
   
   return YES;
 }
+
+@end
 ```
 
 Web Based Uploads in iOS Apps
@@ -123,7 +133,12 @@ Simply instantiate and run a ```GCDWebUploader``` instance then visit ```http://
 ```objectivec
 #import "GCDWebUploader.h"
 
-static GCDWebUploader* _webUploader = nil;  // This should really be an ivar of your application's delegate class
+@interface AppDelegate : NSObject <UIApplicationDelegate> {
+  GCDWebUploader* _webUploader;
+}
+@end
+
+@implementation AppDelegate
 
 - (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
   NSString* documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
@@ -132,6 +147,8 @@ static GCDWebUploader* _webUploader = nil;  // This should really be an ivar of 
   NSLog(@"Visit %@ in your web browser", _webUploader.serverURL);
   return YES;
 }
+
+@end
 ```
 
 WebDAV Server in iOS Apps
@@ -146,7 +163,12 @@ Simply instantiate and run a ```GCDWebDAVServer``` instance then connect to ```h
 ```objectivec
 #import "GCDWebDAVServer.h"
 
-static GCDWebDAVServer* _davServer = nil;  // This should really be an ivar of your application's delegate class
+@interface AppDelegate : NSObject <UIApplicationDelegate> {
+  GCDWebDAVServer* _davServer;
+}
+@end
+
+@implementation AppDelegate
 
 - (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
   NSString* documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
@@ -155,6 +177,8 @@ static GCDWebDAVServer* _davServer = nil;  // This should really be an ivar of y
   NSLog(@"Visit %@ in your WebDAV client", _davServer.serverURL);
   return YES;
 }
+
+@end
 ```
 
 Serving a Static Website
