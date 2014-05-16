@@ -681,29 +681,18 @@ static inline NSString* _EncodeBase64(NSString* string) {
 }
 
 - (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name {
-  return [self startWithPort:port bonjourName:name bonjourType:nil];
-}
-
-- (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name bonjourType:(NSString *)bonjourType {
   NSMutableDictionary* options = [NSMutableDictionary dictionary];
   [options setObject:[NSNumber numberWithInteger:port] forKey:GCDWebServerOption_Port];
   [options setValue:name forKey:GCDWebServerOption_BonjourName];
-  if (bonjourType.length) { [options setObject:bonjourType forKey:GCDWebServerOption_BonjourType]; }
   return [self startWithOptions:options error:NULL];
 }
 
 #if !TARGET_OS_IPHONE
 
-- (BOOL)runWithPort:(NSUInteger)port bonjourName:(NSString*)name
-{
-  return [self runWithPort:port bonjourName:name bonjourType:nil];
-}
-
-- (BOOL)runWithPort:(NSUInteger)port bonjourName:(NSString*)name bonjourType:(NSString*)bonjourType {
+- (BOOL)runWithPort:(NSUInteger)port bonjourName:(NSString*)name {
   NSMutableDictionary* options = [NSMutableDictionary dictionary];
   [options setObject:[NSNumber numberWithInteger:port] forKey:GCDWebServerOption_Port];
   [options setValue:name forKey:GCDWebServerOption_BonjourName];
-  if (bonjourType.length) { [options setObject:bonjourType forKey:GCDWebServerOption_BonjourType]; }
   return [self runWithOptions:options error:NULL];
 }
 

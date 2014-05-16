@@ -356,18 +356,6 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  */
 - (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name;
 
-/**
- *  Starts the server on a given port and with a specific Bonjour name and type.
- *  Pass a nil Bonjour name to disable Bonjour entirely or an empty string to
- *  use the computer / device name.
- *  Pass a nil or empty string to Bonjour type to use the standard
- *  HTTP web server type "_http._tcp".
- *
- *  Returns NO if the server failed to start.
- */
-- (BOOL)startWithPort:(NSUInteger)port bonjourName:(NSString*)name bonjourType:(NSString*)bonjourType;
-
-
 #if !TARGET_OS_IPHONE
 
 /**
@@ -380,18 +368,6 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *  @warning This method must be used from the main thread only.
  */
 - (BOOL)runWithPort:(NSUInteger)port bonjourName:(NSString*)name;
-
-/**
- *  Runs the server synchronously using -startWithPort:bonjourName:bonjourType:
- *  until a SIGINT signal is received i.e. Ctrl-C. This method is intended
- *  to be used by command line tools.
- *
- *  Returns NO if the server failed to start.
- *
- *  @warning This method must be used from the main thread only.
- */
-- (BOOL)runWithPort:(NSUInteger)port bonjourName:(NSString*)name bonjourType:(NSString*)bonjourType;
-
 
 /**
  *  Runs the server synchronously using -startWithOptions: until a SIGTERM or
