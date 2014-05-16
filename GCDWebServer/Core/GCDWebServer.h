@@ -84,6 +84,13 @@ extern NSString* const GCDWebServerOption_Port;
 extern NSString* const GCDWebServerOption_BonjourName;
 
 /**
+ *  The Bonjour service type used by the GCDWebServer (NSString).
+ *
+ *  The default value is "_http._tcp", standard HTTP web server.
+ */
+extern NSString* const GCDWebServerOption_BonjourType;
+
+/**
  *  The maximum number of incoming HTTP requests that can be queued waiting to
  *  be handled before new ones are dropped (NSNumber / NSUInteger).
  *
@@ -265,6 +272,14 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *  registration has successfully completed, which can take up to a few seconds.
  */
 @property(nonatomic, readonly) NSString* bonjourName;
+
+/**
+ *  Returns the Bonjour service type used by the server.
+ *
+ *  @warning This property is only valid if the server is running and Bonjour
+ *  registration has successfully completed, which can take up to a few seconds.
+ */
+@property(nonatomic, readonly) NSString* bonjourType;
 
 /**
  *  This method is the designated initializer for the class.

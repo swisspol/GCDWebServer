@@ -45,6 +45,7 @@
 
 NSString* const GCDWebServerOption_Port = @"Port";
 NSString* const GCDWebServerOption_BonjourName = @"BonjourName";
+NSString* const GCDWebServerOption_BonjourType = @"BonjourType";
 NSString* const GCDWebServerOption_MaxPendingConnections = @"MaxPendingConnections";
 NSString* const GCDWebServerOption_ServerName = @"ServerName";
 NSString* const GCDWebServerOption_AuthenticationMethod = @"AuthenticationMethod";
@@ -342,6 +343,11 @@ static void _DisconnectTimerCallBack(CFRunLoopTimerRef timer, void* info) {
   return name && CFStringGetLength(name) ? ARC_BRIDGE_RELEASE(CFStringCreateCopy(kCFAllocatorDefault, name)) : nil;
 }
 
+- (NSString*)bonjourType {
+  CFStringRef type = _service ? CFNetServiceGetType(_service) : NULL;
+  return type && CFStringGetLength(type) ? ARC_BRIDGE_RELEASE(CFStringCreateCopy(kCFAllocatorDefault, type)) : nil;
+}
+
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)handlerBlock {
   DCHECK(_options == nil);
   GCDWebServerHandler* handler = [[GCDWebServerHandler alloc] initWithMatchBlock:matchBlock processBlock:handlerBlock];
@@ -388,6 +394,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
   DCHECK(_source == NULL);
   NSUInteger port = [_GetOption(_options, GCDWebServerOption_Port, @0) unsignedIntegerValue];
   NSString* name = _GetOption(_options, GCDWebServerOption_BonjourName, @"");
+  NSString* bonjourType = _GetOption(_options, GCDWebServerOption_BonjourType, @"_http._tcp");
   NSUInteger maxPendingConnections = [_GetOption(_options, GCDWebServerOption_MaxPendingConnections, @16) unsignedIntegerValue];
   int listeningSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (listeningSocket > 0) {
@@ -485,7 +492,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
         }
         
         if (name) {
-          _service = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), CFSTR("_http._tcp"), (ARC_BRIDGE CFStringRef)name, (SInt32)_port);
+          _service = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), (ARC_BRIDGE CFStringRef)bonjourType, (ARC_BRIDGE CFStringRef)name, (SInt32)_port);
           if (_service) {
             CFNetServiceClientContext context = {0, (ARC_BRIDGE void*)self, NULL, NULL, NULL};
             CFNetServiceSetClient(_service, _NetServiceClientCallBack, &context);
