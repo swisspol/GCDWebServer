@@ -71,7 +71,7 @@ webServer.addDefaultHandlerForMethod("GET", requestClass: GCDWebServerRequest.se
 
 webServer.runWithPort(8080, bonjourName: nil)
 
-NSLog("Visit \(webServer.serverURL) in your web browser")
+println("Visit \(webServer.serverURL) in your web browser")
 ```
 
 ***WebServer-Bridging-Header.h***
