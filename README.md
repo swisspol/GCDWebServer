@@ -57,6 +57,29 @@ Hello World
 
 These code snippets show how to implement a custom HTTP server that runs on port 8080 and returns a "Hello World" HTML page to any request. Since GCDWebServer uses GCD blocks to handle requests, no subclassing or delegates are needed, which results in very clean code.
 
+**OS X Swift version (command line tool):**
+
+***webServer.swift***
+```swift
+import Foundation
+
+let webServer = GCDWebServer()
+
+webServer.addDefaultHandlerForMethod("GET", requestClass: GCDWebServerRequest.self) { request in
+    return GCDWebServerDataResponse(HTML:"<html><body><p>Hello World</p></body></html>")
+}
+
+webServer.runWithPort(8080, bonjourName: nil)
+
+println("Visit \(webServer.serverURL) in your web browser")
+```
+
+***WebServer-Bridging-Header.h***
+```objectivec
+#import "GCDWebServer.h"
+#import "GCDWebServerDataResponse.h"
+```
+
 **OS X version (command line tool):**
 ```objectivec
 #import "GCDWebServer.h"
