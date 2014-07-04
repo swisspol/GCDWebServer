@@ -268,7 +268,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     }
     
   });
-  ARC_DISPATCH_RELEASE(buffer);
+  dispatch_release(buffer);
 }
 
 - (void)_writeHeadersWithCompletionBlock:(WriteHeadersCompletionBlock)block {
