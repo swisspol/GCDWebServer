@@ -1,9 +1,9 @@
 # http://guides.cocoapods.org/syntax/podspec.html
-# Verify Podspec with:
-#   sudo gem update cocoapods
-#   pod spec lint GCDWebServer.podspec --verbose
-# Add to source line:
-#   :tag => s.version.to_s
+# http://guides.cocoapods.org/making/getting-setup-with-trunk.html
+# $ sudo gem update cocoapods
+# (optional) $ pod trunk register {email} {name} --description={computer}
+# $ pod trunk push
+# DELETE THIS SECTION BEFORE PROCEEDING!
 
 Pod::Spec.new do |s|
   s.name     = 'GCDWebServer'
@@ -13,7 +13,7 @@ Pod::Spec.new do |s|
   s.homepage = 'https://github.com/swisspol/GCDWebServer'
   s.summary  = 'Lightweight GCD based HTTP server for OS X & iOS (includes web based uploader & WebDAV server)'
   
-  s.source   = { :git => 'https://github.com/swisspol/GCDWebServer.git' }
+  s.source   = { :git => 'https://github.com/swisspol/GCDWebServer.git', :tag => s.version.to_s }
   s.ios.deployment_target = '5.0'
   s.osx.deployment_target = '10.7'
   s.requires_arc = true
