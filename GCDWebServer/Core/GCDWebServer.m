@@ -623,7 +623,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 }
 
 - (BOOL)isRunning {
-  return (_source ? YES : NO);
+  return (_options ? YES : NO);
 }
 
 - (void)stop {
