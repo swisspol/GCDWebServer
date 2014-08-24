@@ -491,7 +491,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = macosx;
 			};
@@ -501,7 +500,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = macosx;
 			};
@@ -553,7 +551,6 @@
 				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = iOS/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 5.1.1;
 				PRODUCT_NAME = GCDWebServer;
 				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
@@ -567,7 +564,6 @@
 				ARCHS = "$(ARCHS_STANDARD)";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = iOS/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 5.1.1;
 				PRODUCT_NAME = GCDWebServer;
 				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;

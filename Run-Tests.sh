@@ -32,19 +32,35 @@ function runTests {
   logLevel=2 $1 -mode "$2" -root "$PAYLOAD_DIR/Payload" -tests "$3"
 }
 
-# Build for iOS in manual memory management mode (TODO: run tests on iOS)
+# Build for iOS in manual memory management mode and for oldest deployment target (TODO: run tests on iOS)
+rm -rf "$MRC_BUILD_DIR"
+xcodebuild -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$MRC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=NO" "IPHONEOS_DEPLOYMENT_TARGET=5.1.1" > /dev/null
+
+# Build for iOS in manual memory management mode and for default deployment target (TODO: run tests on iOS)
 rm -rf "$MRC_BUILD_DIR"
 xcodebuild -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$MRC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=NO" > /dev/null
 
-# Build for iOS in ARC mode (TODO: run tests on iOS)
+# Build for iOS in ARC mode and for oldest deployment target (TODO: run tests on iOS)
+rm -rf "$ARC_BUILD_DIR"
+xcodebuild -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$ARC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=YES" "IPHONEOS_DEPLOYMENT_TARGET=5.1.1" > /dev/null
+
+# Build for iOS in ARC mode and for default deployment target (TODO: run tests on iOS)
 rm -rf "$ARC_BUILD_DIR"
 xcodebuild -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$ARC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=YES" > /dev/null
 
-# Build for OS X in manual memory management mode
+# Build for OS X in manual memory management mode and for oldest deployment target
+rm -rf "$MRC_BUILD_DIR"
+xcodebuild -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$MRC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=NO" "MACOSX_DEPLOYMENT_TARGET=10.7" > /dev/null
+
+# Build for OS X in manual memory management mode and for default deployment target
 rm -rf "$MRC_BUILD_DIR"
 xcodebuild -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$MRC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=NO" > /dev/null
 
-# Build for OS X in ARC mode
+# Build for OS X in ARC mode and for oldest deployment target
+rm -rf "$ARC_BUILD_DIR"
+xcodebuild -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$ARC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=YES" "MACOSX_DEPLOYMENT_TARGET=10.7" > /dev/null
+
+# Build for OS X in ARC mode and for default deployment target
 rm -rf "$ARC_BUILD_DIR"
 xcodebuild -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$ARC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=YES" > /dev/null
 
