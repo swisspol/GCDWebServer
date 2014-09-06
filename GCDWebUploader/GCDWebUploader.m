@@ -322,6 +322,10 @@
       NSString* title = server.title;
       if (title == nil) {
         title = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+        
+        if (title == nil) {
+          title = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"];
+        }
 #if !TARGET_OS_IPHONE
         if (title == nil) {
           title = [[NSProcessInfo processInfo] processName];
@@ -343,6 +347,9 @@
       NSString* footer = server.footer;
       if (footer == nil) {
         NSString* name = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+        if (name == nil) {
+          name = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"];
+        }
         NSString* version = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
 #if !TARGET_OS_IPHONE
         if (!name && !version) {
