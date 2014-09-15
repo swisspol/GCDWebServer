@@ -322,6 +322,9 @@
       NSString* title = server.title;
       if (title == nil) {
         title = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+        if (title == nil) {
+          title = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleName"];
+        }
 #if !TARGET_OS_IPHONE
         if (title == nil) {
           title = [[NSProcessInfo processInfo] processName];
