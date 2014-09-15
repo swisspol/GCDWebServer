@@ -77,16 +77,18 @@ typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* r
 extern NSString* const GCDWebServerOption_Port;
 
 /**
- *  The Bonjour name used by the GCDWebServer (NSString).
+ *  The Bonjour name used by the GCDWebServer (NSString). If set to an empty string,
+ *  the name will automatically take the value of the GCDWebServerOption_ServerName
+ *  option. If this option is set to nil, Bonjour will be disabled.
  *
- *  The default value is an empty string i.e. use the computer / device name.
+ *  The default value is an empty string.
  */
 extern NSString* const GCDWebServerOption_BonjourName;
 
 /**
  *  The Bonjour service type used by the GCDWebServer (NSString).
  *
- *  The default value is "_http._tcp", standard HTTP web server.
+ *  The default value is "_http._tcp", the service type for HTTP web servers.
  */
 extern NSString* const GCDWebServerOption_BonjourType;
 
@@ -336,12 +338,14 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *
  *  @warning This property is only valid if the server is running and Bonjour
  *  registration has successfully completed, which can take up to a few seconds.
+ *  Also be aware this property will not automatically update if the Bonjour hostname
+ *  has been dynamically changed after the server started running (this should be rare).
  */
 @property(nonatomic, readonly) NSURL* bonjourServerURL;
 
 /**
  *  Starts the server on port 8080 (OS X & iOS Simulator) or port 80 (iOS)
- *  using the computer / device name for as the Bonjour name.
+ *  using the default Bonjour name.
  *
  *  Returns NO if the server failed to start.
  */
@@ -350,7 +354,7 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 /**
  *  Starts the server on a given port and with a specific Bonjour name.
  *  Pass a nil Bonjour name to disable Bonjour entirely or an empty string to
- *  use the computer / device name.
+ *  use the default name.
  *
  *  Returns NO if the server failed to start.
  */

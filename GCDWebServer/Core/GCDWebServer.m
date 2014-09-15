@@ -160,7 +160,8 @@ static void _ExecuteMainThreadRunLoopSources() {
   CFTimeInterval _disconnectDelay;
   NSUInteger _port;
   dispatch_source_t _source;
-  CFNetServiceRef _service;
+  CFNetServiceRef _registrationService;
+  CFNetServiceRef _resolutionService;
 #if TARGET_OS_IPHONE
   BOOL _suspendInBackground;
   UIBackgroundTaskIdentifier _backgroundTask;
@@ -339,12 +340,12 @@ static void _DisconnectTimerCallBack(CFRunLoopTimerRef timer, void* info) {
 }
 
 - (NSString*)bonjourName {
-  CFStringRef name = _service ? CFNetServiceGetName(_service) : NULL;
+  CFStringRef name = _resolutionService ? CFNetServiceGetName(_resolutionService) : NULL;
   return name && CFStringGetLength(name) ? ARC_BRIDGE_RELEASE(CFStringCreateCopy(kCFAllocatorDefault, name)) : nil;
 }
 
 - (NSString*)bonjourType {
-  CFStringRef type = _service ? CFNetServiceGetType(_service) : NULL;
+  CFStringRef type = _resolutionService ? CFNetServiceGetType(_resolutionService) : NULL;
   return type && CFStringGetLength(type) ? ARC_BRIDGE_RELEASE(CFStringCreateCopy(kCFAllocatorDefault, type)) : nil;
 }
 
@@ -360,11 +361,26 @@ static void _DisconnectTimerCallBack(CFRunLoopTimerRef timer, void* info) {
   [_handlers removeAllObjects];
 }
 
-static void _NetServiceClientCallBack(CFNetServiceRef service, CFStreamError* error, void* info) {
+static void _NetServiceRegisterCallBack(CFNetServiceRef service, CFStreamError* error, void* info) {
   DCHECK([NSThread isMainThread]);
   @autoreleasepool {
     if (error->error) {
-      LOG_ERROR(@"Bonjour error %i (domain %i)", (int)error->error, (int)error->domain);
+      LOG_ERROR(@"Bonjour registration error %i (domain %i)", (int)error->error, (int)error->domain);
+    } else {
+      GCDWebServer* server = (ARC_BRIDGE GCDWebServer*)info;
+      LOG_VERBOSE(@"Bonjour registration complete for %@", [server class]);
+      CFNetServiceResolveWithTimeout(server->_resolutionService, 1.0, NULL);
+    }
+  }
+}
+
+static void _NetServiceResolveCallBack(CFNetServiceRef service, CFStreamError* error, void* info) {
+  DCHECK([NSThread isMainThread]);
+  @autoreleasepool {
+    if (error->error) {
+      if ((error->domain != kCFStreamErrorDomainNetServices) && (error->error != kCFNetServicesErrorTimeout)) {
+        LOG_ERROR(@"Bonjour resolution error %i (domain %i)", (int)error->error, (int)error->domain);
+      }
     } else {
       GCDWebServer* server = (ARC_BRIDGE GCDWebServer*)info;
       LOG_INFO(@"%@ now reachable at %@", [server class], server.bonjourServerURL);
@@ -392,8 +408,9 @@ static inline NSString* _EncodeBase64(NSString* string) {
 
 - (BOOL)_start:(NSError**)error {
   DCHECK(_source == NULL);
+  
   NSUInteger port = [_GetOption(_options, GCDWebServerOption_Port, @0) unsignedIntegerValue];
-  NSString* name = _GetOption(_options, GCDWebServerOption_BonjourName, @"");
+  NSString* bonjourName = _GetOption(_options, GCDWebServerOption_BonjourName, @"");
   NSString* bonjourType = _GetOption(_options, GCDWebServerOption_BonjourType, @"_http._tcp");
   NSUInteger maxPendingConnections = [_GetOption(_options, GCDWebServerOption_MaxPendingConnections, @16) unsignedIntegerValue];
   int listeningSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -491,14 +508,21 @@ static inline NSString* _EncodeBase64(NSString* string) {
           _port = port;
         }
         
-        if (name) {
-          _service = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), (ARC_BRIDGE CFStringRef)bonjourType, (ARC_BRIDGE CFStringRef)name, (SInt32)_port);
-          if (_service) {
+        if (bonjourName) {
+          _registrationService = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), (ARC_BRIDGE CFStringRef)bonjourType, (ARC_BRIDGE CFStringRef)(bonjourName.length ? bonjourName : _serverName), (SInt32)_port);
+          if (_registrationService) {
             CFNetServiceClientContext context = {0, (ARC_BRIDGE void*)self, NULL, NULL, NULL};
-            CFNetServiceSetClient(_service, _NetServiceClientCallBack, &context);
-            CFNetServiceScheduleWithRunLoop(_service, CFRunLoopGetMain(), kCFRunLoopCommonModes);
+            
+            CFNetServiceSetClient(_registrationService, _NetServiceRegisterCallBack, &context);
+            CFNetServiceScheduleWithRunLoop(_registrationService, CFRunLoopGetMain(), kCFRunLoopCommonModes);
             CFStreamError streamError = {0};
-            CFNetServiceRegisterWithOptions(_service, 0, &streamError);
+            CFNetServiceRegisterWithOptions(_registrationService, 0, &streamError);
+            
+            _resolutionService = CFNetServiceCreateCopy(kCFAllocatorDefault, _registrationService);
+            if (_resolutionService) {
+              CFNetServiceSetClient(_resolutionService, _NetServiceResolveCallBack, &context);
+              CFNetServiceScheduleWithRunLoop(_resolutionService, CFRunLoopGetMain(), kCFRunLoopCommonModes);
+            }
           } else {
             LOG_ERROR(@"Failed creating CFNetService");
           }
@@ -537,11 +561,19 @@ static inline NSString* _EncodeBase64(NSString* string) {
 - (void)_stop {
   DCHECK(_source != NULL);
   
-  if (_service) {
-    CFNetServiceUnscheduleFromRunLoop(_service, CFRunLoopGetMain(), kCFRunLoopCommonModes);
-    CFNetServiceSetClient(_service, NULL, NULL);
-    CFRelease(_service);
-    _service = NULL;
+  if (_registrationService) {
+    if (_resolutionService) {
+      CFNetServiceUnscheduleFromRunLoop(_resolutionService, CFRunLoopGetMain(), kCFRunLoopCommonModes);
+      CFNetServiceSetClient(_resolutionService, NULL, NULL);
+      CFNetServiceCancel(_resolutionService);
+      CFRelease(_resolutionService);
+      _resolutionService = NULL;
+    }
+    CFNetServiceUnscheduleFromRunLoop(_registrationService, CFRunLoopGetMain(), kCFRunLoopCommonModes);
+    CFNetServiceSetClient(_registrationService, NULL, NULL);
+    CFNetServiceCancel(_registrationService);
+    CFRelease(_registrationService);
+    _registrationService = NULL;
   }
   
   dispatch_source_cancel(_source);
@@ -663,13 +695,14 @@ static inline NSString* _EncodeBase64(NSString* string) {
 }
 
 - (NSURL*)bonjourServerURL {
-  if (_source && _service) {
-    CFStringRef name = CFNetServiceGetName(_service);
-    if (name && CFStringGetLength(name)) {
+  if (_source && _resolutionService) {
+    NSString* name = (ARC_BRIDGE NSString*)CFNetServiceGetTargetHost(_resolutionService);
+    if (name.length) {
+      name = [name substringToIndex:(name.length - 1)];  // Strip trailing period at end of domain
       if (_port != 80) {
-        return [NSURL URLWithString:[NSString stringWithFormat:@"http://%@.local:%i/", name, (int)_port]];
+        return [NSURL URLWithString:[NSString stringWithFormat:@"http://%@:%i/", name, (int)_port]];
       } else {
-        return [NSURL URLWithString:[NSString stringWithFormat:@"http://%@.local/", name]];
+        return [NSURL URLWithString:[NSString stringWithFormat:@"http://%@/", name]];
       }
     }
   }
