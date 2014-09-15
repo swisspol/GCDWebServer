@@ -79,16 +79,18 @@ extern GCDWebServerLogLevel GCDLogLevel;
 extern void GCDLogMessage(GCDWebServerLogLevel level, NSString* format, ...) NS_FORMAT_FUNCTION(2, 3);
 
 #define LOG_VERBOSE(...) do { if (GCDLogLevel <= kGCDWebServerLogLevel_Verbose) GCDLogMessage(kGCDWebServerLogLevel_Verbose, __VA_ARGS__); } while (0)
+#define LOG_DEBUG(...) do { if (GCDLogLevel <= kGCDWebServerLogLevel_Debug) GCDLogMessage(kGCDWebServerLogLevel_Debug, __VA_ARGS__); } while (0)
 #define LOG_INFO(...) do { if (GCDLogLevel <= kGCDWebServerLogLevel_Info) GCDLogMessage(kGCDWebServerLogLevel_Info, __VA_ARGS__); } while (0)
 #define LOG_WARNING(...) do { if (GCDLogLevel <= kGCDWebServerLogLevel_Warning) GCDLogMessage(kGCDWebServerLogLevel_Warning, __VA_ARGS__); } while (0)
 #define LOG_ERROR(...) do { if (GCDLogLevel <= kGCDWebServerLogLevel_Error) GCDLogMessage(kGCDWebServerLogLevel_Error, __VA_ARGS__); } while (0)
 #define LOG_EXCEPTION(__EXCEPTION__) do { if (GCDLogLevel <= kGCDWebServerLogLevel_Exception) GCDLogMessage(kGCDWebServerLogLevel_Exception, @"%@", __EXCEPTION__); } while (0)
 
+#endif
+
 #ifdef NDEBUG
 
 #define DCHECK(__CONDITION__)
 #define DNOT_REACHED()
-#define LOG_DEBUG(...)
 
 #else
 
@@ -99,10 +101,6 @@ extern void GCDLogMessage(GCDWebServerLogLevel level, NSString* format, ...) NS_
     } \
   } while (0)
 #define DNOT_REACHED() abort()
-#define LOG_DEBUG(...) do { if (GCDLogLevel <= kGCDWebServerLogLevel_Debug) GCDLogMessage(kGCDWebServerLogLevel_Debug, __VA_ARGS__); } while (0)
-
-#endif
-
 #endif
 
 #define kGCDWebServerDefaultMimeType @"application/octet-stream"
