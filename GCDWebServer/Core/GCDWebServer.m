@@ -882,17 +882,18 @@ static inline NSString* _EncodeBase64(NSString* string) {
       
       GCDWebServerResponse* response = nil;
       NSString* filePath = [directoryPath stringByAppendingPathComponent:[request.path substringFromIndex:basePath.length]];
-      BOOL isDirectory;
-      if ([[NSFileManager defaultManager] fileExistsAtPath:filePath isDirectory:&isDirectory]) {
-        if (isDirectory) {
+      NSString* fileType = [[[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:NULL] fileType];
+      if (fileType) {
+        if ([fileType isEqualToString:NSFileTypeDirectory]) {
           if (indexFilename) {
             NSString* indexPath = [filePath stringByAppendingPathComponent:indexFilename];
-            if ([[NSFileManager defaultManager] fileExistsAtPath:indexPath isDirectory:&isDirectory] && !isDirectory) {
+            NSString* indexType = [[[NSFileManager defaultManager] attributesOfItemAtPath:indexPath error:NULL] fileType];
+            if ([indexType isEqualToString:NSFileTypeRegular]) {
               return [GCDWebServerFileResponse responseWithFile:indexPath];
             }
           }
           response = [server _responseWithContentsOfDirectory:filePath];
-        } else  {
+        } else if ([fileType isEqualToString:NSFileTypeRegular]) {
           if (allowRangeRequests) {
             response = [GCDWebServerFileResponse responseWithFile:filePath byteRange:request.byteRange];
             [response setValue:@"bytes" forAdditionalHeader:@"Accept-Ranges"];
