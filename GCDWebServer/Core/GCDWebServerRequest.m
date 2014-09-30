@@ -29,6 +29,8 @@
 
 #import "GCDWebServerPrivate.h"
 
+NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerRequestAttribute_RegexCaptures";
+
 #define kZlibErrorDomain @"ZlibErrorDomain"
 #define kGZipInitialBufferSize (256 * 1024)
 
@@ -152,6 +154,7 @@
   
   BOOL _opened;
   NSMutableArray* _decoders;
+  NSMutableDictionary* _attributes;
   id<GCDWebServerBodyWriter> __unsafe_unretained _writer;
 }
 @end
@@ -238,6 +241,7 @@
     }
     
     _decoders = [[NSMutableArray alloc] init];
+    _attributes = [[NSMutableDictionary alloc] init];
   }
   return self;
 }
@@ -252,6 +256,7 @@
   ARC_RELEASE(_modifiedSince);
   ARC_RELEASE(_noneMatch);
   ARC_RELEASE(_decoders);
+  ARC_RELEASE(_attributes);
   
   ARC_DEALLOC(super);
 }
@@ -262,6 +267,10 @@
 
 - (BOOL)hasByteRange {
   return GCDWebServerIsValidByteRange(_range);
+}
+
+- (id)attributeForKey:(NSString*)key {
+  return [_attributes objectForKey:key];
 }
 
 - (BOOL)open:(NSError**)error {
@@ -305,6 +314,10 @@
 - (BOOL)performClose:(NSError**)error {
   DCHECK(_opened);
   return [_writer close:error];
+}
+
+- (void)setAttribute:(id)attribute forKey:(NSString*)key {
+  [_attributes setValue:attribute forKey:key];
 }
 
 - (NSString*)description {

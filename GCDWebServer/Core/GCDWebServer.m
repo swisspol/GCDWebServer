@@ -793,10 +793,23 @@ static inline NSString* _EncodeBase64(NSString* string) {
       if (![requestMethod isEqualToString:method]) {
         return nil;
       }
-      if ([expression firstMatchInString:urlPath options:0 range:NSMakeRange(0, urlPath.length)] == nil) {
+
+      NSArray* matches = [expression matchesInString:urlPath options:0 range:NSMakeRange(0, urlPath.length)];
+      if (matches.count == 0) {
         return nil;
       }
-      return ARC_AUTORELEASE([[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
+
+      NSMutableArray* captures = [NSMutableArray array];
+      for (NSTextCheckingResult* result in matches) {
+        // Start at 1; index 0 is the whole string
+        for (NSUInteger i = 1; i < result.numberOfRanges; i++) {
+          [captures addObject:[urlPath substringWithRange:[result rangeAtIndex:i]]];
+        }
+      }
+
+      GCDWebServerRequest* request = [[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery];
+      [request setAttribute:captures forKey:GCDWebServerRequestAttribute_RegexCaptures];
+      return ARC_AUTORELEASE(request);
       
     } processBlock:block];
   } else {

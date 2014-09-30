@@ -28,6 +28,15 @@
 #import <Foundation/Foundation.h>
 
 /**
+ *  Attribute key to retrieve an NSArray containing NSStrings from a GCDWebServerRequest
+ *  with the contents of any regular expression captures done on the request path.
+ *
+ *  @warning This attribute will only be set on the request if adding a handler using 
+ *  -addHandlerForMethod:pathRegex:requestClass:processBlock:.
+ */
+extern NSString* const GCDWebServerRequestAttribute_RegexCaptures;
+
+/**
  *  This protocol is used by the GCDWebServerConnection to communicate with
  *  the GCDWebServerRequest and write the received HTTP body data.
  *
@@ -162,5 +171,12 @@
  *  Convenience method that checks if the byteRange property is defined.
  */
 - (BOOL)hasByteRange;
+
+/**
+ *  Retrieves an attribute associated with this request using the given key.
+ *
+ *  @return The attribute value for the key.
+ */
+- (id)attributeForKey:(NSString*)key;
 
 @end

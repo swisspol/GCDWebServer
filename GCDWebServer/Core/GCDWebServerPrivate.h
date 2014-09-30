@@ -153,6 +153,7 @@ extern NSString* GCDWebServerComputeMD5Digest(NSString* format, ...) NS_FORMAT_F
 - (BOOL)performOpen:(NSError**)error;
 - (BOOL)performWriteData:(NSData*)data error:(NSError**)error;
 - (BOOL)performClose:(NSError**)error;
+- (void)setAttribute:(id)attribute forKey:(NSString*)key;
 @end
 
 @interface GCDWebServerResponse ()
