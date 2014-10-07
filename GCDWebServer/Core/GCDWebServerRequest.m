@@ -84,7 +84,9 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
 - (BOOL)open:(NSError**)error {
   int result = inflateInit2(&_stream, 15 + 16);
   if (result != Z_OK) {
-    *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
+    if (error != NULL) {
+      *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
+    }
     return NO;
   }
   if (![super open:error]) {
@@ -111,7 +113,9 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
     int result = inflate(&_stream, Z_NO_FLUSH);
     if ((result != Z_OK) && (result != Z_STREAM_END)) {
       ARC_RELEASE(decodedData);
-      *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
+      if (error != NULL) {
+        *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
+      }
       return NO;
     }
     length += maxLength - _stream.avail_out;

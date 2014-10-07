@@ -55,7 +55,9 @@
     _data = [[NSMutableData alloc] init];
   }
   if (_data == nil) {
-    *error = [NSError errorWithDomain:kGCDWebServerErrorDomain code:-1 userInfo:@{NSLocalizedDescriptionKey: @"Failed allocating memory"}];
+    if (error != NULL) {
+      *error = [NSError errorWithDomain:kGCDWebServerErrorDomain code:-1 userInfo:@{NSLocalizedDescriptionKey: @"Failed allocating memory"}];
+    }
     return NO;
   }
   return YES;
