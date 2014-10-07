@@ -147,7 +147,6 @@ static void _ExecuteMainThreadRunLoopSources() {
   NSMutableArray* _handlers;
   NSInteger _activeConnections;  // Accessed through _syncQueue only
   BOOL _connected;  // Accessed on main thread only
-  BOOL _disconnecting;  // Accessed on main thread only
   CFRunLoopTimerRef _disconnectTimer;  // Accessed on main thread only
   
   NSDictionary* _options;
@@ -193,23 +192,11 @@ static void _ExecuteMainThreadRunLoopSources() {
   GCDWebServerInitializeFunctions();
 }
 
-static void _DisconnectTimerCallBack(CFRunLoopTimerRef timer, void* info) {
-  DCHECK([NSThread isMainThread]);
-  GCDWebServer* server = (ARC_BRIDGE GCDWebServer*)info;
-  @autoreleasepool {
-    [server _didDisconnect];
-  }
-  server->_disconnecting = NO;
-}
-
 - (instancetype)init {
   if ((self = [super init])) {
     _syncQueue = dispatch_queue_create([NSStringFromClass([self class]) UTF8String], DISPATCH_QUEUE_SERIAL);
     _sourceSemaphore = dispatch_semaphore_create(0);
     _handlers = [[NSMutableArray alloc] init];
-    CFRunLoopTimerContext context = {0, (ARC_BRIDGE void*)self, NULL, NULL, NULL};
-    _disconnectTimer = CFRunLoopTimerCreate(kCFAllocatorDefault, HUGE_VAL, HUGE_VAL, 0, 0, _DisconnectTimerCallBack, &context);
-    CFRunLoopAddTimer(CFRunLoopGetMain(), _disconnectTimer, kCFRunLoopCommonModes);
 #if TARGET_OS_IPHONE
     _backgroundTask = UIBackgroundTaskInvalid;
 #endif
@@ -221,9 +208,8 @@ static void _DisconnectTimerCallBack(CFRunLoopTimerRef timer, void* info) {
   DCHECK(_connected == NO);
   DCHECK(_activeConnections == 0);
   DCHECK(_options == nil);  // The server can never be dealloc'ed while running because of the retain-cycle with the dispatch source
+  DCHECK(_disconnectTimer == NULL);  // The server can never be dealloc'ed while the disconnect timer is pending because of the retain-cycle
   
-  CFRunLoopTimerInvalidate(_disconnectTimer);
-  CFRelease(_disconnectTimer);
   ARC_RELEASE(_handlers);
   ARC_DISPATCH_RELEASE(_sourceSemaphore);
   ARC_DISPATCH_RELEASE(_syncQueue);
@@ -273,9 +259,10 @@ static void _DisconnectTimerCallBack(CFRunLoopTimerRef timer, void* info) {
     DCHECK(_activeConnections >= 0);
     if (_activeConnections == 0) {
       dispatch_async(dispatch_get_main_queue(), ^{
-        if (_disconnecting) {
-          CFRunLoopTimerSetNextFireDate(_disconnectTimer, HUGE_VAL);
-          _disconnecting = NO;
+        if (_disconnectTimer) {
+          CFRunLoopTimerInvalidate(_disconnectTimer);
+          CFRelease(_disconnectTimer);
+          _disconnectTimer = NULL;
         }
         if (_connected == NO) {
           [self _didConnect];
@@ -329,8 +316,17 @@ static void _DisconnectTimerCallBack(CFRunLoopTimerRef timer, void* info) {
     if (_activeConnections == 0) {
       dispatch_async(dispatch_get_main_queue(), ^{
         if ((_disconnectDelay > 0.0) && (_source != NULL)) {
-          CFRunLoopTimerSetNextFireDate(_disconnectTimer, CFAbsoluteTimeGetCurrent() + _disconnectDelay);
-          _disconnecting = YES;
+          if (_disconnectTimer) {
+            CFRunLoopTimerInvalidate(_disconnectTimer);
+            CFRelease(_disconnectTimer);
+          }
+          _disconnectTimer = CFRunLoopTimerCreateWithHandler(kCFAllocatorDefault, CFAbsoluteTimeGetCurrent() + _disconnectDelay, 0.0, 0, 0, ^(CFRunLoopTimerRef timer) {
+            DCHECK([NSThread isMainThread]);
+            [self _didDisconnect];
+            CFRelease(_disconnectTimer);
+            _disconnectTimer = NULL;
+          });
+          CFRunLoopAddTimer(CFRunLoopGetMain(), _disconnectTimer, kCFRunLoopCommonModes);
         } else {
           [self _didDisconnect];
         }
@@ -592,9 +588,10 @@ static inline NSString* _EncodeBase64(NSString* string) {
   _authenticationDigestAccounts = nil;
   
   dispatch_async(dispatch_get_main_queue(), ^{
-    if (_disconnecting) {
-      CFRunLoopTimerSetNextFireDate(_disconnectTimer, HUGE_VAL);
-      _disconnecting = NO;
+    if (_disconnectTimer) {
+      CFRunLoopTimerInvalidate(_disconnectTimer);
+      CFRelease(_disconnectTimer);
+      _disconnectTimer = NULL;
       [self _didDisconnect];
     }
   });
