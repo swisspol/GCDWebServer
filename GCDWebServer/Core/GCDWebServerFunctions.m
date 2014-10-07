@@ -204,10 +204,13 @@ NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
     }
     
     key = [key stringByReplacingOccurrencesOfString:@"+" withString:@" "];
+    NSString* unescapedKey = key ? GCDWebServerUnescapeURLString(key) : nil;
     value = [value stringByReplacingOccurrencesOfString:@"+" withString:@" "];
-    if (key && value) {
-      [parameters setObject:GCDWebServerUnescapeURLString(value) forKey:GCDWebServerUnescapeURLString(key)];
+    NSString* unescapedValue = value ? GCDWebServerUnescapeURLString(value) : nil;
+    if (unescapedKey && unescapedValue) {
+      [parameters setObject:unescapedValue forKey:unescapedKey];
     } else {
+      LOG_WARNING(@"Failed parsing URL encoded form for key \"%@\" and value \"%@\"", key, value);
       DNOT_REACHED();
     }
     
