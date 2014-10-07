@@ -55,7 +55,9 @@
 - (BOOL)open:(NSError**)error {
   _file = open([_temporaryPath fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
   if (_file <= 0) {
-    *error = GCDWebServerMakePosixError(errno);
+    if (error != NULL) {
+      *error = GCDWebServerMakePosixError(errno);
+    }
     return NO;
   }
   return YES;
@@ -63,7 +65,9 @@
 
 - (BOOL)writeData:(NSData*)data error:(NSError**)error {
   if (write(_file, data.bytes, data.length) != (ssize_t)data.length) {
-    *error = GCDWebServerMakePosixError(errno);
+    if (error != NULL) {
+      *error = GCDWebServerMakePosixError(errno);
+    }
     return NO;
   }
   return YES;
@@ -71,7 +75,9 @@
 
 - (BOOL)close:(NSError**)error {
   if (close(_file) < 0) {
-    *error = GCDWebServerMakePosixError(errno);
+    if (error != NULL) {
+      *error = GCDWebServerMakePosixError(errno);
+    }
     return NO;
   }
 #ifdef __GCDWEBSERVER_ENABLE_TESTING__

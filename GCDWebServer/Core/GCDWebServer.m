@@ -536,21 +536,21 @@ static inline NSString* _EncodeBase64(NSString* string) {
           });
         }
       } else {
-        if (error) {
+        if (error != NULL) {
           *error = GCDWebServerMakePosixError(errno);
         }
         LOG_ERROR(@"Failed starting listening socket: %s (%i)", strerror(errno), errno);
         close(listeningSocket);
       }
     } else {
-      if (error) {
+      if (error != NULL) {
         *error = GCDWebServerMakePosixError(errno);
       }
       LOG_ERROR(@"Failed binding listening socket: %s (%i)", strerror(errno), errno);
       close(listeningSocket);
     }
   } else {
-    if (error) {
+    if (error != NULL) {
       *error = GCDWebServerMakePosixError(errno);
     }
     LOG_ERROR(@"Failed creating listening socket: %s (%i)", strerror(errno), errno);
