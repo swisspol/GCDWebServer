@@ -679,7 +679,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 
 - (NSURL*)serverURL {
   if (_source) {
-    NSString* ipAddress = GCDWebServerGetPrimaryIPv4Address();
+    NSString* ipAddress = GCDWebServerGetPrimaryIPv4Address() ?: @"127.0.0.1";
     if (ipAddress) {
       if (_port != 80) {
         return [NSURL URLWithString:[NSString stringWithFormat:@"http://%@:%i/", ipAddress, (int)_port]];
