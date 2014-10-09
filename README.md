@@ -42,15 +42,15 @@ Download or check out the [latest release](https://github.com/swisspol/GCDWebSer
 
 Alternatively, you can install GCDWebServer using [CocoaPods](http://cocoapods.org/) by simply adding this line to your Xcode project's Podfile:
 ```
-pod "GCDWebServer", "~> 2.0"
+pod "GCDWebServer", "~> 3.0"
 ```
 If you want to use GCDWebUploader, use this line instead:
 ```
-pod "GCDWebServer/WebUploader", "~> 2.0"
+pod "GCDWebServer/WebUploader", "~> 3.0"
 ```
 Or this line for GCDWebDAVServer:
 ```
-pod "GCDWebServer/WebDAV", "~> 2.0"
+pod "GCDWebServer/WebDAV", "~> 3.0"
 ```
 
 Hello World
@@ -145,6 +145,38 @@ println("Visit \(webServer.serverURL) in your web browser")
 ```objectivec
 #import "GCDWebServer.h"
 #import "GCDWebServerDataResponse.h"
+```
+
+Asynchronous HTTP Responses
+===========================
+
+New in GCDWebServer 3.0 is the ability to process HTTP requests aysnchronously i.e. add handlers to the server that generate their ```GCDWebServerResponse``` asynchronously. This is achieved by adding handlers that use a ```GCDWebServerAsyncProcessBlock``` instead of a ```GCDWebServerProcessBlock```. Here's an example:
+
+***Synchronous version***
+```objectivec
+[webServer addDefaultHandlerForMethod:@"GET"
+                         requestClass:[GCDWebServerRequest class]
+                         processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+  
+  GCDWebServerDataResponse* response = [GCDWebServerDataResponse responseWithHTML:@"<html><body><p>Hello World</p></body></html>"];
+  return response;
+  
+}];
+```
+
+***Asynchronous version***
+```objectivec
+[webServer addDefaultHandlerForMethod:@"GET"
+                         requestClass:[GCDWebServerRequest class]
+                    asyncProcessBlock:^(GCDWebServerRequest* request, GCDWebServerCompletionBlock completionBlock) {
+  
+  // Do some async operation like network access or file I/O (simulated here using dispatch_after())
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    GCDWebServerDataResponse* response = [GCDWebServerDataResponse responseWithHTML:@"<html><body><p>Hello World</p></body></html>"];
+    completionBlock(response);
+  });
+
+}];
 ```
 
 Web Based Uploads in iOS Apps
@@ -250,9 +282,9 @@ GCDWebServer relies on "handlers" to process incoming web requests and generatin
 
 Handlers require 2 GCD blocks:
 * The ```GCDWebServerMatchBlock``` is called on every handler added to the ```GCDWebServer``` instance whenever a web request has started (i.e. HTTP headers have been received). It is passed the basic info for the web request (HTTP method, URL, headers...) and must decide if it wants to handle it or not. If yes, it must return a new ```GCDWebServerRequest``` instance (see above) created with this info. Otherwise, it simply returns nil.
-* The ```GCDWebServerProcessBlock``` is called after the web request has been fully received and is passed the ```GCDWebServerRequest``` instance created at the previous step. It must return a ```GCDWebServerResponse``` instance (see above) or nil on error, which will result in a 500 HTTP status code returned to the client. It's however recommended to return an instance of [GCDWebServerErrorResponse](GCDWebServer/Responses/GCDWebServerErrorResponse.h) on error so more useful information can be returned to the client.
+* The ```GCDWebServerProcessBlock``` or ```GCDWebServerAsyncProcessBlock``` is called after the web request has been fully received and is passed the ```GCDWebServerRequest``` instance created at the previous step. It must return synchronously (if using ```GCDWebServerProcessBlock```) or asynchronously (if using ```GCDWebServerAsyncProcessBlock```) a ```GCDWebServerResponse``` instance (see above) or nil on error, which will result in a 500 HTTP status code returned to the client. It's however recommended to return an instance of [GCDWebServerErrorResponse](GCDWebServer/Responses/GCDWebServerErrorResponse.h) on error so more useful information can be returned to the client.
 
-Note that most methods on ```GCDWebServer``` to add handlers only require the ```GCDWebServerProcessBlock``` as they already provide a built-in ```GCDWebServerMatchBlock``` e.g. to match a URL path with a Regex.
+Note that most methods on ```GCDWebServer``` to add handlers only require the ```GCDWebServerProcessBlock``` or ```GCDWebServerAsyncProcessBlock``` as they already provide a built-in ```GCDWebServerMatchBlock``` e.g. to match a URL path with a Regex.
 
 GCDWebServer & Background Mode for iOS Apps
 ===========================================
