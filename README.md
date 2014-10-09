@@ -13,6 +13,7 @@ GCDWebServer is a modern and lightweight GCD based HTTP 1.1 server designed to b
 * Available under a friendly [New BSD License](LICENSE)
 
 Extra built-in features:
+* Allow implementation of fully asynchronous handlers of incoming HTTP requests
 * Minimize memory usage with disk streaming of large HTTP request or response bodies
 * Parser for [web forms](http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4) submitted using "application/x-www-form-urlencoded" or "multipart/form-data" encodings (including file uploads)
 * [JSON](http://www.json.org/) parsing and serialization for request and response HTTP bodies
