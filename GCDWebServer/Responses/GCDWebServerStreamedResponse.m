@@ -29,17 +29,17 @@
 
 @interface GCDWebServerStreamedResponse () {
 @private
-  GCDWebServerStreamingBlock _block;
+  GCDWebServerStreamBlock _block;
 }
 @end
 
 @implementation GCDWebServerStreamedResponse
 
-+ (instancetype)responseWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamingBlock)block {
++ (instancetype)responseWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block {
   return ARC_AUTORELEASE([[[self class] alloc] initWithContentType:type streamBlock:block]);
 }
 
-- (instancetype)initWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamingBlock)block {
+- (instancetype)initWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block {
   if ((self = [super init])) {
     _block = [block copy];
     
