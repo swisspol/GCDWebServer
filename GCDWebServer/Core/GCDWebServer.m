@@ -114,25 +114,25 @@ static void _ExecuteMainThreadRunLoopSources() {
 @interface GCDWebServerHandler () {
 @private
   GCDWebServerMatchBlock _matchBlock;
-  GCDWebServerProcessBlock _processBlock;
+  GCDWebServerAsyncProcessBlock _asyncProcessBlock;
 }
 @end
 
 @implementation GCDWebServerHandler
 
-@synthesize matchBlock=_matchBlock, processBlock=_processBlock;
+@synthesize matchBlock=_matchBlock, asyncProcessBlock=_asyncProcessBlock;
 
-- (id)initWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock {
+- (id)initWithMatchBlock:(GCDWebServerMatchBlock)matchBlock asyncProcessBlock:(GCDWebServerAsyncProcessBlock)processBlock {
   if ((self = [super init])) {
     _matchBlock = [matchBlock copy];
-    _processBlock = [processBlock copy];
+    _asyncProcessBlock = [processBlock copy];
   }
   return self;
 }
 
 - (void)dealloc {
   ARC_RELEASE(_matchBlock);
-  ARC_RELEASE(_processBlock);
+  ARC_RELEASE(_asyncProcessBlock);
   
   ARC_DEALLOC(super);
 }
@@ -345,9 +345,15 @@ static void _ExecuteMainThreadRunLoopSources() {
   return type && CFStringGetLength(type) ? ARC_BRIDGE_RELEASE(CFStringCreateCopy(kCFAllocatorDefault, type)) : nil;
 }
 
-- (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)handlerBlock {
+- (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock {
+  [self addHandlerWithMatchBlock:matchBlock asyncProcessBlock:^(GCDWebServerRequest* request, GCDWebServerCompletionBlock completionBlock) {
+    completionBlock(processBlock(request));
+  }];
+}
+
+- (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock asyncProcessBlock:(GCDWebServerAsyncProcessBlock)processBlock {
   DCHECK(_options == nil);
-  GCDWebServerHandler* handler = [[GCDWebServerHandler alloc] initWithMatchBlock:matchBlock processBlock:handlerBlock];
+  GCDWebServerHandler* handler = [[GCDWebServerHandler alloc] initWithMatchBlock:matchBlock asyncProcessBlock:processBlock];
   [_handlers insertObject:handler atIndex:0];
   ARC_RELEASE(handler);
 }
@@ -754,6 +760,12 @@ static inline NSString* _EncodeBase64(NSString* string) {
 @implementation GCDWebServer (Handlers)
 
 - (void)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block {
+  [self addDefaultHandlerForMethod:method requestClass:aClass asyncProcessBlock:^(GCDWebServerRequest* request, GCDWebServerCompletionBlock completionBlock) {
+    completionBlock(block(request));
+  }];
+}
+
+- (void)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)aClass asyncProcessBlock:(GCDWebServerAsyncProcessBlock)block {
   [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
     
     if (![requestMethod isEqualToString:method]) {
@@ -761,10 +773,16 @@ static inline NSString* _EncodeBase64(NSString* string) {
     }
     return ARC_AUTORELEASE([[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
     
-  } processBlock:block];
+  } asyncProcessBlock:block];
 }
 
 - (void)addHandlerForMethod:(NSString*)method path:(NSString*)path requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block {
+  [self addHandlerForMethod:method path:path requestClass:aClass asyncProcessBlock:^(GCDWebServerRequest* request, GCDWebServerCompletionBlock completionBlock) {
+    completionBlock(block(request));
+  }];
+}
+
+- (void)addHandlerForMethod:(NSString*)method path:(NSString*)path requestClass:(Class)aClass asyncProcessBlock:(GCDWebServerAsyncProcessBlock)block {
   if ([path hasPrefix:@"/"] && [aClass isSubclassOfClass:[GCDWebServerRequest class]]) {
     [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
       
@@ -776,13 +794,19 @@ static inline NSString* _EncodeBase64(NSString* string) {
       }
       return ARC_AUTORELEASE([[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
       
-    } processBlock:block];
+    } asyncProcessBlock:block];
   } else {
     DNOT_REACHED();
   }
 }
 
 - (void)addHandlerForMethod:(NSString*)method pathRegex:(NSString*)regex requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block {
+  [self addHandlerForMethod:method pathRegex:regex requestClass:aClass asyncProcessBlock:^(GCDWebServerRequest* request, GCDWebServerCompletionBlock completionBlock) {
+    completionBlock(block(request));
+  }];
+}
+
+- (void)addHandlerForMethod:(NSString*)method pathRegex:(NSString*)regex requestClass:(Class)aClass asyncProcessBlock:(GCDWebServerAsyncProcessBlock)block {
   NSRegularExpression* expression = [NSRegularExpression regularExpressionWithPattern:regex options:NSRegularExpressionCaseInsensitive error:NULL];
   if (expression && [aClass isSubclassOfClass:[GCDWebServerRequest class]]) {
     [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
@@ -808,7 +832,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
       [request setAttribute:captures forKey:GCDWebServerRequestAttribute_RegexCaptures];
       return ARC_AUTORELEASE(request);
       
-    } processBlock:block];
+    } asyncProcessBlock:block];
   } else {
     DNOT_REACHED();
   }

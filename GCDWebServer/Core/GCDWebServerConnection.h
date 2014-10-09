@@ -138,13 +138,14 @@
 
 /**
  *  Assuming a valid HTTP request was received and -preflightRequest: returned nil,
- *  this method is called to process the request.
+ *  this method is called to process the request by executing the handler's
+ *  process block.
  */
-- (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block;
+- (void)processRequest:(GCDWebServerRequest*)request completion:(GCDWebServerCompletionBlock)completion;
 
 /**
  *  Assuming a valid HTTP request was received and either -preflightRequest:
- *  or -processRequest:withBlock: returned a non-nil GCDWebServerResponse,
+ *  or -processRequest:completion: returned a non-nil GCDWebServerResponse,
  *  this method is called to override the response.
  *
  *  You can either modify the current response and return it, or return a

@@ -373,15 +373,24 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Date"), (ARC_BRIDGE CFStringRef)GCDWebServerFormatRFC822([NSDate date]));
 }
 
+- (void)_startProcessingRequest {
+  DCHECK(_responseMessage == NULL);
+  
+  GCDWebServerResponse* preflightResponse = [self preflightRequest:_request];
+  if (preflightResponse) {
+    [self _finishProcessingRequest:preflightResponse];
+  } else {
+    [self processRequest:_request completion:^(GCDWebServerResponse* processResponse) {
+      [self _finishProcessingRequest:processResponse];
+    }];
+  }
+}
+
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
-- (void)_processRequest {
+- (void)_finishProcessingRequest:(GCDWebServerResponse*)response {
   DCHECK(_responseMessage == NULL);
   BOOL hasBody = NO;
   
-  GCDWebServerResponse* response = [self preflightRequest:_request];
-  if (!response) {
-    response = [self processRequest:_request withBlock:_handler.processBlock];
-  }
   if (response) {
     response = [self overrideResponse:response forRequest:_request];
   }
@@ -471,7 +480,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       
       NSError* localError = nil;
       if ([_request performClose:&localError]) {
-        [self _processRequest];
+        [self _startProcessingRequest];
       } else {
         LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
         [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
@@ -480,7 +489,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     }];
   } else {
     if ([_request performClose:&error]) {
-      [self _processRequest];
+      [self _startProcessingRequest];
     } else {
       LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
       [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
@@ -501,7 +510,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   
     NSError* localError = nil;
     if ([_request performClose:&localError]) {
-      [self _processRequest];
+      [self _startProcessingRequest];
     } else {
       LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
       [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
@@ -572,7 +581,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
               [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_BadRequest];
             }
           } else {
-            [self _processRequest];
+            [self _startProcessingRequest];
           }
         } else {
           _request = [[GCDWebServerRequest alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:requestPath query:requestQuery];
@@ -772,16 +781,14 @@ static NSString* _StringFromAddressData(NSData* data) {
   return response;
 }
 
-- (GCDWebServerResponse*)processRequest:(GCDWebServerRequest*)request withBlock:(GCDWebServerProcessBlock)block {
+- (void)processRequest:(GCDWebServerRequest*)request completion:(GCDWebServerCompletionBlock)completion {
   LOG_DEBUG(@"Connection on socket %i processing request \"%@ %@\" with %lu bytes body", _socket, _virtualHEAD ? @"HEAD" : _request.method, _request.path, (unsigned long)_bytesRead);
-  GCDWebServerResponse* response = nil;
   @try {
-    response = block(request);
+    _handler.asyncProcessBlock(request, completion);
   }
   @catch (NSException* exception) {
     LOG_EXCEPTION(exception);
   }
-  return response;
 }
 
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.26

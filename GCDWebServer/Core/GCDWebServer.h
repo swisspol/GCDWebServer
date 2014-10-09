@@ -70,6 +70,19 @@ typedef GCDWebServerRequest* (^GCDWebServerMatchBlock)(NSString* requestMethod, 
 typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* request);
 
 /**
+ *  The GCDWebServerAsynchronousProcessBlock works like the GCDWebServerProcessBlock
+ *  except the GCDWebServerResponse can be returned to the server at a later time
+ *  allowing for asynchronous generation of the response.
+ *
+ *  The block must eventually call "completionBlock" passing a GCDWebServerResponse
+ *  or nil on error, which will result in a 500 HTTP status code returned to the client.
+ *  It's however recommended to return a GCDWebServerErrorResponse on error so more
+ *  useful information can be returned to the client.
+ */
+typedef void (^GCDWebServerCompletionBlock)(GCDWebServerResponse* response);
+typedef void (^GCDWebServerAsyncProcessBlock)(GCDWebServerRequest* request, GCDWebServerCompletionBlock completionBlock);
+
+/**
  *  The port used by the GCDWebServer (NSNumber / NSUInteger).
  *
  *  The default value is 0 i.e. let the OS pick a random port.
@@ -289,7 +302,7 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 - (instancetype)init;
 
 /**
- *  Adds a handler to the server to handle incoming HTTP requests.
+ *  Adds to the server a handler that generates responses synchronously when handling incoming HTTP requests.
  *
  *  Handlers are called in a LIFO queue, so if multiple handlers can potentially
  *  respond to a given request, the latest added one wins.
@@ -297,6 +310,16 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *  @warning Addling handlers while the server is running is not allowed.
  */
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
+
+/**
+ *  Adds to the server a handler that generates responses asynchronously when handling incoming HTTP requests.
+ *
+ *  Handlers are called in a LIFO queue, so if multiple handlers can potentially
+ *  respond to a given request, the latest added one wins.
+ *
+ *  @warning Addling handlers while the server is running is not allowed.
+ */
+- (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock asyncProcessBlock:(GCDWebServerAsyncProcessBlock)processBlock;
 
 /**
  *  Removes all handlers previously added to the server.
@@ -392,21 +415,43 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 
 /**
  *  Adds a default handler to the server to handle all incoming HTTP requests
- *  with a given HTTP method.
+ *  with a given HTTP method and generate responses synchronously.
  */
 - (void)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block;
 
 /**
+ *  Adds a default handler to the server to handle all incoming HTTP requests
+ *  with a given HTTP method and generate responses asynchronously.
+ */
+- (void)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)aClass asyncProcessBlock:(GCDWebServerAsyncProcessBlock)block;
+
+/**
  *  Adds a handler to the server to handle incoming HTTP requests with a given
- *  HTTP method and a specific case-insensitive path.
+ *  HTTP method and a specific case-insensitive path  and generate responses
+ *  synchronously.
  */
 - (void)addHandlerForMethod:(NSString*)method path:(NSString*)path requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block;
 
 /**
  *  Adds a handler to the server to handle incoming HTTP requests with a given
- *  HTTP method and a path matching a case-insensitive regular expression.
+ *  HTTP method and a specific case-insensitive path and generate responses
+ *  asynchronously.
+ */
+- (void)addHandlerForMethod:(NSString*)method path:(NSString*)path requestClass:(Class)aClass asyncProcessBlock:(GCDWebServerAsyncProcessBlock)block;
+
+/**
+ *  Adds a handler to the server to handle incoming HTTP requests with a given
+ *  HTTP method and a path matching a case-insensitive regular expression and
+ *  generate responses synchronously.
  */
 - (void)addHandlerForMethod:(NSString*)method pathRegex:(NSString*)regex requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block;
+
+/**
+ *  Adds a handler to the server to handle incoming HTTP requests with a given
+ *  HTTP method and a path matching a case-insensitive regular expression and
+ *  generate responses asynchronously.
+ */
+- (void)addHandlerForMethod:(NSString*)method pathRegex:(NSString*)regex requestClass:(Class)aClass asyncProcessBlock:(GCDWebServerAsyncProcessBlock)block;
 
 @end
 

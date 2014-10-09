@@ -143,8 +143,7 @@ extern NSString* GCDWebServerComputeMD5Digest(NSString* format, ...) NS_FORMAT_F
 
 @interface GCDWebServerHandler : NSObject
 @property(nonatomic, readonly) GCDWebServerMatchBlock matchBlock;
-@property(nonatomic, readonly) GCDWebServerProcessBlock processBlock;
-- (id)initWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
+@property(nonatomic, readonly) GCDWebServerAsyncProcessBlock asyncProcessBlock;
 @end
 
 @interface GCDWebServerRequest ()
