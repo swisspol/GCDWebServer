@@ -112,6 +112,8 @@
 		E22112981690B7AA0048D2B2 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.0.sdk/System/Library/Frameworks/CFNetwork.framework; sourceTree = DEVELOPER_DIR; };
 		E221129A1690B7B10048D2B2 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.0.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		E221129C1690B7BA0048D2B2 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.0.sdk/System/Library/Frameworks/MobileCoreServices.framework; sourceTree = DEVELOPER_DIR; };
+		E26DC18719E84B2200C68DDC /* GCDWebServer.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = GCDWebServer.podspec; sourceTree = "<group>"; };
+		E26DC18819E84BC000C68DDC /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		E28BAE1618F99C810095C089 /* GCDWebServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebServer.h; sourceTree = "<group>"; };
 		E28BAE1718F99C810095C089 /* GCDWebServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebServer.m; sourceTree = "<group>"; };
 		E28BAE1818F99C810095C089 /* GCDWebServerConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebServerConnection.h; sourceTree = "<group>"; };
@@ -183,6 +185,8 @@
 		08FB7794FE84155DC02AAC07 /* LittleCMS */ = {
 			isa = PBXGroup;
 			children = (
+				E26DC18819E84BC000C68DDC /* README.md */,
+				E26DC18719E84B2200C68DDC /* GCDWebServer.podspec */,
 				E28BAE1418F99C810095C089 /* GCDWebServer */,
 				E2A0E80718F3432600C580B1 /* GCDWebDAVServer */,
 				E2BE850618E77ECA0061360B /* GCDWebUploader */,
