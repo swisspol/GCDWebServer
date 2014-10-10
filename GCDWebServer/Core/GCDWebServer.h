@@ -33,8 +33,8 @@
 /**
  *  Log levels used by GCDWebServer.
  *
- *  @warning kGCDWebServerLogLevel_Debug is only available if "NDEBUG" is not
- *  defined when building.
+ *  @warning kGCDWebServerLogLevel_Debug is only functional if the preprocessor
+ *  constant "DEBUG" is is non-zero at build time.
  */
 typedef NS_ENUM(int, GCDWebServerLogLevel) {
   kGCDWebServerLogLevel_Debug = 0,
@@ -489,8 +489,9 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 /**
  *  Sets the current log level below which logged messages are discarded.
  *
- *  The default level is either DEBUG or INFO if "NDEBUG" is defined at build-time.
- *  It can also be set at runtime with the "logLevel" environment variable.
+ *  The default level is INFO (or DEBUG if the preprocessor constant "DEBUG"
+ *  is non-zero at build time).
+ *  It can also be set at run time with the "logLevel" environment variable.
  */
 + (void)setLogLevel:(GCDWebServerLogLevel)level;
 

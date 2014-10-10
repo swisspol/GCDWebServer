@@ -28,7 +28,6 @@ Pod::Spec.new do |s|
     cs.ios.frameworks = 'MobileCoreServices', 'CFNetwork'
     cs.osx.library = 'z'
     cs.osx.framework = 'SystemConfiguration'
-    cs.compiler_flags = '-DNDEBUG'  # TODO: Only set this for Release configuration
   end
   
   s.subspec 'WebDAV' do |cs|

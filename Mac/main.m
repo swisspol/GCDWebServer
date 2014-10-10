@@ -359,7 +359,7 @@ int main(int argc, const char* argv[]) {
     if (webServer) {
       Delegate* delegate = [[Delegate alloc] init];
       if (testDirectory) {
-#ifndef NDEBUG
+#if DEBUG
         webServer.delegate = delegate;
 #endif
         fprintf(stdout, "<RUNNING TESTS FROM \"%s\">\n\n", [testDirectory UTF8String]);

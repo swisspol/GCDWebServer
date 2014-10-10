@@ -84,13 +84,7 @@ extern void GCDLogMessage(GCDWebServerLogLevel level, NSString* format, ...) NS_
 #define LOG_ERROR(...) do { if (GCDLogLevel <= kGCDWebServerLogLevel_Error) GCDLogMessage(kGCDWebServerLogLevel_Error, __VA_ARGS__); } while (0)
 #define LOG_EXCEPTION(__EXCEPTION__) do { if (GCDLogLevel <= kGCDWebServerLogLevel_Exception) GCDLogMessage(kGCDWebServerLogLevel_Exception, @"%@", __EXCEPTION__); } while (0)
 
-#ifdef NDEBUG
-
-#define DCHECK(__CONDITION__)
-#define DNOT_REACHED()
-#define LOG_DEBUG(...)
-
-#else
+#if DEBUG
 
 #define DCHECK(__CONDITION__) \
   do { \
@@ -100,6 +94,12 @@ extern void GCDLogMessage(GCDWebServerLogLevel level, NSString* format, ...) NS_
   } while (0)
 #define DNOT_REACHED() abort()
 #define LOG_DEBUG(...) do { if (GCDLogLevel <= kGCDWebServerLogLevel_Debug) GCDLogMessage(kGCDWebServerLogLevel_Debug, __VA_ARGS__); } while (0)
+
+#else
+
+#define DCHECK(__CONDITION__)
+#define DNOT_REACHED()
+#define LOG_DEBUG(...)
 
 #endif
 

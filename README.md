@@ -303,20 +303,20 @@ HTTP connections are often initiated in batches (or bursts), for instance when l
 Debug Builds & Custom Logging
 =============================
 
-When building GCDWebServer in "Debug" mode versus "Release" mode, GCDWebServer logs a lot more information and also performs a number of internal consistency checks. To disable this behavior, make sure to define the preprocessor constant ```NDEBUG``` when compiling GCDWebServer. In Xcode target settings, this can be done by adding ```NDEBUG``` to the build setting ```GCC_PREPROCESSOR_DEFINITIONS``` when building in Release configuration (this is done automatically for you if you use CocoaPods).
+When building GCDWebServer in "Debug" mode versus "Release" mode, GCDWebServer logs a lot more information and also performs a number of internal consistency checks. To enable this behavior, define the preprocessor constant ```DEBUG=1``` when compiling GCDWebServer. In Xcode target settings, this can be done by adding ```DEBUG=1``` to the build setting ```GCC_PREPROCESSOR_DEFINITIONS``` when building in Debug configuration.
 
 It's also possible to replace the logging system used by GCDWebServer by a custom one. Simply define the preprocessor constant ```__GCDWEBSERVER_LOGGING_HEADER__``` to the name of a header file (e.g. "MyLogging.h") that defines these macros:
 
 ```
-#define LOG_DEBUG(...)  // Should not do anything if NDEBUG is defined
+#define LOG_DEBUG(...)  // Should not do anything unless the preprocessor constant DEBUG is non-zero
 #define LOG_VERBOSE(...)
 #define LOG_INFO(...)
 #define LOG_WARNING(...)
 #define LOG_ERROR(...)
 #define LOG_EXCEPTION(__EXCEPTION__)
 
-#define DCHECK(__CONDITION__)  // Should not do anything if NDEBUG is defined or abort if __CONDITION__ is false
-#define DNOT_REACHED()  // Should not do anything if NDEBUG is defined
+#define DCHECK(__CONDITION__)  // Should not do anything unless the preprocessor constant DEBUG is non-zero
+#define DNOT_REACHED()  // Should not do anything unless the preprocessor constant DEBUG is non-zero
 ```
 
 Advanced Example 1: Implementing HTTP Redirects
