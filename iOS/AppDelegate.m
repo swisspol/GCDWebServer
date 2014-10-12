@@ -30,14 +30,11 @@
 
 @interface AppDelegate () <GCDWebUploaderDelegate> {
 @private
-  UIWindow* _window;
   GCDWebUploader* _webServer;
 }
 @end
 
 @implementation AppDelegate
-
-@synthesize window=_window;
 
 #if !__has_feature(objc_arc)
 
@@ -50,7 +47,8 @@
 #endif
 
 - (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
-  _window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+  CGRect bounds = ([UIScreen instancesRespondToSelector:@selector(nativeBounds)] ? [[UIScreen mainScreen] nativeBounds] : [[UIScreen mainScreen] bounds]);
+  _window = [[UIWindow alloc] initWithFrame:bounds];
   _window.backgroundColor = [UIColor whiteColor];
   [_window makeKeyAndVisible];
   
