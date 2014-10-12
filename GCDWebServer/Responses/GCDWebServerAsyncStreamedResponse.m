@@ -30,6 +30,7 @@
 @interface GCDWebServerAsyncStreamedResponse () {
 @private
   GCDWebServerBodyReaderBlock _readerBlock;
+  BOOL _finished;
 }
 @end
 
@@ -42,12 +43,13 @@
 - (instancetype)initWithContentType:(NSString*)type {
   if ((self = [super init])) {
     self.contentType = type;
+    _finished = NO;
   }
   return self;
 }
 
 - (void)dealloc {
-  ARC_RELEASE(_block);
+  ARC_RELEASE(_readerBlock);
   
   ARC_DEALLOC(super);
 }
@@ -65,22 +67,22 @@
   if ([data length] == 0) {
     [self finish];
   }
-  else if (_readerBlock) {
+  else if (_readerBlock && !_finished) {
     _readerBlock(data, nil);
   }
 }
 
 - (void)finish {
-  if (_readerBlock) {
+  if (_readerBlock && !_finished) {
     _readerBlock([NSData data], nil);
-    _readerBlock = nil;
+    _finished = YES;
   }
 }
 
 - (void)finishWithError:(NSError*)error {
-  if (_readerBlock) {
+  if (_readerBlock && !_finished) {
     _readerBlock(nil, error);
-    _readerBlock = nil;
+    _finished = YES;
   }
 }
 
