@@ -280,8 +280,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 
 - (void)_writeBodyWithCompletionBlock:(WriteBodyCompletionBlock)block {
   DCHECK([_response hasBody]);
-  NSError* error = nil;
-  NSData* data = [_response performReadData:&error];
+  GCDWebServerBodyReaderBlock readerBlock = ^(NSData *data, NSError *error) {
   if (data) {
     if (data.length) {
       if (_response.usesChunkedTransferEncoding) {
@@ -327,6 +326,14 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   } else {
     LOG_ERROR(@"Failed reading response body for socket %i: %@", _socket, error);
     block(NO);
+  }
+  };
+  if ([_response respondsToSelector:@selector(asyncReadData:)]) {
+    [_response asyncReadData:readerBlock];
+  } else {
+    NSError* error = nil;
+    NSData* data = [_response performReadData:&error];
+    readerBlock(data, error);
   }
 }
 

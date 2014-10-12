@@ -27,6 +27,8 @@
 
 #import <Foundation/Foundation.h>
 
+typedef void (^GCDWebServerBodyReaderBlock)(NSData *data, NSError *error);
+
 /**
  *  This protocol is used by the GCDWebServerConnection to communicate with
  *  the GCDWebServerResponse and read the HTTP body data to send.
@@ -60,6 +62,18 @@
  *  This method is called after all body data has been sent.
  */
 - (void)close;
+
+@optional
+
+/**
+ *  This method is called whenever body data is sent asyncronously, meaning
+ *  pushed by response object as they become available.
+ *
+ *  It should pass a non-empty NSData to readerBlock when body data available.
+ *  Passing an empty NSData implies there is no more body data or an error
+ *  occured.
+ */
+- (void)asyncReadData:(GCDWebServerBodyReaderBlock)readerBlock;
 
 @end
 
