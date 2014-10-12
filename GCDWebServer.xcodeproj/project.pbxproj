@@ -67,6 +67,7 @@
 		E2BE850C18E785940061360B /* GCDWebUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = E2BE850918E77ECA0061360B /* GCDWebUploader.m */; };
 		E2BE850F18E788990061360B /* GCDWebUploader.bundle in CopyFiles */ = {isa = PBXBuildFile; fileRef = E2BE850718E77ECA0061360B /* GCDWebUploader.bundle */; };
 		E2BE851118E79DAF0061360B /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2BE851018E79DAF0061360B /* SystemConfiguration.framework */; };
+		F6F7FFD119EA344D0007509C /* GCDWebServerAsyncStreamedResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = F6F7FFD019EA344D0007509C /* GCDWebServerAsyncStreamedResponse.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -152,6 +153,8 @@
 		E2BE850818E77ECA0061360B /* GCDWebUploader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebUploader.h; sourceTree = "<group>"; };
 		E2BE850918E77ECA0061360B /* GCDWebUploader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebUploader.m; sourceTree = "<group>"; };
 		E2BE851018E79DAF0061360B /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		F6F7FFCF19EA344D0007509C /* GCDWebServerAsyncStreamedResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebServerAsyncStreamedResponse.h; sourceTree = "<group>"; };
+		F6F7FFD019EA344D0007509C /* GCDWebServerAsyncStreamedResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebServerAsyncStreamedResponse.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -298,6 +301,8 @@
 		E28BAE2B18F99C810095C089 /* Responses */ = {
 			isa = PBXGroup;
 			children = (
+				F6F7FFCF19EA344D0007509C /* GCDWebServerAsyncStreamedResponse.h */,
+				F6F7FFD019EA344D0007509C /* GCDWebServerAsyncStreamedResponse.m */,
 				E28BAE2C18F99C810095C089 /* GCDWebServerDataResponse.h */,
 				E28BAE2D18F99C810095C089 /* GCDWebServerDataResponse.m */,
 				E28BAE2E18F99C810095C089 /* GCDWebServerErrorResponse.h */,
@@ -438,6 +443,7 @@
 				E28BAE4418F99C810095C089 /* GCDWebServerURLEncodedFormRequest.m in Sources */,
 				E28BAE3A18F99C810095C089 /* GCDWebServerRequest.m in Sources */,
 				E28BAE3418F99C810095C089 /* GCDWebServer.m in Sources */,
+				F6F7FFD119EA344D0007509C /* GCDWebServerAsyncStreamedResponse.m in Sources */,
 				E28BAE3618F99C810095C089 /* GCDWebServerConnection.m in Sources */,
 				E28BAE3C18F99C810095C089 /* GCDWebServerResponse.m in Sources */,
 				E28BAE4018F99C810095C089 /* GCDWebServerFileRequest.m in Sources */,
