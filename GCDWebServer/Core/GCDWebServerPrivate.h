@@ -68,6 +68,7 @@
 #import "GCDWebServerFileResponse.h"
 #import "GCDWebServerStreamedResponse.h"
 #import "GCDWebServerAsyncStreamedResponse.h"
+#import "GCDWebServerEventStreamResponse.h"
 
 #ifdef __GCDWEBSERVER_LOGGING_HEADER__
 
