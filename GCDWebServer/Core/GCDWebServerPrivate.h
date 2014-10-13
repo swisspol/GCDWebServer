@@ -71,6 +71,8 @@
 #ifdef __GCDWEBSERVER_LOGGING_HEADER__
 
 // Define __GCDWEBSERVER_LOGGING_HEADER__ as a preprocessor constant to redirect GCDWebServer logging to your own system
+// This can be done in Xcode build settings like this:
+// GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = __GCDWEBSERVER_LOGGING_HEADER__=\"MyLoggingHeader.h\"
 #import __GCDWEBSERVER_LOGGING_HEADER__
 
 #else
