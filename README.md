@@ -5,6 +5,8 @@ Overview
 [![Version](http://cocoapod-badges.herokuapp.com/v/GCDWebServer/badge.png)](http://cocoadocs.org/docsets/GCDWebServer)
 [![Platform](http://cocoapod-badges.herokuapp.com/p/GCDWebServer/badge.png)](http://cocoadocs.org/docsets/GCDWebServer)
 
+*ANNOUNCEMENT: If you like GCDWebServer, check out [XLFacility](https://github.com/swisspol/XLFacility), an elegant and powerful logging facility for OS X & iOS by the same author and also open-source. XLFacility can be used seemlessly to handle logging from GCDWebServer (see "Custom Logging" below).*
+
 GCDWebServer is a modern and lightweight GCD based HTTP 1.1 server designed to be embedded in OS X & iOS apps. It was written from scratch with the following goals in mind:
 * Elegant and easy to use architecture with only 4 core classes: server, connection, request and response (see "Understanding GCDWebServer's Architecture" below)
 * Well designed API with fully documented headers for easy integration and customization
@@ -303,7 +305,7 @@ HTTP connections are often initiated in batches (or bursts), for instance when l
 Debug Builds & Custom Logging
 =============================
 
-When building GCDWebServer in "Debug" mode versus "Release" mode, GCDWebServer logs a lot more information and also performs a number of internal consistency checks. To enable this behavior, define the preprocessor constant ```DEBUG=1``` when compiling GCDWebServer. In Xcode target settings, this can be done by adding ```DEBUG=1``` to the build setting ```GCC_PREPROCESSOR_DEFINITIONS``` when building in Debug configuration.
+When building GCDWebServer in "Debug" mode versus "Release" mode, GCDWebServer logs a lot more information and also performs a number of internal consistency checks. To enable this behavior, define the preprocessor constant ```DEBUG=1``` when compiling GCDWebServer. In Xcode target settings, this can be done by adding ```DEBUG=1``` to the build setting ```GCC_PREPROCESSOR_DEFINITIONS``` when building in "Debug" configuration.
 
 It's also possible to replace the logging system used by GCDWebServer by a custom one. Simply define the preprocessor constant ```__GCDWEBSERVER_LOGGING_HEADER__``` to the name of a header file (e.g. "MyLogging.h") that defines these macros:
 
@@ -318,6 +320,8 @@ It's also possible to replace the logging system used by GCDWebServer by a custo
 #define DCHECK(__CONDITION__)  // Should not do anything unless the preprocessor constant DEBUG is non-zero
 #define DNOT_REACHED()  // Should not do anything unless the preprocessor constant DEBUG is non-zero
 ```
+
+GCDWebServer comes with [an example of such header file](XLFacilityLogging.h) that allows to use [XLFacility](https://github.com/swisspol/XLFacility) as the logging system.
 
 Advanced Example 1: Implementing HTTP Redirects
 ===============================================
