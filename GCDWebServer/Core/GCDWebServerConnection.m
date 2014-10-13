@@ -280,7 +280,6 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 
 - (void)_writeBodyWithCompletionBlock:(WriteBodyCompletionBlock)block {
   DCHECK([_response hasBody]);
-  __block WriteBodyCompletionBlock completionBlock = block;
   GCDWebServerBodyReaderBlock readerBlock = ^(NSData *data, NSError *error) {
   if (data) {
     if (data.length) {
@@ -290,7 +289,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
         NSData* chunk = [NSMutableData dataWithLength:(hexLength + 2 + data.length + 2)];
         if (chunk == nil) {
           LOG_ERROR(@"Failed allocating memory for response body chunk for socket %i: %@", _socket, error);
-          completionBlock(NO);
+          block(NO);
           return;
         }
         char* ptr = (char*)[(NSMutableData*)chunk mutableBytes];
@@ -307,9 +306,9 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       [self _writeData:data withCompletionBlock:^(BOOL success) {
         
         if (success) {
-          [self _writeBodyWithCompletionBlock:completionBlock];
+          [self _writeBodyWithCompletionBlock:block];
         } else {
-          completionBlock(NO);
+          block(NO);
         }
         
       }];
@@ -317,16 +316,16 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       if (_response.usesChunkedTransferEncoding) {
         [self _writeData:_lastChunkData withCompletionBlock:^(BOOL success) {
           
-          completionBlock(success);
+          block(success);
           
         }];
       } else {
-        completionBlock(YES);
+        block(YES);
       }
     }
   } else {
     LOG_ERROR(@"Failed reading response body for socket %i: %@", _socket, error);
-    completionBlock(NO);
+    block(NO);
   }
   };
   if ([_response respondsToSelector:@selector(asyncReadData:)]) {
