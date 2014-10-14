@@ -76,6 +76,8 @@
 #import "GCDWebServerErrorResponse.h"
 #import "GCDWebServerFileResponse.h"
 #import "GCDWebServerStreamedResponse.h"
+#import "GCDWebServerAsyncStreamedResponse.h"
+#import "GCDWebServerEventStreamResponse.h"
 
 /**
  *  Automatically detect if XLFacility is available and if so use it as a

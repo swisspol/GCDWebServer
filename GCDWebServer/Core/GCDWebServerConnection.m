@@ -280,8 +280,19 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 
 - (void)_writeBodyWithCompletionBlock:(WriteBodyCompletionBlock)block {
   GWS_DCHECK([_response hasBody]);
-  NSError* error = nil;
-  NSData* data = [_response performReadData:&error];
+  if ([_response respondsToSelector:@selector(asyncReadData:)]) {
+    [_response asyncReadData:^(NSData *data, NSError *error) {
+      [self _writeBodyWithCompletionBlock:block data:data error:error];
+    }];
+  } else {
+    NSError* error = nil;
+    NSData* data = [_response performReadData:&error];
+    [self _writeBodyWithCompletionBlock:block data:data error:error];
+  }
+}
+
+- (void)_writeBodyWithCompletionBlock:(WriteBodyCompletionBlock)block data:(NSData*)data error:(NSError*)error {
+  GWS_DCHECK([_response hasBody]);
   if (data) {
     if (data.length) {
       if (_response.usesChunkedTransferEncoding) {
