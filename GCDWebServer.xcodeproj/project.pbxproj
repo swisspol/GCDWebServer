@@ -546,6 +546,7 @@
 					"-Wno-padded",
 					"-Wno-documentation",
 					"-Wno-documentation-unknown-command",
+					"-Wno-objc-missing-property-synthesis",
 				);
 			};
 			name = Debug;
