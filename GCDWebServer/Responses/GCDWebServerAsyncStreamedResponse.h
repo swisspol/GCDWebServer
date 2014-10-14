@@ -25,7 +25,7 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import "GCDWebServerAsyncStreamedResponse.h"
+#import "GCDWebServerResponse.h"
 
 /**
  *  The GCDWebServerAsyncStreamedResponse subclass of GCDWebServerResponse streams
