@@ -26,6 +26,7 @@
  */
 
 #import <os/object.h>
+#import <sys/socket.h>
 
 /**
  *  ARC <-> MRC compatibility macros.
@@ -212,6 +213,7 @@ extern NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset)
 extern BOOL GCDWebServerIsTextContentType(NSString* type);
 extern NSString* GCDWebServerDescribeData(NSData* data, NSString* contentType);
 extern NSString* GCDWebServerComputeMD5Digest(NSString* format, ...) NS_FORMAT_FUNCTION(1,2);
+extern NSString* GCDWebServerStringFromSockAddr(const struct sockaddr* addr, BOOL includeService);
 
 @interface GCDWebServerConnection ()
 - (id)initWithServer:(GCDWebServer*)server localAddress:(NSData*)localAddress remoteAddress:(NSData*)remoteAddress socket:(CFSocketNativeHandle)socket;
