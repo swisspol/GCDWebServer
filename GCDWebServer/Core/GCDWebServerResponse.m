@@ -244,9 +244,14 @@
   return [_reader open:error];
 }
 
-- (NSData*)performReadData:(NSError**)error {
-  GWS_DCHECK(_opened);
-  return [_reader readData:error];
+- (void)performReadDataWithCompletion:(GCDWebServerBodyReaderCompletionBlock)block {
+  if ([_reader respondsToSelector:@selector(asyncReadDataWithCompletion:)]) {
+    [_reader asyncReadDataWithCompletion:block];
+  } else {
+    NSError* error = nil;
+    NSData* data = [_reader readData:&error];
+    block(data, error);
+  }
 }
 
 - (void)performClose {

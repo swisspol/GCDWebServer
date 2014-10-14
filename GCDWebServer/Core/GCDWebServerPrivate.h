@@ -249,6 +249,6 @@ extern NSString* GCDWebServerStringFromSockAddr(const struct sockaddr* addr, BOO
 @property(nonatomic, readonly) BOOL usesChunkedTransferEncoding;
 - (void)prepareForReading;
 - (BOOL)performOpen:(NSError**)error;
-- (NSData*)performReadData:(NSError**)error;
+- (void)performReadDataWithCompletion:(GCDWebServerBodyReaderCompletionBlock)block;
 - (void)performClose;
 @end

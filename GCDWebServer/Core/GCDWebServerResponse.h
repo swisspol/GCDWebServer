@@ -28,6 +28,12 @@
 #import <Foundation/Foundation.h>
 
 /**
+ *  The GCDWebServerBodyReaderCompletionBlock is passed by GCDWebServer to the
+ *  GCDWebServerBodyReader object when reading data from it asynchronously.
+ */
+typedef void (^GCDWebServerBodyReaderCompletionBlock)(NSData* data, NSError* error);
+
+/**
  *  This protocol is used by the GCDWebServerConnection to communicate with
  *  the GCDWebServerResponse and read the HTTP body data to send.
  *
@@ -38,6 +44,8 @@
  *  @warning These methods can be called on any GCD thread.
  */
 @protocol GCDWebServerBodyReader <NSObject>
+
+@required
 
 /**
  *  This method is called before any body data is sent.
@@ -60,6 +68,17 @@
  *  This method is called after all body data has been sent.
  */
 - (void)close;
+
+@optional
+
+/**
+ *  If this method is implemented, it will be preferred over -readData:.
+ *
+ *  It must call the passed block when data is available, passing a non-empty
+ *  NSData if there is body data available, or an empty NSData there is no more
+ *  body data, or nil on error and pass an NSError along.
+ */
+- (void)asyncReadDataWithCompletion:(GCDWebServerBodyReaderCompletionBlock)block;
 
 @end
 

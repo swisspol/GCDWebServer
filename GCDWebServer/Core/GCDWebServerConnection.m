@@ -280,54 +280,56 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 
 - (void)_writeBodyWithCompletionBlock:(WriteBodyCompletionBlock)block {
   GWS_DCHECK([_response hasBody]);
-  NSError* error = nil;
-  NSData* data = [_response performReadData:&error];
-  if (data) {
-    if (data.length) {
-      if (_response.usesChunkedTransferEncoding) {
-        const char* hexString = [[NSString stringWithFormat:@"%lx", (unsigned long)data.length] UTF8String];
-        size_t hexLength = strlen(hexString);
-        NSData* chunk = [NSMutableData dataWithLength:(hexLength + 2 + data.length + 2)];
-        if (chunk == nil) {
-          GWS_LOG_ERROR(@"Failed allocating memory for response body chunk for socket %i: %@", _socket, error);
-          block(NO);
-          return;
+  [_response performReadDataWithCompletion:^(NSData* data, NSError* error) {
+    
+    if (data) {
+      if (data.length) {
+        if (_response.usesChunkedTransferEncoding) {
+          const char* hexString = [[NSString stringWithFormat:@"%lx", (unsigned long)data.length] UTF8String];
+          size_t hexLength = strlen(hexString);
+          NSData* chunk = [NSMutableData dataWithLength:(hexLength + 2 + data.length + 2)];
+          if (chunk == nil) {
+            GWS_LOG_ERROR(@"Failed allocating memory for response body chunk for socket %i: %@", _socket, error);
+            block(NO);
+            return;
+          }
+          char* ptr = (char*)[(NSMutableData*)chunk mutableBytes];
+          bcopy(hexString, ptr, hexLength);
+          ptr += hexLength;
+          *ptr++ = '\r';
+          *ptr++ = '\n';
+          bcopy(data.bytes, ptr, data.length);
+          ptr += data.length;
+          *ptr++ = '\r';
+          *ptr = '\n';
+          data = chunk;
         }
-        char* ptr = (char*)[(NSMutableData*)chunk mutableBytes];
-        bcopy(hexString, ptr, hexLength);
-        ptr += hexLength;
-        *ptr++ = '\r';
-        *ptr++ = '\n';
-        bcopy(data.bytes, ptr, data.length);
-        ptr += data.length;
-        *ptr++ = '\r';
-        *ptr = '\n';
-        data = chunk;
-      }
-      [self _writeData:data withCompletionBlock:^(BOOL success) {
-        
-        if (success) {
-          [self _writeBodyWithCompletionBlock:block];
-        } else {
-          block(NO);
-        }
-        
-      }];
-    } else {
-      if (_response.usesChunkedTransferEncoding) {
-        [self _writeData:_lastChunkData withCompletionBlock:^(BOOL success) {
+        [self _writeData:data withCompletionBlock:^(BOOL success) {
           
-          block(success);
+          if (success) {
+            [self _writeBodyWithCompletionBlock:block];
+          } else {
+            block(NO);
+          }
           
         }];
       } else {
-        block(YES);
+        if (_response.usesChunkedTransferEncoding) {
+          [self _writeData:_lastChunkData withCompletionBlock:^(BOOL success) {
+            
+            block(success);
+            
+          }];
+        } else {
+          block(YES);
+        }
       }
+    } else {
+      GWS_LOG_ERROR(@"Failed reading response body for socket %i: %@", _socket, error);
+      block(NO);
     }
-  } else {
-    GWS_LOG_ERROR(@"Failed reading response body for socket %i: %@", _socket, error);
-    block(NO);
-  }
+    
+  }];
 }
 
 @end
