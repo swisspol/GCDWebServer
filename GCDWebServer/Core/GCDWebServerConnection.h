@@ -49,7 +49,7 @@
 @property(nonatomic, readonly) GCDWebServer* server;
 
 /**
- *  Returns true if the connection is using IPv6.
+ *  Returns YES if the connection is using IPv6.
  */
 @property(nonatomic, readonly, getter=isUsingIPv6) BOOL usingIPv6;
 
