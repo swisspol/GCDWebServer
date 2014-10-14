@@ -311,7 +311,7 @@ int main(int argc, const char* argv[]) {
         fprintf(stdout, "Running in Streaming Response mode");
         webServer = [[GCDWebServer alloc] init];
         [webServer addHandlerForMethod:@"GET"
-                                  path:@"/"
+                                  path:@"/sync"
                           requestClass:[GCDWebServerRequest class]
                           processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
           
@@ -324,6 +324,24 @@ int main(int argc, const char* argv[]) {
             } else {
               return [NSData data];
             }
+            
+          }];
+          
+        }];
+        [webServer addHandlerForMethod:@"GET"
+                                  path:@"/async"
+                          requestClass:[GCDWebServerRequest class]
+                          processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+          
+          __block int countDown = 10;
+          return [GCDWebServerStreamedResponse responseWithContentType:@"text/plain" asyncStreamBlock:^(GCDWebServerBodyReaderCompletionBlock completionBlock) {
+            
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+              
+              NSData* data = countDown ? [[NSString stringWithFormat:@"%i\n", countDown--] dataUsingEncoding:NSUTF8StringEncoding] : [NSData data];
+              completionBlock(data, nil);
+              
+            });
             
           }];
           

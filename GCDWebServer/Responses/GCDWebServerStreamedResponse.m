@@ -29,7 +29,7 @@
 
 @interface GCDWebServerStreamedResponse () {
 @private
-  GCDWebServerStreamBlock _block;
+  GCDWebServerAsyncStreamBlock _block;
 }
 @end
 
@@ -39,7 +39,21 @@
   return ARC_AUTORELEASE([[[self class] alloc] initWithContentType:type streamBlock:block]);
 }
 
++ (instancetype)responseWithContentType:(NSString*)type asyncStreamBlock:(GCDWebServerAsyncStreamBlock)block {
+  return ARC_AUTORELEASE([[[self class] alloc] initWithContentType:type asyncStreamBlock:block]);
+}
+
 - (instancetype)initWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block {
+  return [self initWithContentType:type asyncStreamBlock:^(GCDWebServerBodyReaderCompletionBlock completionBlock) {
+    
+    NSError* error = nil;
+    NSData* data = block(&error);
+    completionBlock(data, error);
+    
+  }];
+}
+
+- (instancetype)initWithContentType:(NSString*)type asyncStreamBlock:(GCDWebServerAsyncStreamBlock)block {
   if ((self = [super init])) {
     _block = [block copy];
     
@@ -54,8 +68,8 @@
   ARC_DEALLOC(super);
 }
 
-- (NSData*)readData:(NSError**)error {
-  return _block(error);
+- (void)asyncReadDataWithCompletion:(GCDWebServerBodyReaderCompletionBlock)block {
+  _block(block);
 }
 
 - (NSString*)description {
