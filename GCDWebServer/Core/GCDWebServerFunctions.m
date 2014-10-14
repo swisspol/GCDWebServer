@@ -45,24 +45,24 @@ static dispatch_queue_t _dateFormatterQueue = NULL;
 
 // TODO: Handle RFC 850 and ANSI C's asctime() format
 void GCDWebServerInitializeFunctions() {
-  DCHECK([NSThread isMainThread]);  // NSDateFormatter should be initialized on main thread
+  GWS_DCHECK([NSThread isMainThread]);  // NSDateFormatter should be initialized on main thread
   if (_dateFormatterRFC822 == nil) {
     _dateFormatterRFC822 = [[NSDateFormatter alloc] init];
     _dateFormatterRFC822.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
     _dateFormatterRFC822.dateFormat = @"EEE',' dd MMM yyyy HH':'mm':'ss 'GMT'";
     _dateFormatterRFC822.locale = ARC_AUTORELEASE([[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]);
-    DCHECK(_dateFormatterRFC822);
+    GWS_DCHECK(_dateFormatterRFC822);
   }
   if (_dateFormatterISO8601 == nil) {
     _dateFormatterISO8601 = [[NSDateFormatter alloc] init];
     _dateFormatterISO8601.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
     _dateFormatterISO8601.dateFormat = @"yyyy-MM-dd'T'HH:mm:ss'+00:00'";
     _dateFormatterISO8601.locale = ARC_AUTORELEASE([[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]);
-    DCHECK(_dateFormatterISO8601);
+    GWS_DCHECK(_dateFormatterISO8601);
   }
   if (_dateFormatterQueue == NULL) {
     _dateFormatterQueue = dispatch_queue_create(NULL, DISPATCH_QUEUE_SERIAL);
-    DCHECK(_dateFormatterQueue);
+    GWS_DCHECK(_dateFormatterQueue);
   }
 }
 
@@ -210,8 +210,8 @@ NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
     if (unescapedKey && unescapedValue) {
       [parameters setObject:unescapedValue forKey:unescapedKey];
     } else {
-      LOG_WARNING(@"Failed parsing URL encoded form for key \"%@\" and value \"%@\"", key, value);
-      DNOT_REACHED();
+      GWS_LOG_WARNING(@"Failed parsing URL encoded form for key \"%@\" and value \"%@\"", key, value);
+      GWS_DNOT_REACHED();
     }
     
     if ([scanner isAtEnd]) {

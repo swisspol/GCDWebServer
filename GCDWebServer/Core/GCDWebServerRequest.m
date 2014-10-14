@@ -95,12 +95,12 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
 }
 
 - (BOOL)writeData:(NSData*)data error:(NSError**)error {
-  DCHECK(!_finished);
+  GWS_DCHECK(!_finished);
   _stream.next_in = (Bytef*)data.bytes;
   _stream.avail_in = (uInt)data.length;
   NSMutableData* decodedData = [[NSMutableData alloc] initWithLength:kGZipInitialBufferSize];
   if (decodedData == nil) {
-    DNOT_REACHED();
+    GWS_DNOT_REACHED();
     return NO;
   }
   NSUInteger length = 0;
@@ -130,7 +130,7 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
 }
 
 - (BOOL)close:(NSError**)error {
-  DCHECK(_finished);
+  GWS_DCHECK(_finished);
   inflateEnd(&_stream);
   return [super close:error];
 }
@@ -178,7 +178,7 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
     if (lengthHeader) {
       NSInteger length = [lengthHeader integerValue];
       if (_chunked || (length < 0)) {
-        DNOT_REACHED();
+        GWS_DNOT_REACHED();
         ARC_RELEASE(self);
         return nil;
       }
@@ -193,7 +193,7 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
       _length = NSUIntegerMax;
     } else {
       if (_type) {
-        DNOT_REACHED();
+        GWS_DNOT_REACHED();
         ARC_RELEASE(self);
         return nil;
       }
@@ -232,7 +232,7 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
         }
       }
       if ((_range.location == NSUIntegerMax) && (_range.length == 0)) {  // Ignore "Range" header if syntactically invalid
-        LOG_WARNING(@"Failed to parse 'Range' header \"%@\" for url: %@", rangeHeader, url);
+        GWS_LOG_WARNING(@"Failed to parse 'Range' header \"%@\" for url: %@", rangeHeader, url);
       }
     }
     
@@ -296,10 +296,10 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
 }
 
 - (BOOL)performOpen:(NSError**)error {
-  DCHECK(_type);
-  DCHECK(_writer);
+  GWS_DCHECK(_type);
+  GWS_DCHECK(_writer);
   if (_opened) {
-    DNOT_REACHED();
+    GWS_DNOT_REACHED();
     return NO;
   }
   _opened = YES;
@@ -307,12 +307,12 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
 }
 
 - (BOOL)performWriteData:(NSData*)data error:(NSError**)error {
-  DCHECK(_opened);
+  GWS_DCHECK(_opened);
   return [_writer writeData:data error:error];
 }
 
 - (BOOL)performClose:(NSError**)error {
-  DCHECK(_opened);
+  GWS_DCHECK(_opened);
   return [_writer close:error];
 }
 
