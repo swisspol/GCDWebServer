@@ -305,13 +305,13 @@ HTTP connections are often initiated in batches (or bursts), for instance when l
 Logging in GCDWebServer
 =======================
 
-Both for debugging and informational purpose, GCDWebServer log messages extensively whenever something happens. Furthermore, when building GCDWebServer in "Debug" mode versus "Release" mode, it logs even more information but also performs a number of internal consistency checks. To enable this behavior, define the preprocessor constant ```DEBUG=1``` when compiling GCDWebServer. In Xcode target settings, this can be done by adding ```DEBUG=1``` to the build setting ```GCC_PREPROCESSOR_DEFINITIONS``` when building in "Debug" configuration. You can also control the logging verbosity at run time by calling ```+[GCDWebServer setLogLevel:]```.
+Both for debugging and informational purpose, GCDWebServer logs messages extensively whenever something happens. Furthermore, when building GCDWebServer in "Debug" mode versus "Release" mode, it logs even more information but also performs a number of internal consistency checks. To enable this behavior, define the preprocessor constant ```DEBUG=1``` when compiling GCDWebServer. In Xcode target settings, this can be done by adding ```DEBUG=1``` to the build setting ```GCC_PREPROCESSOR_DEFINITIONS``` when building in "Debug" configuration. Finally, you can also control the logging verbosity at run time by calling ```+[GCDWebServer setLogLevel:]```.
 
-By default all messages logged by GCDWebServer are sent to its built-in logging facility, which simply outputs to ```stderr``` assuming a terminal type device is connected. In order to better integrate with the rest of your app or because of the amount of information logged, you might want to use another logging facility.
+By default, all messages logged by GCDWebServer are sent to its built-in logging facility, which simply outputs to ```stderr``` (assuming a terminal type device is connected). In order to better integrate with the rest of your app or because of the amount of information logged, you might want to use another logging facility.
 
 GCDWebServer has automatic support for [XLFacility](https://github.com/swisspol/XLFacility) (by the same author as GCDWebServer and also open-source) and [CocoaLumberjack](https://github.com/CocoaLumberjack/CocoaLumberjack). If either of them is in the same Xcode project, GCDWebServer should use it automatically instead of the built-in logging facility (see [GCDWebServerPrivate.h](GCDWebServer/Core/GCDWebServerPrivate.h) for the implementation details).
 
-*It's also possible to use a custom logging facility - see [GCDWebServer.h](GCDWebServer/Core/GCDWebServer.h) for more information.*
+It's also possible to use a custom logging facility - see [GCDWebServer.h](GCDWebServer/Core/GCDWebServer.h) for more information.
 
 Advanced Example 1: Implementing HTTP Redirects
 ===============================================
