@@ -49,6 +49,11 @@
 @property(nonatomic, readonly) GCDWebServer* server;
 
 /**
+ *  Returns YES if the connection is using IPv6.
+ */
+@property(nonatomic, readonly, getter=isUsingIPv6) BOOL usingIPv6;
+
+/**
  *  Returns the address of the local peer (i.e. server) of the connection
  *  as a raw "struct sockaddr".
  */
@@ -56,7 +61,7 @@
 
 /**
  *  Returns the address of the local peer (i.e. server) of the connection
- *  as a dotted string.
+ *  as a string.
  */
 @property(nonatomic, readonly) NSString* localAddressString;
 
@@ -68,7 +73,7 @@
 
 /**
  *  Returns the address of the remote peer (i.e. client) of the connection
- *  as a dotted string.
+ *  as a string.
  */
 @property(nonatomic, readonly) NSString* remoteAddressString;
 

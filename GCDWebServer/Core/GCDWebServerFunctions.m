@@ -223,7 +223,19 @@ NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
   return parameters;
 }
 
-NSString* GCDWebServerGetPrimaryIPv4Address() {
+NSString* GCDWebServerStringFromSockAddr(const struct sockaddr* addr, BOOL includeService) {
+  NSString* string = nil;
+  char hostBuffer[NI_MAXHOST];
+  char serviceBuffer[NI_MAXSERV];
+  if (getnameinfo(addr, addr->sa_len, hostBuffer, sizeof(hostBuffer), serviceBuffer, sizeof(serviceBuffer), NI_NUMERICHOST | NI_NUMERICSERV | NI_NOFQDN) >= 0) {
+    string = includeService ? [NSString stringWithFormat:@"%s:%s", hostBuffer, serviceBuffer] : [NSString stringWithUTF8String:hostBuffer];
+  } else {
+    GWS_DNOT_REACHED();
+  }
+  return string;
+}
+
+NSString* GCDWebServerGetPrimaryIPAddress(BOOL useIPv6) {
   NSString* address = nil;
 #if TARGET_OS_IPHONE
 #if !TARGET_IPHONE_SIMULATOR
@@ -233,7 +245,7 @@ NSString* GCDWebServerGetPrimaryIPv4Address() {
   const char* primaryInterface = NULL;
   SCDynamicStoreRef store = SCDynamicStoreCreate(kCFAllocatorDefault, CFSTR("GCDWebServer"), NULL, NULL);
   if (store) {
-    CFPropertyListRef info = SCDynamicStoreCopyValue(store, CFSTR("State:/Network/Global/IPv4"));
+    CFPropertyListRef info = SCDynamicStoreCopyValue(store, CFSTR("State:/Network/Global/IPv4"));  // There is no equivalent for IPv6 but the primary interface should be the same
     if (info) {
       primaryInterface = [[NSString stringWithString:[(ARC_BRIDGE NSDictionary*)info objectForKey:@"PrimaryInterface"]] UTF8String];
       CFRelease(info);
@@ -255,11 +267,8 @@ NSString* GCDWebServerGetPrimaryIPv4Address() {
       {
         continue;
       }
-      if ((ifap->ifa_flags & IFF_UP) && (ifap->ifa_addr->sa_family == AF_INET)) {
-        char buffer[NI_MAXHOST];
-        if (getnameinfo(ifap->ifa_addr, ifap->ifa_addr->sa_len, buffer, sizeof(buffer), NULL, 0, NI_NUMERICHOST | NI_NOFQDN) >= 0) {
-          address = [NSString stringWithUTF8String:buffer];
-        }
+      if ((ifap->ifa_flags & IFF_UP) && ((!useIPv6 && (ifap->ifa_addr->sa_family == AF_INET)) || (useIPv6 && (ifap->ifa_addr->sa_family == AF_INET6)))) {
+        address = GCDWebServerStringFromSockAddr(ifap->ifa_addr, NO);
         break;
       }
     }

@@ -372,6 +372,11 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   }
 }
 
+- (BOOL)isUsingIPv6 {
+  const struct sockaddr* localSockAddr = _localAddress.bytes;
+  return (localSockAddr->sa_family == AF_INET6);
+}
+
 - (void)_initializeResponseHeadersWithStatusCode:(NSInteger)statusCode {
   _statusCode = statusCode;
   _responseMessage = CFHTTPMessageCreateResponse(kCFAllocatorDefault, statusCode, NULL, kCFHTTPVersion1_1);
@@ -629,25 +634,12 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   return self;
 }
 
-static NSString* _StringFromAddressData(NSData* data) {
-  NSString* string = nil;
-  const struct sockaddr* addr = data.bytes;
-  char hostBuffer[NI_MAXHOST];
-  char serviceBuffer[NI_MAXSERV];
-  if (getnameinfo(addr, addr->sa_len, hostBuffer, sizeof(hostBuffer), serviceBuffer, sizeof(serviceBuffer), NI_NUMERICHOST | NI_NUMERICSERV | NI_NOFQDN) >= 0) {
-    string = [NSString stringWithFormat:@"%s:%s", hostBuffer, serviceBuffer];
-  } else {
-    GWS_DNOT_REACHED();
-  }
-  return string;
-}
-
 - (NSString*)localAddressString {
-  return _StringFromAddressData(_localAddress);
+  return GCDWebServerStringFromSockAddr(_localAddress.bytes, YES);
 }
 
 - (NSString*)remoteAddressString {
-  return _StringFromAddressData(_remoteAddress);
+  return GCDWebServerStringFromSockAddr(_remoteAddress.bytes, YES);
 }
 
 - (void)dealloc {
