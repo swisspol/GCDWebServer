@@ -280,7 +280,19 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 
 - (void)_writeBodyWithCompletionBlock:(WriteBodyCompletionBlock)block {
   GWS_DCHECK([_response hasBody]);
-  GCDWebServerBodyReaderBlock readerBlock = ^(NSData *data, NSError *error) {
+  if ([_response respondsToSelector:@selector(asyncReadData:)]) {
+    [_response asyncReadData:^(NSData *data, NSError *error) {
+      [self _writeBodyWithCompletionBlock:block data:data error:error];
+    }];
+  } else {
+    NSError* error = nil;
+    NSData* data = [_response performReadData:&error];
+    [self _writeBodyWithCompletionBlock:block data:data error:error];
+  }
+}
+
+- (void)_writeBodyWithCompletionBlock:(WriteBodyCompletionBlock)block data:(NSData*)data error:(NSError*)error {
+  GWS_DCHECK([_response hasBody]);
   if (data) {
     if (data.length) {
       if (_response.usesChunkedTransferEncoding) {
@@ -326,14 +338,6 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   } else {
     GWS_LOG_ERROR(@"Failed reading response body for socket %i: %@", _socket, error);
     block(NO);
-  }
-  };
-  if ([_response respondsToSelector:@selector(asyncReadData:)]) {
-    [_response asyncReadData:readerBlock];
-  } else {
-    NSError* error = nil;
-    NSData* data = [_response performReadData:&error];
-    readerBlock(data, error);
   }
 }
 
