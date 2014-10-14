@@ -89,7 +89,7 @@
       NSString* charset = GCDWebServerExtractHeaderValueParameter(self.contentType, @"charset");
       _text = [[NSString alloc] initWithData:self.data encoding:GCDWebServerStringEncodingFromCharset(charset)];
     } else {
-      DNOT_REACHED();
+      GWS_DNOT_REACHED();
     }
   }
   return _text;
@@ -101,7 +101,7 @@
     if ([mimeType isEqualToString:@"application/json"] || [mimeType isEqualToString:@"text/json"] || [mimeType isEqualToString:@"text/javascript"]) {
       _jsonObject = ARC_RETAIN([NSJSONSerialization JSONObjectWithData:_data options:0 error:NULL]);
     } else {
-      DNOT_REACHED();
+      GWS_DNOT_REACHED();
     }
   }
   return _jsonObject;

@@ -5,6 +5,8 @@ Overview
 [![Version](http://cocoapod-badges.herokuapp.com/v/GCDWebServer/badge.png)](http://cocoadocs.org/docsets/GCDWebServer)
 [![Platform](http://cocoapod-badges.herokuapp.com/p/GCDWebServer/badge.png)](http://cocoadocs.org/docsets/GCDWebServer)
 
+*ANNOUNCEMENT: If you like GCDWebServer, check out [XLFacility](https://github.com/swisspol/XLFacility), an elegant and powerful logging facility for OS X & iOS by the same author and also open-source. XLFacility can be used seemlessly to handle logging from GCDWebServer (see "Logging in GCDWebServer" below).*
+
 GCDWebServer is a modern and lightweight GCD based HTTP 1.1 server designed to be embedded in OS X & iOS apps. It was written from scratch with the following goals in mind:
 * Elegant and easy to use architecture with only 4 core classes: server, connection, request and response (see "Understanding GCDWebServer's Architecture" below)
 * Well designed API with fully documented headers for easy integration and customization
@@ -300,24 +302,16 @@ Fortunately, GCDWebServer does all of this automatically for you:
 
 HTTP connections are often initiated in batches (or bursts), for instance when loading a web page with multiple resources. This makes it difficult to accurately detect when the *very last* HTTP connection has been closed: it's possible 2 consecutive HTTP connections part of the same batch would be separated by a small delay instead of overlapping. It would be bad for the client if GCDWebServer suspended itself right in between. The ```GCDWebServerOption_ConnectedStateCoalescingInterval``` option solves this problem elegantly by forcing GCDWebServer to wait some extra delay before performing any action after the last HTTP connection has been closed, just in case a new HTTP connection is initiated within this delay.
 
-Debug Builds & Custom Logging
-=============================
+Logging in GCDWebServer
+=======================
 
-When building GCDWebServer in "Debug" mode versus "Release" mode, GCDWebServer logs a lot more information and also performs a number of internal consistency checks. To enable this behavior, define the preprocessor constant ```DEBUG=1``` when compiling GCDWebServer. In Xcode target settings, this can be done by adding ```DEBUG=1``` to the build setting ```GCC_PREPROCESSOR_DEFINITIONS``` when building in Debug configuration.
+Both for debugging and informational purpose, GCDWebServer logs messages extensively whenever something happens. Furthermore, when building GCDWebServer in "Debug" mode versus "Release" mode, it logs even more information but also performs a number of internal consistency checks. To enable this behavior, define the preprocessor constant ```DEBUG=1``` when compiling GCDWebServer. In Xcode target settings, this can be done by adding ```DEBUG=1``` to the build setting ```GCC_PREPROCESSOR_DEFINITIONS``` when building in "Debug" configuration. Finally, you can also control the logging verbosity at run time by calling ```+[GCDWebServer setLogLevel:]```.
 
-It's also possible to replace the logging system used by GCDWebServer by a custom one. Simply define the preprocessor constant ```__GCDWEBSERVER_LOGGING_HEADER__``` to the name of a header file (e.g. "MyLogging.h") that defines these macros:
+By default, all messages logged by GCDWebServer are sent to its built-in logging facility, which simply outputs to ```stderr``` (assuming a terminal type device is connected). In order to better integrate with the rest of your app or because of the amount of information logged, you might want to use another logging facility.
 
-```
-#define LOG_DEBUG(...)  // Should not do anything unless the preprocessor constant DEBUG is non-zero
-#define LOG_VERBOSE(...)
-#define LOG_INFO(...)
-#define LOG_WARNING(...)
-#define LOG_ERROR(...)
-#define LOG_EXCEPTION(__EXCEPTION__)
+GCDWebServer has automatic support for [XLFacility](https://github.com/swisspol/XLFacility) (by the same author as GCDWebServer and also open-source) and [CocoaLumberjack](https://github.com/CocoaLumberjack/CocoaLumberjack). If either of them is in the same Xcode project, GCDWebServer should use it automatically instead of the built-in logging facility (see [GCDWebServerPrivate.h](GCDWebServer/Core/GCDWebServerPrivate.h) for the implementation details).
 
-#define DCHECK(__CONDITION__)  // Should not do anything unless the preprocessor constant DEBUG is non-zero
-#define DNOT_REACHED()  // Should not do anything unless the preprocessor constant DEBUG is non-zero
-```
+It's also possible to use a custom logging facility - see [GCDWebServer.h](GCDWebServer/Core/GCDWebServer.h) for more information.
 
 Advanced Example 1: Implementing HTTP Redirects
 ===============================================

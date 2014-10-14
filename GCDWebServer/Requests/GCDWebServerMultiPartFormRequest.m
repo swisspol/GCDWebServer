@@ -171,22 +171,22 @@ static NSData* _dashNewlineData = nil;
 + (void)initialize {
   if (_newlineData == nil) {
     _newlineData = [[NSData alloc] initWithBytes:"\r\n" length:2];
-    DCHECK(_newlineData);
+    GWS_DCHECK(_newlineData);
   }
   if (_newlinesData == nil) {
     _newlinesData = [[NSData alloc] initWithBytes:"\r\n\r\n" length:4];
-    DCHECK(_newlinesData);
+    GWS_DCHECK(_newlinesData);
   }
   if (_dashNewlineData == nil) {
     _dashNewlineData = [[NSData alloc] initWithBytes:"--\r\n" length:4];
-    DCHECK(_dashNewlineData);
+    GWS_DCHECK(_dashNewlineData);
   }
 }
 
 - (id)initWithBoundary:(NSString*)boundary defaultControlName:(NSString*)name arguments:(NSMutableArray*)arguments files:(NSMutableArray*)files {
   NSData* data = boundary.length ? [[NSString stringWithFormat:@"--%@", boundary] dataUsingEncoding:NSASCIIStringEncoding] : nil;
   if (data == nil) {
-    DNOT_REACHED();
+    GWS_DNOT_REACHED();
     ARC_RELEASE(self);
     return nil;
   }
@@ -259,7 +259,7 @@ static NSData* _dashNewlineData = nil;
               }
             }
           } else {
-            DNOT_REACHED();
+            GWS_DNOT_REACHED();
           }
         }
         if (_contentType == nil) {
@@ -267,15 +267,15 @@ static NSData* _dashNewlineData = nil;
         }
         ARC_RELEASE(headers);
       } else {
-        LOG_ERROR(@"Failed decoding headers in part of 'multipart/form-data'");
-        DNOT_REACHED();
+        GWS_LOG_ERROR(@"Failed decoding headers in part of 'multipart/form-data'");
+        GWS_DNOT_REACHED();
       }
       if (_controlName) {
         if ([GCDWebServerTruncateHeaderValue(_contentType) isEqualToString:@"multipart/mixed"]) {
           NSString* boundary = GCDWebServerExtractHeaderValueParameter(_contentType, @"boundary");
           _subParser = [[GCDWebServerMIMEStreamParser alloc] initWithBoundary:boundary defaultControlName:_controlName arguments:_arguments files:_files];
           if (_subParser == nil) {
-            DNOT_REACHED();
+            GWS_DNOT_REACHED();
             success = NO;
           }
         } else if (_fileName) {
@@ -284,12 +284,12 @@ static NSData* _dashNewlineData = nil;
           if (_tmpFile > 0) {
             _tmpPath = [path copy];
           } else {
-            DNOT_REACHED();
+            GWS_DNOT_REACHED();
             success = NO;
           }
         }
       } else {
-        DNOT_REACHED();
+        GWS_DNOT_REACHED();
         success = NO;
       }
       
@@ -311,7 +311,7 @@ static NSData* _dashNewlineData = nil;
           NSUInteger dataLength = range.location - 2;
           if (_subParser) {
             if (![_subParser appendBytes:dataBytes length:(dataLength + 2)] || ![_subParser isAtEnd]) {
-              DNOT_REACHED();
+              GWS_DNOT_REACHED();
               success = NO;
             }
             ARC_RELEASE(_subParser);
@@ -325,11 +325,11 @@ static NSData* _dashNewlineData = nil;
                 [_files addObject:file];
                 ARC_RELEASE(file);
               } else {
-                DNOT_REACHED();
+                GWS_DNOT_REACHED();
                 success = NO;
               }
             } else {
-              DNOT_REACHED();
+              GWS_DNOT_REACHED();
               success = NO;
             }
             ARC_RELEASE(_tmpPath);
@@ -359,7 +359,7 @@ static NSData* _dashNewlineData = nil;
           if ([_subParser appendBytes:_data.bytes length:length]) {
             [_data replaceBytesInRange:NSMakeRange(0, length) withBytes:NULL length:0];
           } else {
-            DNOT_REACHED();
+            GWS_DNOT_REACHED();
             success = NO;
           }
         } else if (_tmpPath) {
@@ -367,7 +367,7 @@ static NSData* _dashNewlineData = nil;
           if (result == (ssize_t)length) {
             [_data replaceBytesInRange:NSMakeRange(0, length) withBytes:NULL length:0];
           } else {
-            DNOT_REACHED();
+            GWS_DNOT_REACHED();
             success = NO;
           }
         }

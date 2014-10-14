@@ -42,7 +42,7 @@
 
 - (instancetype)initWithData:(NSData*)data contentType:(NSString*)type {
   if (data == nil) {
-    DNOT_REACHED();
+    GWS_DNOT_REACHED();
     ARC_RELEASE(self);
     return nil;
   }
@@ -107,7 +107,7 @@
 - (instancetype)initWithText:(NSString*)text {
   NSData* data = [text dataUsingEncoding:NSUTF8StringEncoding];
   if (data == nil) {
-    DNOT_REACHED();
+    GWS_DNOT_REACHED();
     ARC_RELEASE(self);
     return nil;
   }
@@ -117,7 +117,7 @@
 - (instancetype)initWithHTML:(NSString*)html {
   NSData* data = [html dataUsingEncoding:NSUTF8StringEncoding];
   if (data == nil) {
-    DNOT_REACHED();
+    GWS_DNOT_REACHED();
     ARC_RELEASE(self);
     return nil;
   }

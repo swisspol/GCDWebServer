@@ -61,11 +61,17 @@ NSString* const GCDWebServerOption_AutomaticallySuspendInBackground = @"Automati
 NSString* const GCDWebServerAuthenticationMethod_Basic = @"Basic";
 NSString* const GCDWebServerAuthenticationMethod_DigestAccess = @"DigestAccess";
 
-#ifndef __GCDWEBSERVER_LOGGING_HEADER__
+#if defined(__GCDWEBSERVER_LOGGING_FACILITY_BUILTIN__)
 #if DEBUG
-GCDWebServerLogLevel GCDLogLevel = kGCDWebServerLogLevel_Debug;
+GCDWebServerLoggingLevel GCDWebServerLogLevel = kGCDWebServerLoggingLevel_Debug;
 #else
-GCDWebServerLogLevel GCDLogLevel = kGCDWebServerLogLevel_Info;
+GCDWebServerLoggingLevel GCDWebServerLogLevel = kGCDWebServerLoggingLevel_Info;
+#endif
+#elif defined(__GCDWEBSERVER_LOGGING_FACILITY_COCOALUMBERJACK__)
+#if DEBUG
+int GCDWebServerLogLevel = LOG_LEVEL_DEBUG;
+#else
+int GCDWebServerLogLevel = LOG_LEVEL_INFO;
 #endif
 #endif
 
@@ -73,16 +79,22 @@ GCDWebServerLogLevel GCDLogLevel = kGCDWebServerLogLevel_Info;
 static BOOL _run;
 #endif
 
-#ifndef __GCDWEBSERVER_LOGGING_HEADER__
+#ifdef __GCDWEBSERVER_LOGGING_FACILITY_BUILTIN__
 
-void GCDLogMessage(GCDWebServerLogLevel level, NSString* format, ...) {
+void GCDWebServerLogMessage(GCDWebServerLoggingLevel level, NSString* format, ...) {
   static const char* levelNames[] = {"DEBUG", "VERBOSE", "INFO", "WARNING", "ERROR", "EXCEPTION"};
-  va_list arguments;
-  va_start(arguments, format);
-  NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
-  va_end(arguments);
-  fprintf(stderr, "[%s] %s\n", levelNames[level], [message UTF8String]);
-  ARC_RELEASE(message);
+  static int enableLogging = -1;
+  if (enableLogging < 0) {
+    enableLogging = (isatty(STDERR_FILENO) ? 1 : 0);
+  }
+  if (enableLogging) {
+    va_list arguments;
+    va_start(arguments, format);
+    NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
+    va_end(arguments);
+    fprintf(stderr, "[%s] %s\n", levelNames[level], [message UTF8String]);
+    ARC_RELEASE(message);
+  }
 }
 
 #endif
@@ -177,17 +189,6 @@ static void _ExecuteMainThreadRunLoopSources() {
             authenticationBasicAccounts=_authenticationBasicAccounts, authenticationDigestAccounts=_authenticationDigestAccounts,
             shouldAutomaticallyMapHEADToGET=_mapHEADToGET;
 
-#ifndef __GCDWEBSERVER_LOGGING_HEADER__
-
-+ (void)load {
-  const char* logLevel = getenv("logLevel");
-  if (logLevel) {
-    GCDLogLevel = atoi(logLevel);
-  }
-}
-
-#endif
-
 + (void)initialize {
   GCDWebServerInitializeFunctions();
 }
@@ -205,10 +206,10 @@ static void _ExecuteMainThreadRunLoopSources() {
 }
 
 - (void)dealloc {
-  DCHECK(_connected == NO);
-  DCHECK(_activeConnections == 0);
-  DCHECK(_options == nil);  // The server can never be dealloc'ed while running because of the retain-cycle with the dispatch source
-  DCHECK(_disconnectTimer == NULL);  // The server can never be dealloc'ed while the disconnect timer is pending because of the retain-cycle
+  GWS_DCHECK(_connected == NO);
+  GWS_DCHECK(_activeConnections == 0);
+  GWS_DCHECK(_options == nil);  // The server can never be dealloc'ed while running because of the retain-cycle with the dispatch source
+  GWS_DCHECK(_disconnectTimer == NULL);  // The server can never be dealloc'ed while the disconnect timer is pending because of the retain-cycle
   
   ARC_RELEASE(_handlers);
   ARC_DISPATCH_RELEASE(_sourceSemaphore);
@@ -221,17 +222,17 @@ static void _ExecuteMainThreadRunLoopSources() {
 
 // Always called on main thread
 - (void)_startBackgroundTask {
-  DCHECK([NSThread isMainThread]);
+  GWS_DCHECK([NSThread isMainThread]);
   if (_backgroundTask == UIBackgroundTaskInvalid) {
-    LOG_DEBUG(@"Did start background task");
+    GWS_LOG_DEBUG(@"Did start background task");
     _backgroundTask = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
       
-      LOG_WARNING(@"Application is being suspended while %@ is still connected", [self class]);
+      GWS_LOG_WARNING(@"Application is being suspended while %@ is still connected", [self class]);
       [self _endBackgroundTask];
       
     }];
   } else {
-    DNOT_REACHED();
+    GWS_DNOT_REACHED();
   }
 }
 
@@ -239,10 +240,10 @@ static void _ExecuteMainThreadRunLoopSources() {
 
 // Always called on main thread
 - (void)_didConnect {
-  DCHECK([NSThread isMainThread]);
-  DCHECK(_connected == NO);
+  GWS_DCHECK([NSThread isMainThread]);
+  GWS_DCHECK(_connected == NO);
   _connected = YES;
-  LOG_DEBUG(@"Did connect");
+  GWS_LOG_DEBUG(@"Did connect");
   
 #if TARGET_OS_IPHONE
   [self _startBackgroundTask];
@@ -256,7 +257,7 @@ static void _ExecuteMainThreadRunLoopSources() {
 - (void)willStartConnection:(GCDWebServerConnection*)connection {
   dispatch_sync(_syncQueue, ^{
     
-    DCHECK(_activeConnections >= 0);
+    GWS_DCHECK(_activeConnections >= 0);
     if (_activeConnections == 0) {
       dispatch_async(dispatch_get_main_queue(), ^{
         if (_disconnectTimer) {
@@ -278,16 +279,16 @@ static void _ExecuteMainThreadRunLoopSources() {
 
 // Always called on main thread
 - (void)_endBackgroundTask {
-  DCHECK([NSThread isMainThread]);
+  GWS_DCHECK([NSThread isMainThread]);
   if (_backgroundTask != UIBackgroundTaskInvalid) {
     if (_suspendInBackground && ([[UIApplication sharedApplication] applicationState] == UIApplicationStateBackground) && _source) {
       [self _stop];
     }
     [[UIApplication sharedApplication] endBackgroundTask:_backgroundTask];
     _backgroundTask = UIBackgroundTaskInvalid;
-    LOG_DEBUG(@"Did end background task");
+    GWS_LOG_DEBUG(@"Did end background task");
   } else {
-    DNOT_REACHED();
+    GWS_DNOT_REACHED();
   }
 }
 
@@ -295,10 +296,10 @@ static void _ExecuteMainThreadRunLoopSources() {
 
 // Always called on main thread
 - (void)_didDisconnect {
-  DCHECK([NSThread isMainThread]);
-  DCHECK(_connected == YES);
+  GWS_DCHECK([NSThread isMainThread]);
+  GWS_DCHECK(_connected == YES);
   _connected = NO;
-  LOG_DEBUG(@"Did disconnect");
+  GWS_LOG_DEBUG(@"Did disconnect");
   
 #if TARGET_OS_IPHONE
   [self _endBackgroundTask];
@@ -311,7 +312,7 @@ static void _ExecuteMainThreadRunLoopSources() {
 
 - (void)didEndConnection:(GCDWebServerConnection*)connection {
   dispatch_sync(_syncQueue, ^{
-    DCHECK(_activeConnections > 0);
+    GWS_DCHECK(_activeConnections > 0);
     _activeConnections -= 1;
     if (_activeConnections == 0) {
       dispatch_async(dispatch_get_main_queue(), ^{
@@ -321,7 +322,7 @@ static void _ExecuteMainThreadRunLoopSources() {
             CFRelease(_disconnectTimer);
           }
           _disconnectTimer = CFRunLoopTimerCreateWithHandler(kCFAllocatorDefault, CFAbsoluteTimeGetCurrent() + _disconnectDelay, 0.0, 0, 0, ^(CFRunLoopTimerRef timer) {
-            DCHECK([NSThread isMainThread]);
+            GWS_DCHECK([NSThread isMainThread]);
             [self _didDisconnect];
             CFRelease(_disconnectTimer);
             _disconnectTimer = NULL;
@@ -352,40 +353,40 @@ static void _ExecuteMainThreadRunLoopSources() {
 }
 
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock asyncProcessBlock:(GCDWebServerAsyncProcessBlock)processBlock {
-  DCHECK(_options == nil);
+  GWS_DCHECK(_options == nil);
   GCDWebServerHandler* handler = [[GCDWebServerHandler alloc] initWithMatchBlock:matchBlock asyncProcessBlock:processBlock];
   [_handlers insertObject:handler atIndex:0];
   ARC_RELEASE(handler);
 }
 
 - (void)removeAllHandlers {
-  DCHECK(_options == nil);
+  GWS_DCHECK(_options == nil);
   [_handlers removeAllObjects];
 }
 
 static void _NetServiceRegisterCallBack(CFNetServiceRef service, CFStreamError* error, void* info) {
-  DCHECK([NSThread isMainThread]);
+  GWS_DCHECK([NSThread isMainThread]);
   @autoreleasepool {
     if (error->error) {
-      LOG_ERROR(@"Bonjour registration error %i (domain %i)", (int)error->error, (int)error->domain);
+      GWS_LOG_ERROR(@"Bonjour registration error %i (domain %i)", (int)error->error, (int)error->domain);
     } else {
       GCDWebServer* server = (ARC_BRIDGE GCDWebServer*)info;
-      LOG_VERBOSE(@"Bonjour registration complete for %@", [server class]);
+      GWS_LOG_VERBOSE(@"Bonjour registration complete for %@", [server class]);
       CFNetServiceResolveWithTimeout(server->_resolutionService, 1.0, NULL);
     }
   }
 }
 
 static void _NetServiceResolveCallBack(CFNetServiceRef service, CFStreamError* error, void* info) {
-  DCHECK([NSThread isMainThread]);
+  GWS_DCHECK([NSThread isMainThread]);
   @autoreleasepool {
     if (error->error) {
       if ((error->domain != kCFStreamErrorDomainNetServices) && (error->error != kCFNetServicesErrorTimeout)) {
-        LOG_ERROR(@"Bonjour resolution error %i (domain %i)", (int)error->error, (int)error->domain);
+        GWS_LOG_ERROR(@"Bonjour resolution error %i (domain %i)", (int)error->error, (int)error->domain);
       }
     } else {
       GCDWebServer* server = (ARC_BRIDGE GCDWebServer*)info;
-      LOG_INFO(@"%@ now reachable at %@", [server class], server.bonjourServerURL);
+      GWS_LOG_INFO(@"%@ now reachable at %@", [server class], server.bonjourServerURL);
       if ([server.delegate respondsToSelector:@selector(webServerDidCompleteBonjourRegistration:)]) {
         [server.delegate webServerDidCompleteBonjourRegistration:server];
       }
@@ -409,7 +410,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 }
 
 - (BOOL)_start:(NSError**)error {
-  DCHECK(_source == NULL);
+  GWS_DCHECK(_source == NULL);
   
   NSUInteger port = [_GetOption(_options, GCDWebServerOption_Port, @0) unsignedIntegerValue];
   NSString* bonjourName = _GetOption(_options, GCDWebServerOption_BonjourName, @"");
@@ -428,7 +429,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
     addr4.sin_addr.s_addr = htonl(INADDR_ANY);
     if (bind(listeningSocket, (void*)&addr4, sizeof(addr4)) == 0) {
       if (listen(listeningSocket, (int)maxPendingConnections) == 0) {
-        LOG_DEBUG(@"Did open listening socket %i", listeningSocket);
+        GWS_LOG_DEBUG(@"Did open listening socket %i", listeningSocket);
         _serverName = [_GetOption(_options, GCDWebServerOption_ServerName, NSStringFromClass([self class])) copy];
         NSString* authenticationMethod = _GetOption(_options, GCDWebServerOption_AuthenticationMethod, nil);
         if ([authenticationMethod isEqualToString:GCDWebServerAuthenticationMethod_Basic]) {
@@ -455,9 +456,9 @@ static inline NSString* _EncodeBase64(NSString* string) {
           @autoreleasepool {
             int result = close(listeningSocket);
             if (result != 0) {
-              LOG_ERROR(@"Failed closing listening socket: %s (%i)", strerror(errno), errno);
+              GWS_LOG_ERROR(@"Failed closing listening socket: %s (%i)", strerror(errno), errno);
             } else {
-              LOG_DEBUG(@"Did close listening socket %i", listeningSocket);
+              GWS_LOG_DEBUG(@"Did close listening socket %i", listeningSocket);
             }
           }
           dispatch_semaphore_signal(_sourceSemaphore);
@@ -478,7 +479,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
               if (getsockname(socket, &localSockAddr, &localAddrLen) == 0) {
                 localAddress = [NSData dataWithBytes:&localSockAddr length:localAddrLen];
               } else {
-                DNOT_REACHED();
+                GWS_DNOT_REACHED();
               }
               
               int noSigPipe = 1;
@@ -491,7 +492,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
               [connection release];
 #endif
             } else {
-              LOG_ERROR(@"Failed accepting socket: %s (%i)", strerror(errno), errno);
+              GWS_LOG_ERROR(@"Failed accepting socket: %s (%i)", strerror(errno), errno);
             }
           }
           
@@ -504,7 +505,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
             struct sockaddr_in* sockaddr = (struct sockaddr_in*)&addr;
             _port = ntohs(sockaddr->sin_port);
           } else {
-            LOG_ERROR(@"Failed retrieving socket address: %s (%i)", strerror(errno), errno);
+            GWS_LOG_ERROR(@"Failed retrieving socket address: %s (%i)", strerror(errno), errno);
           }
         } else {
           _port = port;
@@ -526,12 +527,12 @@ static inline NSString* _EncodeBase64(NSString* string) {
               CFNetServiceScheduleWithRunLoop(_resolutionService, CFRunLoopGetMain(), kCFRunLoopCommonModes);
             }
           } else {
-            LOG_ERROR(@"Failed creating CFNetService");
+            GWS_LOG_ERROR(@"Failed creating CFNetService");
           }
         }
         
         dispatch_resume(_source);
-        LOG_INFO(@"%@ started on port %i and reachable at %@", [self class], (int)_port, self.serverURL);
+        GWS_LOG_INFO(@"%@ started on port %i and reachable at %@", [self class], (int)_port, self.serverURL);
         if ([_delegate respondsToSelector:@selector(webServerDidStart:)]) {
           dispatch_async(dispatch_get_main_queue(), ^{
             [_delegate webServerDidStart:self];
@@ -541,27 +542,27 @@ static inline NSString* _EncodeBase64(NSString* string) {
         if (error) {
           *error = GCDWebServerMakePosixError(errno);
         }
-        LOG_ERROR(@"Failed starting listening socket: %s (%i)", strerror(errno), errno);
+        GWS_LOG_ERROR(@"Failed starting listening socket: %s (%i)", strerror(errno), errno);
         close(listeningSocket);
       }
     } else {
       if (error) {
         *error = GCDWebServerMakePosixError(errno);
       }
-      LOG_ERROR(@"Failed binding listening socket: %s (%i)", strerror(errno), errno);
+      GWS_LOG_ERROR(@"Failed binding listening socket: %s (%i)", strerror(errno), errno);
       close(listeningSocket);
     }
   } else {
     if (error) {
       *error = GCDWebServerMakePosixError(errno);
     }
-    LOG_ERROR(@"Failed creating listening socket: %s (%i)", strerror(errno), errno);
+    GWS_LOG_ERROR(@"Failed creating listening socket: %s (%i)", strerror(errno), errno);
   }
   return (_source ? YES : NO);
 }
 
 - (void)_stop {
-  DCHECK(_source != NULL);
+  GWS_DCHECK(_source != NULL);
   
   if (_registrationService) {
     if (_resolutionService) {
@@ -602,7 +603,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
     }
   });
   
-  LOG_INFO(@"%@ stopped", [self class]);
+  GWS_LOG_INFO(@"%@ stopped", [self class]);
   if ([_delegate respondsToSelector:@selector(webServerDidStop:)]) {
     dispatch_async(dispatch_get_main_queue(), ^{
       [_delegate webServerDidStop:self];
@@ -613,16 +614,16 @@ static inline NSString* _EncodeBase64(NSString* string) {
 #if TARGET_OS_IPHONE
 
 - (void)_didEnterBackground:(NSNotification*)notification {
-  DCHECK([NSThread isMainThread]);
-  LOG_DEBUG(@"Did enter background");
+  GWS_DCHECK([NSThread isMainThread]);
+  GWS_LOG_DEBUG(@"Did enter background");
   if ((_backgroundTask == UIBackgroundTaskInvalid) && _source) {
     [self _stop];
   }
 }
 
 - (void)_willEnterForeground:(NSNotification*)notification {
-  DCHECK([NSThread isMainThread]);
-  LOG_DEBUG(@"Will enter foreground");
+  GWS_DCHECK([NSThread isMainThread]);
+  GWS_LOG_DEBUG(@"Will enter foreground");
   if (!_source) {
     [self _start:NULL];  // TODO: There's probably nothing we can do on failure
   }
@@ -652,7 +653,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 #endif
     return YES;
   } else {
-    DNOT_REACHED();
+    GWS_DNOT_REACHED();
   }
   return NO;
 }
@@ -675,7 +676,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
     ARC_RELEASE(_options);
     _options = nil;
   } else {
-    DNOT_REACHED();
+    GWS_DNOT_REACHED();
   }
 }
 
@@ -733,7 +734,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 }
 
 - (BOOL)runWithOptions:(NSDictionary*)options error:(NSError**)error {
-  DCHECK([NSThread isMainThread]);
+  GWS_DCHECK([NSThread isMainThread]);
   BOOL success = NO;
   _run = YES;
   void (*termHandler)(int) = signal(SIGTERM, _SignalHandler);
@@ -796,7 +797,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
       
     } asyncProcessBlock:block];
   } else {
-    DNOT_REACHED();
+    GWS_DNOT_REACHED();
   }
 }
 
@@ -834,7 +835,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
       
     } asyncProcessBlock:block];
   } else {
-    DNOT_REACHED();
+    GWS_DNOT_REACHED();
   }
 }
 
@@ -881,7 +882,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
     if (![file hasPrefix:@"."]) {
       NSString* type = [[enumerator fileAttributes] objectForKey:NSFileType];
       NSString* escapedFile = [file stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-      DCHECK(escapedFile);
+      GWS_DCHECK(escapedFile);
       if ([type isEqualToString:NSFileTypeRegular]) {
         [html appendFormat:@"<li><a href=\"%@\">%@</a></li>\n", escapedFile, file];
       } else if ([type isEqualToString:NSFileTypeDirectory]) {
@@ -945,7 +946,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
       
     }];
   } else {
-    DNOT_REACHED();
+    GWS_DNOT_REACHED();
   }
 }
 
@@ -953,44 +954,46 @@ static inline NSString* _EncodeBase64(NSString* string) {
 
 @implementation GCDWebServer (Logging)
 
-#ifndef __GCDWEBSERVER_LOGGING_HEADER__
-
-+ (void)setLogLevel:(GCDWebServerLogLevel)level {
-  GCDLogLevel = level;
-}
-
++ (void)setLogLevel:(int)level {
+#if defined(__GCDWEBSERVER_LOGGING_FACILITY_XLFACILITY__)
+  [XLSharedFacility setMinLogLevel:level];
+#elif defined(__GCDWEBSERVER_LOGGING_FACILITY_COCOALUMBERJACK__)
+  GCDWebServerLogLevel = level;
+#else
+  GCDWebServerLogLevel = level;
 #endif
+}
 
 - (void)logVerbose:(NSString*)format, ... {
   va_list arguments;
   va_start(arguments, format);
-  LOG_VERBOSE(@"%@", ARC_AUTORELEASE([[NSString alloc] initWithFormat:format arguments:arguments]));
+  GWS_LOG_VERBOSE(@"%@", ARC_AUTORELEASE([[NSString alloc] initWithFormat:format arguments:arguments]));
   va_end(arguments);
 }
 
 - (void)logInfo:(NSString*)format, ... {
   va_list arguments;
   va_start(arguments, format);
-  LOG_INFO(@"%@", ARC_AUTORELEASE([[NSString alloc] initWithFormat:format arguments:arguments]));
+  GWS_LOG_INFO(@"%@", ARC_AUTORELEASE([[NSString alloc] initWithFormat:format arguments:arguments]));
   va_end(arguments);
 }
 
 - (void)logWarning:(NSString*)format, ... {
   va_list arguments;
   va_start(arguments, format);
-  LOG_WARNING(@"%@", ARC_AUTORELEASE([[NSString alloc] initWithFormat:format arguments:arguments]));
+  GWS_LOG_WARNING(@"%@", ARC_AUTORELEASE([[NSString alloc] initWithFormat:format arguments:arguments]));
   va_end(arguments);
 }
 
 - (void)logError:(NSString*)format, ... {
   va_list arguments;
   va_start(arguments, format);
-  LOG_ERROR(@"%@", ARC_AUTORELEASE([[NSString alloc] initWithFormat:format arguments:arguments]));
+  GWS_LOG_ERROR(@"%@", ARC_AUTORELEASE([[NSString alloc] initWithFormat:format arguments:arguments]));
   va_end(arguments);
 }
 
 - (void)logException:(NSException*)exception {
-  LOG_EXCEPTION(exception);
+  GWS_LOG_EXCEPTION(exception);
 }
 
 @end
@@ -1047,7 +1050,7 @@ static CFHTTPMessageRef _CreateHTTPMessageFromPerformingRequest(NSData* inData, 
           outData.length = length;
           response = _CreateHTTPMessageFromData(outData, NO);
         } else {
-          DNOT_REACHED();
+          GWS_DNOT_REACHED();
         }
         ARC_RELEASE(outData);
       }
@@ -1067,7 +1070,7 @@ static void _LogResult(NSString* format, ...) {
 }
 
 - (NSInteger)runTestsWithOptions:(NSDictionary*)options inDirectory:(NSString*)path {
-  DCHECK([NSThread isMainThread]);
+  GWS_DCHECK([NSThread isMainThread]);
   NSArray* ignoredHeaders = @[@"Date", @"Etag"];  // Dates are always different by definition and ETags depend on file system node IDs
   NSInteger result = -1;
   if ([self startWithOptions:options error:NULL]) {
@@ -1159,7 +1162,7 @@ static void _LogResult(NSString* format, ...) {
                     CFRelease(expectedResponse);
                   }
                 } else {
-                  DNOT_REACHED();
+                  GWS_DNOT_REACHED();
                 }
                 break;
               }
@@ -1167,7 +1170,7 @@ static void _LogResult(NSString* format, ...) {
             CFRelease(request);
           }
         } else {
-          DNOT_REACHED();
+          GWS_DNOT_REACHED();
         }
         _LogResult(@"");
         if (!success) {

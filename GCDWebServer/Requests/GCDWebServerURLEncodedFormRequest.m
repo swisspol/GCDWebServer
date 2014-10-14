@@ -55,7 +55,7 @@
   NSString* charset = GCDWebServerExtractHeaderValueParameter(self.contentType, @"charset");
   NSString* string = [[NSString alloc] initWithData:self.data encoding:GCDWebServerStringEncodingFromCharset(charset)];
   _arguments = ARC_RETAIN(GCDWebServerParseURLEncodedForm(string));
-  DCHECK(_arguments);
+  GWS_DCHECK(_arguments);
   ARC_RELEASE(string);
   
   return YES;
