@@ -3,8 +3,8 @@ Overview
 
 [![Build Status](https://travis-ci.org/swisspol/GCDWebServer.svg?branch=master)](https://travis-ci.org/swisspol/GCDWebServer)
 [![Version](http://cocoapod-badges.herokuapp.com/v/GCDWebServer/badge.png)](http://cocoadocs.org/docsets/GCDWebServer)
-[![Platform](http://cocoapod-badges.herokuapp.com/p/GCDWebServer/badge.png)]()
-[![License](http://img.shields.io/cocoapods/l/GCDWebServer.svg)]()
+[![Platform](http://cocoapod-badges.herokuapp.com/p/GCDWebServer/badge.png)](https://github.com/swisspol/GCDWebServer)
+[![License](http://img.shields.io/cocoapods/l/GCDWebServer.svg)](LICENSE)
 
 *ANNOUNCEMENT: If you like GCDWebServer, check out [XLFacility](https://github.com/swisspol/XLFacility), an elegant and powerful logging facility for OS X & iOS by the same author and also open-source. XLFacility can be used seemlessly to handle logging from GCDWebServer (see "Logging in GCDWebServer" below).*
 
