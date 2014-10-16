@@ -42,8 +42,10 @@ typedef NSData* (^GCDWebServerStreamBlock)(NSError** error);
  *  The block must return empty NSData when done or nil on error and set the
  *  "error" argument which is guaranteed to be non-NULL.
  *
- *  The block must eventually call "completionBlock" passing the streamed data
- *  if any and the error if applicable.
+ *  The block must regularly call "completionBlock" passing new streamed data.
+ *  Eventually it must call "completionBlock" passing an empty NSData indicating
+ *  the end of the stream has been reached, or pass nil and an NSError in case of
+ *  error.
  */
 typedef void (^GCDWebServerAsyncStreamBlock)(GCDWebServerBodyReaderCompletionBlock completionBlock);
 
