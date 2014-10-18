@@ -25,6 +25,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if !__has_feature(objc_arc)
+#error GCDWebServer requires ARC
+#endif
+
 #import "GCDWebServerPrivate.h"
 
 @interface GCDWebServerURLEncodedFormRequest () {
@@ -41,12 +45,6 @@
   return @"application/x-www-form-urlencoded";
 }
 
-- (void)dealloc {
-  ARC_RELEASE(_arguments);
-  
-  ARC_DEALLOC(super);
-}
-
 - (BOOL)close:(NSError**)error {
   if (![super close:error]) {
     return NO;
@@ -54,9 +52,8 @@
   
   NSString* charset = GCDWebServerExtractHeaderValueParameter(self.contentType, @"charset");
   NSString* string = [[NSString alloc] initWithData:self.data encoding:GCDWebServerStringEncodingFromCharset(charset)];
-  _arguments = ARC_RETAIN(GCDWebServerParseURLEncodedForm(string));
+  _arguments = GCDWebServerParseURLEncodedForm(string);
   GWS_DCHECK(_arguments);
-  ARC_RELEASE(string);
   
   return YES;
 }

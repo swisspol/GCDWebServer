@@ -29,35 +29,6 @@
 #import <sys/socket.h>
 
 /**
- *  ARC <-> MRC compatibility macros.
- */
-
-#if __has_feature(objc_arc)
-#define ARC_BRIDGE __bridge
-#define ARC_BRIDGE_RELEASE(__OBJECT__) CFBridgingRelease(__OBJECT__)
-#define ARC_RETAIN(__OBJECT__) __OBJECT__
-#define ARC_RELEASE(__OBJECT__)
-#define ARC_AUTORELEASE(__OBJECT__) __OBJECT__
-#define ARC_DEALLOC(__OBJECT__)
-#if OS_OBJECT_USE_OBJC_RETAIN_RELEASE
-#define ARC_DISPATCH_RETAIN(__OBJECT__)
-#define ARC_DISPATCH_RELEASE(__OBJECT__)
-#else
-#define ARC_DISPATCH_RETAIN(__OBJECT__) dispatch_retain(__OBJECT__)
-#define ARC_DISPATCH_RELEASE(__OBJECT__) dispatch_release(__OBJECT__)
-#endif
-#else
-#define ARC_BRIDGE
-#define ARC_BRIDGE_RELEASE(__OBJECT__) [(id)__OBJECT__ autorelease]
-#define ARC_RETAIN(__OBJECT__) [__OBJECT__ retain]
-#define ARC_RELEASE(__OBJECT__) [__OBJECT__ release]
-#define ARC_AUTORELEASE(__OBJECT__) [__OBJECT__ autorelease]
-#define ARC_DEALLOC(__OBJECT__) [__OBJECT__ dealloc]
-#define ARC_DISPATCH_RETAIN(__OBJECT__) dispatch_retain(__OBJECT__)
-#define ARC_DISPATCH_RELEASE(__OBJECT__) dispatch_release(__OBJECT__)
-#endif
-
-/**
  *  All GCDWebServer headers.
  */
 

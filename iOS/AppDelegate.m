@@ -36,16 +36,6 @@
 
 @implementation AppDelegate
 
-#if !__has_feature(objc_arc)
-
-- (void)dealloc {
-  [_window release];
-  
-  [super dealloc];
-}
-
-#endif
-
 - (BOOL)application:(UIApplication*)application didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
   CGRect bounds = ([UIScreen instancesRespondToSelector:@selector(nativeBounds)] ? [[UIScreen mainScreen] nativeBounds] : [[UIScreen mainScreen] bounds]);
   _window = [[UIWindow alloc] initWithFrame:bounds];

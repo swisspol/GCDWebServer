@@ -25,6 +25,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if !__has_feature(objc_arc)
+#error GCDWebServer requires ARC
+#endif
+
 #import <zlib.h>
 
 #import "GCDWebServerPrivate.h"
@@ -110,7 +114,6 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
     _stream.avail_out = (uInt)maxLength;
     int result = inflate(&_stream, Z_NO_FLUSH);
     if ((result != Z_OK) && (result != Z_STREAM_END)) {
-      ARC_RELEASE(decodedData);
       *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
       return NO;
     }
@@ -125,7 +128,6 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
   }
   decodedData.length = length;
   BOOL success = length ? [super writeData:decodedData error:error] : YES;  // No need to call writer if we have no data yet
-  ARC_RELEASE(decodedData);
   return success;
 }
 
@@ -167,19 +169,18 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
 - (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
   if ((self = [super init])) {
     _method = [method copy];
-    _url = ARC_RETAIN(url);
-    _headers = ARC_RETAIN(headers);
+    _url = url;
+    _headers = headers;
     _path = [path copy];
-    _query = ARC_RETAIN(query);
+    _query = query;
     
-    _type = ARC_RETAIN(GCDWebServerNormalizeHeaderValue([_headers objectForKey:@"Content-Type"]));
+    _type = GCDWebServerNormalizeHeaderValue([_headers objectForKey:@"Content-Type"]);
     _chunked = [GCDWebServerNormalizeHeaderValue([_headers objectForKey:@"Transfer-Encoding"]) isEqualToString:@"chunked"];
     NSString* lengthHeader = [_headers objectForKey:@"Content-Length"];
     if (lengthHeader) {
       NSInteger length = [lengthHeader integerValue];
       if (_chunked || (length < 0)) {
         GWS_DNOT_REACHED();
-        ARC_RELEASE(self);
         return nil;
       }
       _length = length;
@@ -194,7 +195,6 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
     } else {
       if (_type) {
         GWS_DNOT_REACHED();
-        ARC_RELEASE(self);
         return nil;
       }
       _length = NSUIntegerMax;
@@ -204,7 +204,7 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
     if (modifiedHeader) {
       _modifiedSince = [GCDWebServerParseRFC822(modifiedHeader) copy];
     }
-    _noneMatch = ARC_RETAIN([_headers objectForKey:@"If-None-Match"]);
+    _noneMatch = [_headers objectForKey:@"If-None-Match"];
     
     _range = NSMakeRange(NSUIntegerMax, 0);
     NSString* rangeHeader = GCDWebServerNormalizeHeaderValue([_headers objectForKey:@"Range"]);
@@ -246,21 +246,6 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
   return self;
 }
 
-- (void)dealloc {
-  ARC_RELEASE(_method);
-  ARC_RELEASE(_url);
-  ARC_RELEASE(_headers);
-  ARC_RELEASE(_path);
-  ARC_RELEASE(_query);
-  ARC_RELEASE(_type);
-  ARC_RELEASE(_modifiedSince);
-  ARC_RELEASE(_noneMatch);
-  ARC_RELEASE(_decoders);
-  ARC_RELEASE(_attributes);
-  
-  ARC_DEALLOC(super);
-}
-
 - (BOOL)hasBody {
   return _type ? YES : NO;
 }
@@ -290,7 +275,6 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
   if ([GCDWebServerNormalizeHeaderValue([self.headers objectForKey:@"Content-Encoding"]) isEqualToString:@"gzip"]) {
     GCDWebServerGZipDecoder* decoder = [[GCDWebServerGZipDecoder alloc] initWithRequest:self writer:_writer];
     [_decoders addObject:decoder];
-    ARC_RELEASE(decoder);
     _writer = decoder;
   }
 }

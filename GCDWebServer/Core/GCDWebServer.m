@@ -25,6 +25,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if !__has_feature(objc_arc)
+#error GCDWebServer requires ARC
+#endif
+
 #import <TargetConditionals.h>
 #if TARGET_OS_IPHONE
 #import <UIKit/UIKit.h>
@@ -93,7 +97,6 @@ void GCDWebServerLogMessage(GCDWebServerLoggingLevel level, NSString* format, ..
     NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
     va_end(arguments);
     fprintf(stderr, "[%s] %s\n", levelNames[level], [message UTF8String]);
-    ARC_RELEASE(message);
   }
 }
 
@@ -140,13 +143,6 @@ static void _ExecuteMainThreadRunLoopSources() {
     _asyncProcessBlock = [processBlock copy];
   }
   return self;
-}
-
-- (void)dealloc {
-  ARC_RELEASE(_matchBlock);
-  ARC_RELEASE(_asyncProcessBlock);
-  
-  ARC_DEALLOC(super);
 }
 
 @end
@@ -212,11 +208,10 @@ static void _ExecuteMainThreadRunLoopSources() {
   GWS_DCHECK(_options == nil);  // The server can never be dealloc'ed while running because of the retain-cycle with the dispatch source
   GWS_DCHECK(_disconnectTimer == NULL);  // The server can never be dealloc'ed while the disconnect timer is pending because of the retain-cycle
   
-  ARC_RELEASE(_handlers);
-  ARC_DISPATCH_RELEASE(_sourceGroup);
-  ARC_DISPATCH_RELEASE(_syncQueue);
-  
-  ARC_DEALLOC(super);
+#if !OS_OBJECT_USE_OBJC_RETAIN_RELEASE
+  dispatch_release(_sourceGroup);
+  dispatch_release(_syncQueue);
+#endif
 }
 
 #if TARGET_OS_IPHONE
@@ -339,12 +334,12 @@ static void _ExecuteMainThreadRunLoopSources() {
 
 - (NSString*)bonjourName {
   CFStringRef name = _resolutionService ? CFNetServiceGetName(_resolutionService) : NULL;
-  return name && CFStringGetLength(name) ? ARC_BRIDGE_RELEASE(CFStringCreateCopy(kCFAllocatorDefault, name)) : nil;
+  return name && CFStringGetLength(name) ? CFBridgingRelease(CFStringCreateCopy(kCFAllocatorDefault, name)) : nil;
 }
 
 - (NSString*)bonjourType {
   CFStringRef type = _resolutionService ? CFNetServiceGetType(_resolutionService) : NULL;
-  return type && CFStringGetLength(type) ? ARC_BRIDGE_RELEASE(CFStringCreateCopy(kCFAllocatorDefault, type)) : nil;
+  return type && CFStringGetLength(type) ? CFBridgingRelease(CFStringCreateCopy(kCFAllocatorDefault, type)) : nil;
 }
 
 - (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock {
@@ -357,7 +352,6 @@ static void _ExecuteMainThreadRunLoopSources() {
   GWS_DCHECK(_options == nil);
   GCDWebServerHandler* handler = [[GCDWebServerHandler alloc] initWithMatchBlock:matchBlock asyncProcessBlock:processBlock];
   [_handlers insertObject:handler atIndex:0];
-  ARC_RELEASE(handler);
 }
 
 - (void)removeAllHandlers {
@@ -371,7 +365,7 @@ static void _NetServiceRegisterCallBack(CFNetServiceRef service, CFStreamError* 
     if (error->error) {
       GWS_LOG_ERROR(@"Bonjour registration error %i (domain %i)", (int)error->error, (int)error->domain);
     } else {
-      GCDWebServer* server = (ARC_BRIDGE GCDWebServer*)info;
+      GCDWebServer* server = (__bridge GCDWebServer*)info;
       GWS_LOG_VERBOSE(@"Bonjour registration complete for %@", [server class]);
       CFNetServiceResolveWithTimeout(server->_resolutionService, 1.0, NULL);
     }
@@ -386,7 +380,7 @@ static void _NetServiceResolveCallBack(CFNetServiceRef service, CFStreamError* e
         GWS_LOG_ERROR(@"Bonjour resolution error %i (domain %i)", (int)error->error, (int)error->domain);
       }
     } else {
-      GCDWebServer* server = (ARC_BRIDGE GCDWebServer*)info;
+      GCDWebServer* server = (__bridge GCDWebServer*)info;
       GWS_LOG_INFO(@"%@ now reachable at %@", [server class], server.bonjourServerURL);
       if ([server.delegate respondsToSelector:@selector(webServerDidCompleteBonjourRegistration:)]) {
         [server.delegate webServerDidCompleteBonjourRegistration:server];
@@ -407,7 +401,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
     return [data base64Encoding];
   }
 #endif
-  return ARC_AUTORELEASE([[NSString alloc] initWithData:[data base64EncodedDataWithOptions:0] encoding:NSASCIIStringEncoding]);
+  return [[NSString alloc] initWithData:[data base64EncodedDataWithOptions:0] encoding:NSASCIIStringEncoding];
 }
 
 - (int)_createListeningSocket:(BOOL)useIPv6
@@ -487,11 +481,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
         setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &noSigPipe, sizeof(noSigPipe));  // Make sure this socket cannot generate SIG_PIPE
         
         GCDWebServerConnection* connection = [[_connectionClass alloc] initWithServer:self localAddress:localAddress remoteAddress:remoteAddress socket:socket];  // Connection will automatically retain itself while opened
-#if __has_feature(objc_arc)
         [connection self];  // Prevent compiler from complaining about unused variable / useless statement
-#else
-        [connection release];
-#endif
       } else {
         GWS_LOG_ERROR(@"Failed accepting %s socket: %s (%i)", isIPv6 ? "IPv6" : "IPv4", strerror(errno), errno);
       }
@@ -568,9 +558,9 @@ static inline NSString* _EncodeBase64(NSString* string) {
   NSString* bonjourName = _GetOption(_options, GCDWebServerOption_BonjourName, @"");
   NSString* bonjourType = _GetOption(_options, GCDWebServerOption_BonjourType, @"_http._tcp");
   if (bonjourName) {
-    _registrationService = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), (ARC_BRIDGE CFStringRef)bonjourType, (ARC_BRIDGE CFStringRef)(bonjourName.length ? bonjourName : _serverName), (SInt32)_port);
+    _registrationService = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), (__bridge CFStringRef)bonjourType, (__bridge CFStringRef)(bonjourName.length ? bonjourName : _serverName), (SInt32)_port);
     if (_registrationService) {
-      CFNetServiceClientContext context = {0, (ARC_BRIDGE void*)self, NULL, NULL, NULL};
+      CFNetServiceClientContext context = {0, (__bridge void*)self, NULL, NULL, NULL};
       
       CFNetServiceSetClient(_registrationService, _NetServiceRegisterCallBack, &context);
       CFNetServiceScheduleWithRunLoop(_registrationService, CFRunLoopGetMain(), kCFRunLoopCommonModes);
@@ -620,19 +610,19 @@ static inline NSString* _EncodeBase64(NSString* string) {
   dispatch_source_cancel(_source6);
   dispatch_source_cancel(_source4);
   dispatch_group_wait(_sourceGroup, DISPATCH_TIME_FOREVER);  // Wait until the cancellation handlers have been called which guarantees the listening sockets are closed
-  ARC_DISPATCH_RELEASE(_source6);
+#if !OS_OBJECT_USE_OBJC_RETAIN_RELEASE
+  dispatch_release(_source6);
+#endif
   _source6 = NULL;
-  ARC_DISPATCH_RELEASE(_source4);
+#if !OS_OBJECT_USE_OBJC_RETAIN_RELEASE
+  dispatch_release(_source4);
+#endif
   _source4 = NULL;
   _port = 0;
   
-  ARC_RELEASE(_serverName);
   _serverName = nil;
-  ARC_RELEASE(_authenticationRealm);
   _authenticationRealm = nil;
-  ARC_RELEASE(_authenticationBasicAccounts);
   _authenticationBasicAccounts = nil;
-  ARC_RELEASE(_authenticationDigestAccounts);
   _authenticationDigestAccounts = nil;
   
   dispatch_async(dispatch_get_main_queue(), ^{
@@ -682,7 +672,6 @@ static inline NSString* _EncodeBase64(NSString* string) {
     if (![self _start:error])
 #endif
     {
-      ARC_RELEASE(_options);
       _options = nil;
       return NO;
     }
@@ -714,7 +703,6 @@ static inline NSString* _EncodeBase64(NSString* string) {
     if (_source4) {
       [self _stop];
     }
-    ARC_RELEASE(_options);
     _options = nil;
   } else {
     GWS_DNOT_REACHED();
@@ -741,7 +729,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 
 - (NSURL*)bonjourServerURL {
   if (_source4 && _resolutionService) {
-    NSString* name = (ARC_BRIDGE NSString*)CFNetServiceGetTargetHost(_resolutionService);
+    NSString* name = (__bridge NSString*)CFNetServiceGetTargetHost(_resolutionService);
     if (name.length) {
       name = [name substringToIndex:(name.length - 1)];  // Strip trailing period at end of domain
       if (_port != 80) {
@@ -813,7 +801,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
     if (![requestMethod isEqualToString:method]) {
       return nil;
     }
-    return ARC_AUTORELEASE([[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
+    return [[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery];
     
   } asyncProcessBlock:block];
 }
@@ -834,7 +822,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
       if ([urlPath caseInsensitiveCompare:path] != NSOrderedSame) {
         return nil;
       }
-      return ARC_AUTORELEASE([[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
+      return [[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery];
       
     } asyncProcessBlock:block];
   } else {
@@ -872,7 +860,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 
       GCDWebServerRequest* request = [[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery];
       [request setAttribute:captures forKey:GCDWebServerRequestAttribute_RegexCaptures];
-      return ARC_AUTORELEASE(request);
+      return request;
       
     } asyncProcessBlock:block];
   } else {
@@ -939,11 +927,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 
 - (void)addGETHandlerForBasePath:(NSString*)basePath directoryPath:(NSString*)directoryPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests {
   if ([basePath hasPrefix:@"/"] && [basePath hasSuffix:@"/"]) {
-#if __has_feature(objc_arc)
     GCDWebServer* __unsafe_unretained server = self;
-#else
-    __block GCDWebServer* server = self;
-#endif
     [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
       
       if (![requestMethod isEqualToString:@"GET"]) {
@@ -952,7 +936,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
       if (![urlPath hasPrefix:basePath]) {
         return nil;
       }
-      return ARC_AUTORELEASE([[GCDWebServerRequest alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery]);
+      return [[GCDWebServerRequest alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery];
       
     } processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
       
@@ -1008,28 +992,28 @@ static inline NSString* _EncodeBase64(NSString* string) {
 - (void)logVerbose:(NSString*)format, ... {
   va_list arguments;
   va_start(arguments, format);
-  GWS_LOG_VERBOSE(@"%@", ARC_AUTORELEASE([[NSString alloc] initWithFormat:format arguments:arguments]));
+  GWS_LOG_VERBOSE(@"%@", [[NSString alloc] initWithFormat:format arguments:arguments]);
   va_end(arguments);
 }
 
 - (void)logInfo:(NSString*)format, ... {
   va_list arguments;
   va_start(arguments, format);
-  GWS_LOG_INFO(@"%@", ARC_AUTORELEASE([[NSString alloc] initWithFormat:format arguments:arguments]));
+  GWS_LOG_INFO(@"%@", [[NSString alloc] initWithFormat:format arguments:arguments]);
   va_end(arguments);
 }
 
 - (void)logWarning:(NSString*)format, ... {
   va_list arguments;
   va_start(arguments, format);
-  GWS_LOG_WARNING(@"%@", ARC_AUTORELEASE([[NSString alloc] initWithFormat:format arguments:arguments]));
+  GWS_LOG_WARNING(@"%@", [[NSString alloc] initWithFormat:format arguments:arguments]);
   va_end(arguments);
 }
 
 - (void)logError:(NSString*)format, ... {
   va_list arguments;
   va_start(arguments, format);
-  GWS_LOG_ERROR(@"%@", ARC_AUTORELEASE([[NSString alloc] initWithFormat:format arguments:arguments]));
+  GWS_LOG_ERROR(@"%@", [[NSString alloc] initWithFormat:format arguments:arguments]);
   va_end(arguments);
 }
 
@@ -1093,7 +1077,6 @@ static CFHTTPMessageRef _CreateHTTPMessageFromPerformingRequest(NSData* inData, 
         } else {
           GWS_DNOT_REACHED();
         }
-        ARC_RELEASE(outData);
       }
     }
     close(httpSocket);
@@ -1107,7 +1090,6 @@ static void _LogResult(NSString* format, ...) {
   NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
   va_end(arguments);
   fprintf(stdout, "%s\n", [message UTF8String]);
-  ARC_RELEASE(message);
 }
 
 - (NSInteger)runTestsWithOptions:(NSDictionary*)options inDirectory:(NSString*)path {
@@ -1130,8 +1112,8 @@ static void _LogResult(NSString* format, ...) {
         if (requestData) {
           CFHTTPMessageRef request = _CreateHTTPMessageFromData(requestData, YES);
           if (request) {
-            NSString* requestMethod = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestMethod(request));
-            NSURL* requestURL = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestURL(request));
+            NSString* requestMethod = CFBridgingRelease(CFHTTPMessageCopyRequestMethod(request));
+            NSURL* requestURL = CFBridgingRelease(CFHTTPMessageCopyRequestURL(request));
             _LogResult(@"[%i] %@ %@", (int)[index integerValue], requestMethod, requestURL.path);
             NSString* prefix = [index stringByAppendingString:@"-"];
             for (NSString* responseFile in files) {
@@ -1151,8 +1133,8 @@ static void _LogResult(NSString* format, ...) {
                         success = NO;
                       }
                       
-                      NSDictionary* expectedHeaders = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyAllHeaderFields(expectedResponse));
-                      NSDictionary* actualHeaders = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyAllHeaderFields(actualResponse));
+                      NSDictionary* expectedHeaders = CFBridgingRelease(CFHTTPMessageCopyAllHeaderFields(expectedResponse));
+                      NSDictionary* actualHeaders = CFBridgingRelease(CFHTTPMessageCopyAllHeaderFields(actualResponse));
                       for (NSString* expectedHeader in expectedHeaders) {
                         if ([ignoredHeaders containsObject:expectedHeader]) {
                           continue;
@@ -1171,10 +1153,10 @@ static void _LogResult(NSString* format, ...) {
                         }
                       }
                       
-                      NSString* expectedContentLength = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyHeaderFieldValue(expectedResponse, CFSTR("Content-Length")));
-                      NSData* expectedBody = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyBody(expectedResponse));
-                      NSString* actualContentLength = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyHeaderFieldValue(actualResponse, CFSTR("Content-Length")));
-                      NSData* actualBody = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyBody(actualResponse));
+                      NSString* expectedContentLength = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(expectedResponse, CFSTR("Content-Length")));
+                      NSData* expectedBody = CFBridgingRelease(CFHTTPMessageCopyBody(expectedResponse));
+                      NSString* actualContentLength = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(actualResponse, CFSTR("Content-Length")));
+                      NSData* actualBody = CFBridgingRelease(CFHTTPMessageCopyBody(actualResponse));
                       if ([actualContentLength isEqualToString:expectedContentLength] && (actualBody.length > expectedBody.length)) {  // Handle web browser closing connection before retrieving entire body (e.g. when playing a video file)
                         actualBody = [actualBody subdataWithRange:NSMakeRange(0, expectedBody.length)];
                       }
@@ -1191,7 +1173,6 @@ static void _LogResult(NSString* format, ...) {
                             [task setLaunchPath:@"/usr/bin/opendiff"];
                             [task setArguments:@[expectedPath, actualPath]];
                             [task launch];
-                            ARC_RELEASE(task);
                           }
                         }
 #endif

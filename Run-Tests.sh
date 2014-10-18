@@ -11,13 +11,11 @@ OSX_TARGET="GCDWebServer (Mac)"
 IOS_TARGET="GCDWebServer (iOS)"
 CONFIGURATION="Release"
 
-MRC_BUILD_DIR="/tmp/GCDWebServer-MRC"
-MRC_PRODUCT="$MRC_BUILD_DIR/$CONFIGURATION/GCDWebServer"
-ARC_BUILD_DIR="/tmp/GCDWebServer-ARC"
-ARC_PRODUCT="$ARC_BUILD_DIR/$CONFIGURATION/GCDWebServer"
+BUILD_DIR="/tmp/GCDWebServer-Build"
+PRODUCT="$BUILD_DIR/$CONFIGURATION/GCDWebServer"
 
 PAYLOAD_ZIP="Tests/Payload.zip"
-PAYLOAD_DIR="/tmp/GCDWebServer"
+PAYLOAD_DIR="/tmp/GCDWebServer-Payload"
 
 function runTests {
   rm -rf "$PAYLOAD_DIR"
@@ -32,55 +30,31 @@ function runTests {
   logLevel=2 $1 -mode "$2" -root "$PAYLOAD_DIR/Payload" -tests "$3"
 }
 
-# Build for iOS in manual memory management mode and for oldest deployment target (TODO: run tests on iOS)
-rm -rf "$MRC_BUILD_DIR"
-xcodebuild -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$MRC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=NO" "IPHONEOS_DEPLOYMENT_TARGET=5.1.1" > /dev/null
+# Build for iOS for oldest deployment target (TODO: run tests on iOS)
+rm -rf "$BUILD_DIR"
+xcodebuild -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$BUILD_DIR" "IPHONEOS_DEPLOYMENT_TARGET=5.1.1" > /dev/null
 
-# Build for iOS in manual memory management mode and for default deployment target (TODO: run tests on iOS)
-rm -rf "$MRC_BUILD_DIR"
-xcodebuild -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$MRC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=NO" > /dev/null
+# Build for iOS for default deployment target (TODO: run tests on iOS)
+rm -rf "$BUILD_DIR"
+xcodebuild -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$BUILD_DIR" > /dev/null
 
-# Build for iOS in ARC mode and for oldest deployment target (TODO: run tests on iOS)
-rm -rf "$ARC_BUILD_DIR"
-xcodebuild -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$ARC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=YES" "IPHONEOS_DEPLOYMENT_TARGET=5.1.1" > /dev/null
+# Build for OS X for oldest deployment target
+rm -rf "$BUILD_DIR"
+xcodebuild -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$BUILD_DIR" "MACOSX_DEPLOYMENT_TARGET=10.7" > /dev/null
 
-# Build for iOS in ARC mode and for default deployment target (TODO: run tests on iOS)
-rm -rf "$ARC_BUILD_DIR"
-xcodebuild -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$ARC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=YES" > /dev/null
-
-# Build for OS X in manual memory management mode and for oldest deployment target
-rm -rf "$MRC_BUILD_DIR"
-xcodebuild -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$MRC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=NO" "MACOSX_DEPLOYMENT_TARGET=10.7" > /dev/null
-
-# Build for OS X in manual memory management mode and for default deployment target
-rm -rf "$MRC_BUILD_DIR"
-xcodebuild -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$MRC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=NO" > /dev/null
-
-# Build for OS X in ARC mode and for oldest deployment target
-rm -rf "$ARC_BUILD_DIR"
-xcodebuild -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$ARC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=YES" "MACOSX_DEPLOYMENT_TARGET=10.7" > /dev/null
-
-# Build for OS X in ARC mode and for default deployment target
-rm -rf "$ARC_BUILD_DIR"
-xcodebuild -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$ARC_BUILD_DIR" "CLANG_ENABLE_OBJC_ARC=YES" > /dev/null
+# Build for OS X for default deployment target
+rm -rf "$BUILD_DIR"
+xcodebuild -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$BUILD_DIR" > /dev/null
 
 # Run tests
-runTests $MRC_PRODUCT "htmlForm" "Tests/HTMLForm"
-runTests $ARC_PRODUCT "htmlForm" "Tests/HTMLForm"
-runTests $MRC_PRODUCT "htmlFileUpload" "Tests/HTMLFileUpload"
-runTests $ARC_PRODUCT "htmlFileUpload" "Tests/HTMLFileUpload"
-runTests $MRC_PRODUCT "webServer" "Tests/WebServer"
-runTests $ARC_PRODUCT "webServer" "Tests/WebServer"
-runTests $MRC_PRODUCT "webDAV" "Tests/WebDAV-Transmit"
-runTests $ARC_PRODUCT "webDAV" "Tests/WebDAV-Transmit"
-runTests $MRC_PRODUCT "webDAV" "Tests/WebDAV-Cyberduck"
-runTests $ARC_PRODUCT "webDAV" "Tests/WebDAV-Cyberduck"
-runTests $MRC_PRODUCT "webDAV" "Tests/WebDAV-Finder"
-runTests $ARC_PRODUCT "webDAV" "Tests/WebDAV-Finder"
-runTests $MRC_PRODUCT "webUploader" "Tests/WebUploader"
-runTests $ARC_PRODUCT "webUploader" "Tests/WebUploader"
-runTests $MRC_PRODUCT "webServer" "Tests/WebServer-Sample-Movie" "Tests/Sample-Movie.mp4"
-runTests $ARC_PRODUCT "webServer" "Tests/WebServer-Sample-Movie" "Tests/Sample-Movie.mp4"
+runTests $PRODUCT "htmlForm" "Tests/HTMLForm"
+runTests $PRODUCT "htmlFileUpload" "Tests/HTMLFileUpload"
+runTests $PRODUCT "webServer" "Tests/WebServer"
+runTests $PRODUCT "webDAV" "Tests/WebDAV-Transmit"
+runTests $PRODUCT "webDAV" "Tests/WebDAV-Cyberduck"
+runTests $PRODUCT "webDAV" "Tests/WebDAV-Finder"
+runTests $PRODUCT "webUploader" "Tests/WebUploader"
+runTests $PRODUCT "webServer" "Tests/WebServer-Sample-Movie" "Tests/Sample-Movie.mp4"
 
 # Done
 echo "\nAll tests completed successfully!"

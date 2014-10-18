@@ -25,6 +25,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if !__has_feature(objc_arc)
+#error GCDWebDAVServer requires ARC
+#endif
+
 // WebDAV specifications: http://webdav.org/specs/rfc4918.html
 
 // Requires "HEADER_SEARCH_PATHS = $(SDKROOT)/usr/include/libxml2" in Xcode build settings
@@ -418,9 +422,6 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
     }
     if (!success) {
       NSString* string = [[NSString alloc] initWithData:request.data encoding:NSUTF8StringEncoding];
-#if !__has_feature(objc_arc)
-      [string autorelease];
-#endif
       return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"Invalid DAV properties:\n%@", string];
     }
   } else {
@@ -519,9 +520,6 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
   }
   if (!success) {
     NSString* string = [[NSString alloc] initWithData:request.data encoding:NSUTF8StringEncoding];
-#if !__has_feature(objc_arc)
-    [string autorelease];
-#endif
     return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_BadRequest message:@"Invalid DAV properties:\n%@", string];
   }
   
@@ -607,11 +605,7 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
 - (instancetype)initWithUploadDirectory:(NSString*)path {
   if ((self = [super init])) {
     _uploadDirectory = [[path stringByStandardizingPath] copy];
-#if __has_feature(objc_arc)
     GCDWebDAVServer* __unsafe_unretained server = self;
-#else
-    __block GCDWebDAVServer* server = self;
-#endif
     
     // 9.1 PROPFIND method
     [self addDefaultHandlerForMethod:@"PROPFIND" requestClass:[GCDWebServerDataRequest class] processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
@@ -666,17 +660,6 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
   }
   return self;
 }
-
-#if !__has_feature(objc_arc)
-
-- (void)dealloc {
-  [_uploadDirectory release];
-  [_allowedExtensions release];
-  
-  [super dealloc];
-}
-
-#endif
 
 @end
 

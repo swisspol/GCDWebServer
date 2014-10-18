@@ -25,6 +25,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if !__has_feature(objc_arc)
+#error GCDWebServer requires ARC
+#endif
+
 #import "GCDWebServerPrivate.h"
 
 @interface GCDWebServerErrorResponse ()
@@ -37,7 +41,7 @@
   GWS_DCHECK(((NSInteger)errorCode >= 400) && ((NSInteger)errorCode < 500));
   va_list arguments;
   va_start(arguments, format);
-  GCDWebServerErrorResponse* response = ARC_AUTORELEASE([[self alloc] initWithStatusCode:errorCode underlyingError:nil messageFormat:format arguments:arguments]);
+  GCDWebServerErrorResponse* response = [[self alloc] initWithStatusCode:errorCode underlyingError:nil messageFormat:format arguments:arguments];
   va_end(arguments);
   return response;
 }
@@ -46,7 +50,7 @@
   GWS_DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
   va_list arguments;
   va_start(arguments, format);
-  GCDWebServerErrorResponse* response = ARC_AUTORELEASE([[self alloc] initWithStatusCode:errorCode underlyingError:nil messageFormat:format arguments:arguments]);
+  GCDWebServerErrorResponse* response = [[self alloc] initWithStatusCode:errorCode underlyingError:nil messageFormat:format arguments:arguments];
   va_end(arguments);
   return response;
 }
@@ -55,7 +59,7 @@
   GWS_DCHECK(((NSInteger)errorCode >= 400) && ((NSInteger)errorCode < 500));
   va_list arguments;
   va_start(arguments, format);
-  GCDWebServerErrorResponse* response = ARC_AUTORELEASE([[self alloc] initWithStatusCode:errorCode underlyingError:underlyingError messageFormat:format arguments:arguments]);
+  GCDWebServerErrorResponse* response = [[self alloc] initWithStatusCode:errorCode underlyingError:underlyingError messageFormat:format arguments:arguments];
   va_end(arguments);
   return response;
 }
@@ -64,7 +68,7 @@
   GWS_DCHECK(((NSInteger)errorCode >= 500) && ((NSInteger)errorCode < 600));
   va_list arguments;
   va_start(arguments, format);
-  GCDWebServerErrorResponse* response = ARC_AUTORELEASE([[self alloc] initWithStatusCode:errorCode underlyingError:underlyingError messageFormat:format arguments:arguments]);
+  GCDWebServerErrorResponse* response = [[self alloc] initWithStatusCode:errorCode underlyingError:underlyingError messageFormat:format arguments:arguments];
   va_end(arguments);
   return response;
 }
@@ -82,7 +86,6 @@ static inline NSString* _EscapeHTMLString(NSString* string) {
   if ((self = [self initWithHTML:html])) {
     self.statusCode = statusCode;
   }
-  ARC_RELEASE(message);
   return self;
 }
 

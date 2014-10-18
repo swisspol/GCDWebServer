@@ -25,6 +25,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if !__has_feature(objc_arc)
+#error GCDWebServer requires ARC
+#endif
+
 #import "GCDWebServerPrivate.h"
 
 @interface GCDWebServerFileRequest () {
@@ -40,16 +44,13 @@
 
 - (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
   if ((self = [super initWithMethod:method url:url headers:headers path:path query:query])) {
-    _temporaryPath = ARC_RETAIN([NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]]);
+    _temporaryPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]];
   }
   return self;
 }
 
 - (void)dealloc {
   unlink([_temporaryPath fileSystemRepresentation]);
-  ARC_RELEASE(_temporaryPath);
-  
-  ARC_DEALLOC(super);
 }
 
 - (BOOL)open:(NSError**)error {

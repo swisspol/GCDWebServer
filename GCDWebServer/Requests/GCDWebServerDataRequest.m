@@ -25,6 +25,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if !__has_feature(objc_arc)
+#error GCDWebServer requires ARC
+#endif
+
 #import "GCDWebServerPrivate.h"
 
 @interface GCDWebServerDataRequest () {
@@ -39,14 +43,6 @@
 @implementation GCDWebServerDataRequest
 
 @synthesize data=_data;
-
-- (void)dealloc {
-  ARC_RELEASE(_data);
-  ARC_RELEASE(_text);
-  ARC_RELEASE(_jsonObject);
-  
-  ARC_DEALLOC(super);
-}
 
 - (BOOL)open:(NSError**)error {
   if (self.contentLength != NSUIntegerMax) {
@@ -99,7 +95,7 @@
   if (_jsonObject == nil) {
     NSString* mimeType = GCDWebServerTruncateHeaderValue(self.contentType);
     if ([mimeType isEqualToString:@"application/json"] || [mimeType isEqualToString:@"text/json"] || [mimeType isEqualToString:@"text/javascript"]) {
-      _jsonObject = ARC_RETAIN([NSJSONSerialization JSONObjectWithData:_data options:0 error:NULL]);
+      _jsonObject = [NSJSONSerialization JSONObjectWithData:_data options:0 error:NULL];
     } else {
       GWS_DNOT_REACHED();
     }

@@ -25,6 +25,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if !__has_feature(objc_arc)
+#error GCDWebServer requires ARC
+#endif
+
 #import <TargetConditionals.h>
 #if TARGET_OS_IPHONE
 #import <MobileCoreServices/MobileCoreServices.h>
@@ -50,14 +54,14 @@ void GCDWebServerInitializeFunctions() {
     _dateFormatterRFC822 = [[NSDateFormatter alloc] init];
     _dateFormatterRFC822.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
     _dateFormatterRFC822.dateFormat = @"EEE',' dd MMM yyyy HH':'mm':'ss 'GMT'";
-    _dateFormatterRFC822.locale = ARC_AUTORELEASE([[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]);
+    _dateFormatterRFC822.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
     GWS_DCHECK(_dateFormatterRFC822);
   }
   if (_dateFormatterISO8601 == nil) {
     _dateFormatterISO8601 = [[NSDateFormatter alloc] init];
     _dateFormatterISO8601.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"GMT"];
     _dateFormatterISO8601.dateFormat = @"yyyy-MM-dd'T'HH:mm:ss'+00:00'";
-    _dateFormatterISO8601.locale = ARC_AUTORELEASE([[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]);
+    _dateFormatterISO8601.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US"];
     GWS_DCHECK(_dateFormatterISO8601);
   }
   if (_dateFormatterQueue == NULL) {
@@ -96,7 +100,6 @@ NSString* GCDWebServerExtractHeaderValueParameter(NSString* value, NSString* nam
       [scanner scanUpToCharactersFromSet:[NSCharacterSet whitespaceCharacterSet] intoString:&parameter];
     }
   }
-  ARC_RELEASE(scanner);
   return parameter;
 }
 
@@ -150,7 +153,7 @@ NSString* GCDWebServerDescribeData(NSData* data, NSString* type) {
     NSString* charset = GCDWebServerExtractHeaderValueParameter(type, @"charset");
     NSString* string = [[NSString alloc] initWithData:data encoding:GCDWebServerStringEncodingFromCharset(charset)];
     if (string) {
-      return ARC_AUTORELEASE(string);
+      return string;
     }
   }
   return [NSString stringWithFormat:@"<%lu bytes>", (unsigned long)data.length];
@@ -168,9 +171,9 @@ NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
   if (extension.length) {
     mimeType = [_overrides objectForKey:extension];
     if (mimeType == nil) {
-      CFStringRef uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (ARC_BRIDGE CFStringRef)extension, NULL);
+      CFStringRef uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (__bridge CFStringRef)extension, NULL);
       if (uti) {
-        mimeType = ARC_BRIDGE_RELEASE(UTTypeCopyPreferredTagWithClass(uti, kUTTagClassMIMEType));
+        mimeType = CFBridgingRelease(UTTypeCopyPreferredTagWithClass(uti, kUTTagClassMIMEType));
         CFRelease(uti);
       }
     }
@@ -179,11 +182,11 @@ NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
 }
 
 NSString* GCDWebServerEscapeURLString(NSString* string) {
-  return ARC_BRIDGE_RELEASE(CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)string, NULL, CFSTR(":@/?&=+"), kCFStringEncodingUTF8));
+  return CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault, (CFStringRef)string, NULL, CFSTR(":@/?&=+"), kCFStringEncodingUTF8));
 }
 
 NSString* GCDWebServerUnescapeURLString(NSString* string) {
-  return ARC_BRIDGE_RELEASE(CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault, (CFStringRef)string, CFSTR(""), kCFStringEncodingUTF8));
+  return CFBridgingRelease(CFURLCreateStringByReplacingPercentEscapesUsingEncoding(kCFAllocatorDefault, (CFStringRef)string, CFSTR(""), kCFStringEncodingUTF8));
 }
 
 NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
@@ -219,7 +222,6 @@ NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
     }
     [scanner setScanLocation:([scanner scanLocation] + 1)];
   }
-  ARC_RELEASE(scanner);
   return parameters;
 }
 
@@ -247,7 +249,7 @@ NSString* GCDWebServerGetPrimaryIPAddress(BOOL useIPv6) {
   if (store) {
     CFPropertyListRef info = SCDynamicStoreCopyValue(store, CFSTR("State:/Network/Global/IPv4"));  // There is no equivalent for IPv6 but the primary interface should be the same
     if (info) {
-      primaryInterface = [[NSString stringWithString:[(ARC_BRIDGE NSDictionary*)info objectForKey:@"PrimaryInterface"]] UTF8String];
+      primaryInterface = [[NSString stringWithString:[(__bridge NSDictionary*)info objectForKey:@"PrimaryInterface"]] UTF8String];
       CFRelease(info);
     }
     CFRelease(store);
@@ -280,7 +282,7 @@ NSString* GCDWebServerGetPrimaryIPAddress(BOOL useIPv6) {
 NSString* GCDWebServerComputeMD5Digest(NSString* format, ...) {
   va_list arguments;
   va_start(arguments, format);
-  const char* string = [ARC_AUTORELEASE([[NSString alloc] initWithFormat:format arguments:arguments]) UTF8String];
+  const char* string = [[[NSString alloc] initWithFormat:format arguments:arguments] UTF8String];
   va_end(arguments);
   unsigned char md5[CC_MD5_DIGEST_LENGTH];
   CC_MD5(string, (CC_LONG)strlen(string), md5);

@@ -25,6 +25,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if !__has_feature(objc_arc)
+#error GCDWebServer requires ARC
+#endif
+
 #import <TargetConditionals.h>
 #import <netdb.h>
 #ifdef __GCDWEBSERVER_ENABLE_TESTING__
@@ -172,7 +176,6 @@ static int32_t _connectionCounter = 0;
     }
     
   }];
-  ARC_RELEASE(bodyData);
 }
 
 static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
@@ -244,15 +247,8 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 @implementation GCDWebServerConnection (Write)
 
 - (void)_writeData:(NSData*)data withCompletionBlock:(WriteDataCompletionBlock)block {
-#if !__has_feature(objc_arc)
-  [data retain];
-#endif
   dispatch_data_t buffer = dispatch_data_create(data.bytes, data.length, kGCDWebServerGCDQueue, ^{
-#if __has_feature(objc_arc)
     [data self];  // Keeps ARC from releasing data too early
-#else
-    [data release];
-#endif
   });
   dispatch_write(_socket, buffer, kGCDWebServerGCDQueue, ^(dispatch_data_t remainingData, int error) {
     
@@ -268,13 +264,15 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     }
     
   });
-  ARC_DISPATCH_RELEASE(buffer);
+#if !OS_OBJECT_USE_OBJC_RETAIN_RELEASE
+  dispatch_release(buffer);
+#endif
 }
 
 - (void)_writeHeadersWithCompletionBlock:(WriteHeadersCompletionBlock)block {
   GWS_DCHECK(_responseMessage);
   CFDataRef data = CFHTTPMessageCopySerializedMessage(_responseMessage);
-  [self _writeData:(ARC_BRIDGE NSData*)data withCompletionBlock:block];
+  [self _writeData:(__bridge NSData*)data withCompletionBlock:block];
   CFRelease(data);
 }
 
@@ -349,11 +347,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   }
   if (_continueData == nil) {
     CFHTTPMessageRef message = CFHTTPMessageCreateResponse(kCFAllocatorDefault, 100, NULL, kCFHTTPVersion1_1);
-#if __has_feature(objc_arc)
     _continueData = CFBridgingRelease(CFHTTPMessageCopySerializedMessage(message));
-#else
-    _continueData = (NSData*)CFHTTPMessageCopySerializedMessage(message);
-#endif
     CFRelease(message);
     GWS_DCHECK(_continueData);
   }
@@ -362,7 +356,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   }
   if (_digestAuthenticationNonce == nil) {
     CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
-    _digestAuthenticationNonce = ARC_RETAIN(GCDWebServerComputeMD5Digest(@"%@", ARC_BRIDGE_RELEASE(CFUUIDCreateString(kCFAllocatorDefault, uuid))));
+    _digestAuthenticationNonce = GCDWebServerComputeMD5Digest(@"%@", CFBridgingRelease(CFUUIDCreateString(kCFAllocatorDefault, uuid)));
     CFRelease(uuid);
   }
 }
@@ -376,8 +370,8 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   _statusCode = statusCode;
   _responseMessage = CFHTTPMessageCreateResponse(kCFAllocatorDefault, statusCode, NULL, kCFHTTPVersion1_1);
   CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Connection"), CFSTR("Close"));
-  CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Server"), (ARC_BRIDGE CFStringRef)_server.serverName);
-  CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Date"), (ARC_BRIDGE CFStringRef)GCDWebServerFormatRFC822([NSDate date]));
+  CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Server"), (__bridge CFStringRef)_server.serverName);
+  CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Date"), (__bridge CFStringRef)GCDWebServerFormatRFC822([NSDate date]));
 }
 
 - (void)_startProcessingRequest {
@@ -410,36 +404,36 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     if (hasBody && ![response performOpen:&error]) {
       GWS_LOG_ERROR(@"Failed opening response body for socket %i: %@", _socket, error);
     } else {
-      _response = ARC_RETAIN(response);
+      _response = response;
     }
   }
   
   if (_response) {
     [self _initializeResponseHeadersWithStatusCode:_response.statusCode];
     if (_response.lastModifiedDate) {
-      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Last-Modified"), (ARC_BRIDGE CFStringRef)GCDWebServerFormatRFC822(_response.lastModifiedDate));
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Last-Modified"), (__bridge CFStringRef)GCDWebServerFormatRFC822(_response.lastModifiedDate));
     }
     if (_response.eTag) {
-      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("ETag"), (ARC_BRIDGE CFStringRef)_response.eTag);
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("ETag"), (__bridge CFStringRef)_response.eTag);
     }
     if ((_response.statusCode >= 200) && (_response.statusCode < 300)) {
       if (_response.cacheControlMaxAge > 0) {
-        CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Cache-Control"), (ARC_BRIDGE CFStringRef)[NSString stringWithFormat:@"max-age=%i, public", (int)_response.cacheControlMaxAge]);
+        CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Cache-Control"), (__bridge CFStringRef)[NSString stringWithFormat:@"max-age=%i, public", (int)_response.cacheControlMaxAge]);
       } else {
         CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Cache-Control"), CFSTR("no-cache"));
       }
     }
     if (_response.contentType != nil) {
-      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Type"), (ARC_BRIDGE CFStringRef)GCDWebServerNormalizeHeaderValue(_response.contentType));
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Type"), (__bridge CFStringRef)GCDWebServerNormalizeHeaderValue(_response.contentType));
     }
     if (_response.contentLength != NSUIntegerMax) {
-      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Length"), (ARC_BRIDGE CFStringRef)[NSString stringWithFormat:@"%lu", (unsigned long)_response.contentLength]);
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Content-Length"), (__bridge CFStringRef)[NSString stringWithFormat:@"%lu", (unsigned long)_response.contentLength]);
     }
     if (_response.usesChunkedTransferEncoding) {
       CFHTTPMessageSetHeaderFieldValue(_responseMessage, CFSTR("Transfer-Encoding"), CFSTR("chunked"));
     }
     [_response.additionalHeaders enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL* stop) {
-      CFHTTPMessageSetHeaderFieldValue(_responseMessage, (ARC_BRIDGE CFStringRef)key, (ARC_BRIDGE CFStringRef)obj);
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, (__bridge CFStringRef)key, (__bridge CFStringRef)obj);
     }];
     [self _writeHeadersWithCompletionBlock:^(BOOL success) {
       
@@ -524,7 +518,6 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     }
     
   }];
-  ARC_RELEASE(chunkData);
 }
 
 - (void)_readRequestHeaders {
@@ -533,23 +526,23 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   [self _readHeaders:headersData withCompletionBlock:^(NSData* extraData) {
     
     if (extraData) {
-      NSString* requestMethod = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestMethod(_requestMessage));  // Method verbs are case-sensitive and uppercase
+      NSString* requestMethod = CFBridgingRelease(CFHTTPMessageCopyRequestMethod(_requestMessage));  // Method verbs are case-sensitive and uppercase
       if (_server.shouldAutomaticallyMapHEADToGET && [requestMethod isEqualToString:@"HEAD"]) {
         requestMethod = @"GET";
         _virtualHEAD = YES;
       }
-      NSDictionary* requestHeaders = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyAllHeaderFields(_requestMessage));  // Header names are case-insensitive but CFHTTPMessageCopyAllHeaderFields() will standardize the common ones
-      NSURL* requestURL = ARC_BRIDGE_RELEASE(CFHTTPMessageCopyRequestURL(_requestMessage));
+      NSDictionary* requestHeaders = CFBridgingRelease(CFHTTPMessageCopyAllHeaderFields(_requestMessage));  // Header names are case-insensitive but CFHTTPMessageCopyAllHeaderFields() will standardize the common ones
+      NSURL* requestURL = CFBridgingRelease(CFHTTPMessageCopyRequestURL(_requestMessage));
       if (requestURL) {
         requestURL = [self rewriteRequestURL:requestURL withMethod:requestMethod headers:requestHeaders];
         GWS_DCHECK(requestURL);
       }
-      NSString* requestPath = requestURL ? GCDWebServerUnescapeURLString(ARC_BRIDGE_RELEASE(CFURLCopyPath((CFURLRef)requestURL))) : nil;  // Don't use -[NSURL path] which strips the ending slash
-      NSString* queryString = requestURL ? ARC_BRIDGE_RELEASE(CFURLCopyQueryString((CFURLRef)requestURL, NULL)) : nil;  // Don't use -[NSURL query] to make sure query is not unescaped;
+      NSString* requestPath = requestURL ? GCDWebServerUnescapeURLString(CFBridgingRelease(CFURLCopyPath((CFURLRef)requestURL))) : nil;  // Don't use -[NSURL path] which strips the ending slash
+      NSString* queryString = requestURL ? CFBridgingRelease(CFURLCopyQueryString((CFURLRef)requestURL, NULL)) : nil;  // Don't use -[NSURL query] to make sure query is not unescaped;
       NSDictionary* requestQuery = queryString ? GCDWebServerParseURLEncodedForm(queryString) : @{};
       if (requestMethod && requestURL && requestHeaders && requestPath && requestQuery) {
         for (_handler in _server.handlers) {
-          _request = ARC_RETAIN(_handler.matchBlock(requestMethod, requestURL, requestHeaders, requestPath, requestQuery));
+          _request = _handler.matchBlock(requestMethod, requestURL, requestHeaders, requestPath, requestQuery);
           if (_request) {
             break;
           }
@@ -604,14 +597,13 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     }
     
   }];
-  ARC_RELEASE(headersData);
 }
 
 - (id)initWithServer:(GCDWebServer*)server localAddress:(NSData*)localAddress remoteAddress:(NSData*)remoteAddress socket:(CFSocketNativeHandle)socket {
   if ((self = [super init])) {
-    _server = ARC_RETAIN(server);
-    _localAddress = ARC_RETAIN(localAddress);
-    _remoteAddress = ARC_RETAIN(remoteAddress);
+    _server = server;
+    _localAddress = localAddress;
+    _remoteAddress = remoteAddress;
     _socket = socket;
     GWS_LOG_DEBUG(@"Did open connection on socket %i", _socket);
     
@@ -619,7 +611,6 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     
     if (![self open]) {
       close(_socket);
-      ARC_RELEASE(self);
       return nil;
     }
     _opened = YES;
@@ -650,26 +641,14 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   }
   
   [_server didEndConnection:self];
-  ARC_RELEASE(_server);
-  ARC_RELEASE(_localAddress);
-  ARC_RELEASE(_remoteAddress);
   
   if (_requestMessage) {
     CFRelease(_requestMessage);
   }
-  ARC_RELEASE(_request);
   
   if (_responseMessage) {
     CFRelease(_responseMessage);
   }
-  ARC_RELEASE(_response);
-  
-#ifdef __GCDWEBSERVER_ENABLE_TESTING__
-  ARC_RELEASE(_requestPath);
-  ARC_RELEASE(_responsePath);
-#endif
-  
-  ARC_DEALLOC(super);
 }
 
 @end
@@ -681,11 +660,11 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   if (_server.recordingEnabled) {
     _connectionIndex = OSAtomicIncrement32(&_connectionCounter);
     
-    _requestPath = ARC_RETAIN([NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]]);
+    _requestPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]];
     _requestFD = open([_requestPath fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     GWS_DCHECK(_requestFD > 0);
     
-    _responsePath = ARC_RETAIN([NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]]);
+    _responsePath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]];
     _responseFD = open([_responsePath fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     GWS_DCHECK(_responseFD > 0);
   }

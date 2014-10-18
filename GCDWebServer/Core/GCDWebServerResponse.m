@@ -25,6 +25,10 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if !__has_feature(objc_arc)
+#error GCDWebServer requires ARC
+#endif
+
 #import <zlib.h>
 
 #import "GCDWebServerPrivate.h"
@@ -126,7 +130,6 @@
         if (result == Z_STREAM_END) {
           _finished = YES;
         } else if (result != Z_OK) {
-          ARC_RELEASE(encodedData);
           *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
           return nil;
         }
@@ -140,7 +143,7 @@
     } while (length == 0);  // Make sure we don't return an empty NSData if not in finished state
     encodedData.length = length;
   }
-  return ARC_AUTORELEASE(encodedData);
+  return encodedData;
 }
 
 - (void)close {
@@ -174,7 +177,7 @@
             gzipContentEncodingEnabled=_gzipped, additionalHeaders=_headers;
 
 + (instancetype)response {
-  return ARC_AUTORELEASE([[[self class] alloc] init]);
+  return [[[self class] alloc] init];
 }
 
 - (instancetype)init {
@@ -187,16 +190,6 @@
     _encoders = [[NSMutableArray alloc] init];
   }
   return self;
-}
-
-- (void)dealloc {
-  ARC_RELEASE(_type);
-  ARC_RELEASE(_lastModified);
-  ARC_RELEASE(_eTag);
-  ARC_RELEASE(_headers);
-  ARC_RELEASE(_encoders);
-  
-  ARC_DEALLOC(super);
 }
 
 - (void)setValue:(NSString*)value forAdditionalHeader:(NSString*)header {
@@ -228,7 +221,6 @@
   if (_gzipped) {
     GCDWebServerGZipEncoder* encoder = [[GCDWebServerGZipEncoder alloc] initWithResponse:self reader:_reader];
     [_encoders addObject:encoder];
-    ARC_RELEASE(encoder);
     _reader = encoder;
   }
 }
@@ -288,11 +280,11 @@
 @implementation GCDWebServerResponse (Extensions)
 
 + (instancetype)responseWithStatusCode:(NSInteger)statusCode {
-  return ARC_AUTORELEASE([[self alloc] initWithStatusCode:statusCode]);
+  return [[self alloc] initWithStatusCode:statusCode];
 }
 
 + (instancetype)responseWithRedirect:(NSURL*)location permanent:(BOOL)permanent {
-  return ARC_AUTORELEASE([[self alloc] initWithRedirect:location permanent:permanent]);
+  return [[self alloc] initWithRedirect:location permanent:permanent];
 }
 
 - (instancetype)initWithStatusCode:(NSInteger)statusCode {

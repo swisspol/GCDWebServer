@@ -368,11 +368,6 @@ int main(int argc, const char* argv[]) {
       }
       
     }
-#if __has_feature(objc_arc)
-    fprintf(stdout, " (ARC is ON)\n");
-#else
-    fprintf(stdout, " (ARC is OFF)\n");
-#endif
     
     if (webServer) {
       Delegate* delegate = [[Delegate alloc] init];
@@ -406,10 +401,6 @@ int main(int argc, const char* argv[]) {
         }
       }
       webServer.delegate = nil;
-#if !__has_feature(objc_arc)
-      [delegate release];
-      [webServer release];
-#endif
     }
   }
   return result;
