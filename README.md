@@ -188,7 +188,7 @@ New in GCDWebServer 3.0 is the ability to process HTTP requests aysnchronously i
 ```objectivec
 [webServer addDefaultHandlerForMethod:@"GET"
                          requestClass:[GCDWebServerRequest class]
-                    asyncProcessBlock:^(GCDWebServerRequest* request, GCDWebServerCompletionBlock completionBlock) {
+                         processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
   
   GCDWebServerStreamedResponse* response = [GCDWebServerStreamedResponse responseWithContentType:@"text/html" asyncStreamBlock:^(GCDWebServerBodyReaderCompletionBlock completionBlock) {
     
