@@ -283,7 +283,7 @@ static void _ExecuteMainThreadRunLoopSources() {
     [[UIApplication sharedApplication] endBackgroundTask:_backgroundTask];
     _backgroundTask = UIBackgroundTaskInvalid;
     GWS_LOG_DEBUG(@"Did end background task");
-  } else {
+  } else if ([UIApplication sharedApplication]) {
     GWS_DNOT_REACHED();
   }
 }
