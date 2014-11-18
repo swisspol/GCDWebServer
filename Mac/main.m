@@ -141,9 +141,10 @@ int main(int argc, const char* argv[]) {
     NSString* authenticationRealm = nil;
     NSString* authenticationUser = nil;
     NSString* authenticationPassword = nil;
+    BOOL bindToLocalhost = NO;
     
     if (argc == 1) {
-      fprintf(stdout, "Usage: %s [-mode webServer | htmlPage | htmlForm | htmlFileUpload | webDAV | webUploader | streamingResponse | asyncResponse] [-record] [-root directory] [-tests directory] [-authenticationMethod Basic | Digest] [-authenticationRealm realm] [-authenticationUser user] [-authenticationPassword password]\n\n", basename((char*)argv[0]));
+      fprintf(stdout, "Usage: %s [-mode webServer | htmlPage | htmlForm | htmlFileUpload | webDAV | webUploader | streamingResponse | asyncResponse] [-record] [-root directory] [-tests directory] [-authenticationMethod Basic | Digest] [-authenticationRealm realm] [-authenticationUser user] [-authenticationPassword password] [--localhost]\n\n", basename((char*)argv[0]));
     } else {
       for (int i = 1; i < argc; ++i) {
         if (argv[i][0] != '-') {
@@ -188,6 +189,8 @@ int main(int argc, const char* argv[]) {
         } else if (!strcmp(argv[i], "-authenticationPassword") && (i + 1 < argc)) {
           ++i;
           authenticationPassword = [NSString stringWithUTF8String:argv[i]];
+        } else if (!strcmp(argv[i], "--localhost")) {
+          bindToLocalhost = YES;
         }
       }
     }
@@ -386,6 +389,7 @@ int main(int argc, const char* argv[]) {
         fprintf(stdout, "\n");
         NSMutableDictionary* options = [NSMutableDictionary dictionary];
         [options setObject:@8080 forKey:GCDWebServerOption_Port];
+        [options setObject:@(bindToLocalhost) forKey:GCDWebServerOption_BindToLocalhost];
         [options setObject:@"" forKey:GCDWebServerOption_BonjourName];
         if (authenticationUser && authenticationPassword) {
           [options setValue:authenticationRealm forKey:GCDWebServerOption_AuthenticationRealm];

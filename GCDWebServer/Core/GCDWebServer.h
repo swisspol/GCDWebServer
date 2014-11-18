@@ -91,6 +91,17 @@ extern NSString* const GCDWebServerOption_BonjourName;
 extern NSString* const GCDWebServerOption_BonjourType;
 
 /**
+ *  Only accept HTTP requests coming from localhost i.e. not from the outside
+ *  network (NSNumber / BOOL).
+ *
+ *  The default value is NO.
+ *
+ *  @warning Bonjour should be disabled if using this option since the server
+ *  will not be reachable from the outside network anyway.
+ */
+extern NSString* const GCDWebServerOption_BindToLocalhost;
+
+/**
  *  The maximum number of incoming HTTP requests that can be queued waiting to
  *  be handled before new ones are dropped (NSNumber / NSUInteger).
  *

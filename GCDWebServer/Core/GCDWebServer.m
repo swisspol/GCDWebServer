@@ -50,6 +50,7 @@
 NSString* const GCDWebServerOption_Port = @"Port";
 NSString* const GCDWebServerOption_BonjourName = @"BonjourName";
 NSString* const GCDWebServerOption_BonjourType = @"BonjourType";
+NSString* const GCDWebServerOption_BindToLocalhost = @"BindToLocalhost";
 NSString* const GCDWebServerOption_MaxPendingConnections = @"MaxPendingConnections";
 NSString* const GCDWebServerOption_ServerName = @"ServerName";
 NSString* const GCDWebServerOption_AuthenticationMethod = @"AuthenticationMethod";
@@ -495,6 +496,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
   GWS_DCHECK(_source4 == NULL);
   
   NSUInteger port = [_GetOption(_options, GCDWebServerOption_Port, @0) unsignedIntegerValue];
+  BOOL bindToLocalhost = [_GetOption(_options, GCDWebServerOption_BindToLocalhost, @NO) boolValue];
   NSUInteger maxPendingConnections = [_GetOption(_options, GCDWebServerOption_MaxPendingConnections, @16) unsignedIntegerValue];
   
   struct sockaddr_in addr4;
@@ -502,7 +504,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
   addr4.sin_len = sizeof(addr4);
   addr4.sin_family = AF_INET;
   addr4.sin_port = htons(port);
-  addr4.sin_addr.s_addr = htonl(INADDR_ANY);
+  addr4.sin_addr.s_addr = bindToLocalhost ? htonl(INADDR_LOOPBACK) : htonl(INADDR_ANY);
   int listeningSocket4 = [self _createListeningSocket:NO localAddress:&addr4 length:sizeof(addr4) maxPendingConnections:maxPendingConnections error:error];
   if (listeningSocket4 <= 0) {
     return NO;
@@ -523,7 +525,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
   addr6.sin6_len = sizeof(addr6);
   addr6.sin6_family = AF_INET6;
   addr6.sin6_port = htons(port);
-  addr6.sin6_addr = in6addr_any;
+  addr6.sin6_addr = bindToLocalhost ? in6addr_loopback : in6addr_any;
   int listeningSocket6 = [self _createListeningSocket:YES localAddress:&addr6 length:sizeof(addr6) maxPendingConnections:maxPendingConnections error:error];
   if (listeningSocket6 <= 0) {
     close(listeningSocket4);
