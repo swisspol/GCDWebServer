@@ -557,7 +557,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
   _source6 = [self _createDispatchSourceWithListeningSocket:listeningSocket6 isIPv6:YES];
   _port = port;
   
-  NSString* bonjourName = _GetOption(_options, GCDWebServerOption_BonjourName, @"");
+  NSString* bonjourName = _GetOption(_options, GCDWebServerOption_BonjourName, nil);
   NSString* bonjourType = _GetOption(_options, GCDWebServerOption_BonjourType, @"_http._tcp");
   if (bonjourName) {
     _registrationService = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), (__bridge CFStringRef)bonjourType, (__bridge CFStringRef)(bonjourName.length ? bonjourName : _serverName), (SInt32)_port);

@@ -79,7 +79,7 @@ extern NSString* const GCDWebServerOption_Port;
  *  the name will automatically take the value of the GCDWebServerOption_ServerName
  *  option. If this option is set to nil, Bonjour will be disabled.
  *
- *  The default value is an empty string.
+ *  The default value is nil.
  */
 extern NSString* const GCDWebServerOption_BonjourName;
 
