@@ -188,7 +188,14 @@ static void _ExecuteMainThreadRunLoopSources() {
             shouldAutomaticallyMapHEADToGET=_mapHEADToGET;
 
 + (void)initialize {
-  GCDWebServerInitializeFunctions();
+    if ([NSThread isMainThread]) {
+        GCDWebServerInitializeFunctions();
+    }
+    else {
+        dispatch_async(dispatch_get_main_queue(), ^(void){
+            GCDWebServerInitializeFunctions();
+        });
+    }
 }
 
 - (instancetype)init {
