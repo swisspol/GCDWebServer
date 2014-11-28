@@ -986,7 +986,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
   [XLSharedFacility setMinLogLevel:level];
 #elif defined(__GCDWEBSERVER_LOGGING_FACILITY_COCOALUMBERJACK__)
   GCDWebServerLogLevel = level;
-#else
+#elif defined(__GCDWEBSERVER_LOGGING_FACILITY_BUILTIN__)
   GCDWebServerLogLevel = level;
 #endif
 }

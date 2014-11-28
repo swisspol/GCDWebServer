@@ -49,11 +49,21 @@
 #import "GCDWebServerStreamedResponse.h"
 
 /**
+ *  Check if a custom logging facility should be used instead.
+ */
+
+#if defined(__GCDWEBSERVER_LOGGING_HEADER__)
+
+#define __GCDWEBSERVER_LOGGING_FACILITY_CUSTOM__
+
+#import __GCDWEBSERVER_LOGGING_HEADER__
+
+/**
  *  Automatically detect if XLFacility is available and if so use it as a
  *  logging facility.
  */
 
-#if defined(__has_include) && __has_include("XLFacilityMacros.h")
+#elif defined(__has_include) && __has_include("XLFacilityMacros.h")
 
 #define __GCDWEBSERVER_LOGGING_FACILITY_XLFACILITY__
 
@@ -95,16 +105,6 @@ extern int GCDWebServerLogLevel;
 #define GWS_LOG_EXCEPTION(__EXCEPTION__) DDLogError(@"%@", __EXCEPTION__)
 
 /**
- *  Check if a custom logging facility should be used instead.
- */
-
-#elif defined(__GCDWEBSERVER_LOGGING_HEADER__)
-
-#define __GCDWEBSERVER_LOGGING_FACILITY_CUSTOM__
-
-#import __GCDWEBSERVER_LOGGING_HEADER__
-
-/**
  *  If all of the above fail, then use GCDWebServer built-in
  *  logging facility.
  */
@@ -119,7 +119,7 @@ typedef NS_ENUM(int, GCDWebServerLoggingLevel) {
   kGCDWebServerLoggingLevel_Info,
   kGCDWebServerLoggingLevel_Warning,
   kGCDWebServerLoggingLevel_Error,
-  kGCDWebServerLoggingLevel_Exception,
+  kGCDWebServerLoggingLevel_Exception
 };
 
 extern GCDWebServerLoggingLevel GCDWebServerLogLevel;

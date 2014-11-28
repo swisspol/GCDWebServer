@@ -523,6 +523,14 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *
  *  @warning The interpretation of the "level" argument depends on the logging
  *  facility used at compile time.
+ *
+ *  If using the built-in logging facility, the log levels are as follow:
+ *  DEBUG = 0
+ *  VERBOSE = 1
+ *  INFO = 2
+ *  WARNING = 3
+ *  ERROR = 4
+ *  EXCEPTION = 5
  */
 + (void)setLogLevel:(int)level;
 
