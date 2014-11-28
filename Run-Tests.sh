@@ -24,7 +24,7 @@ function runTests {
   if [ "$4" != "" ]; then
     cp -f "$4" "$PAYLOAD_DIR/Payload"
     pushd "$PAYLOAD_DIR/Payload"
-    SetFile -d "1/1/2014 00:00:00" -m "1/1/2014 00:00:00" `basename "$4"`
+    TZ=GMT SetFile -d "1/1/2014 00:00:00" -m "1/1/2014 00:00:00" `basename "$4"`
     popd
   fi
   logLevel=2 $1 -mode "$2" -root "$PAYLOAD_DIR/Payload" -tests "$3"
