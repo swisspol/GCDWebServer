@@ -22,6 +22,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		103B193D1A35DAB800F15B3E /* NSURL+Parameters.m in Sources */ = {isa = PBXBuildFile; fileRef = 103B193C1A35DAB800F15B3E /* NSURL+Parameters.m */; };
+		103B193E1A35DAB800F15B3E /* NSURL+Parameters.m in Sources */ = {isa = PBXBuildFile; fileRef = 103B193C1A35DAB800F15B3E /* NSURL+Parameters.m */; };
 		E208D149167B76B700500836 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E208D148167B76B700500836 /* CFNetwork.framework */; };
 		E208D1B3167BB17E00500836 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E208D1B2167BB17E00500836 /* CoreServices.framework */; };
 		E221128F1690B6470048D2B2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = E221128E1690B6470048D2B2 /* main.m */; };
@@ -100,6 +102,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		103B193B1A35DAB800F15B3E /* NSURL+Parameters.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSURL+Parameters.h"; sourceTree = "<group>"; };
+		103B193C1A35DAB800F15B3E /* NSURL+Parameters.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSURL+Parameters.m"; sourceTree = "<group>"; };
 		8DD76FB20486AB0100D96B5E /* GCDWebServer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GCDWebServer; sourceTree = BUILT_PRODUCTS_DIR; };
 		E208D148167B76B700500836 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
 		E208D1B2167BB17E00500836 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
@@ -199,6 +203,15 @@
 			name = LittleCMS;
 			sourceTree = "<group>";
 		};
+		103B193A1A35DA9800F15B3E /* NSURL+Parameters */ = {
+			isa = PBXGroup;
+			children = (
+				103B193B1A35DAB800F15B3E /* NSURL+Parameters.h */,
+				103B193C1A35DAB800F15B3E /* NSURL+Parameters.m */,
+			);
+			name = "NSURL+Parameters";
+			sourceTree = "<group>";
+		};
 		1AB674ADFE9D54B511CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -230,6 +243,7 @@
 		E221129E1690B7CB0048D2B2 /* iOS Frameworks and Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				103B193A1A35DA9800F15B3E /* NSURL+Parameters */,
 				E221129C1690B7BA0048D2B2 /* MobileCoreServices.framework */,
 				E221129A1690B7B10048D2B2 /* UIKit.framework */,
 				E22112981690B7AA0048D2B2 /* CFNetwork.framework */,
@@ -437,6 +451,7 @@
 				E28BAE4A18F99C810095C089 /* GCDWebServerFileResponse.m in Sources */,
 				E28BAE4418F99C810095C089 /* GCDWebServerURLEncodedFormRequest.m in Sources */,
 				E28BAE3A18F99C810095C089 /* GCDWebServerRequest.m in Sources */,
+				103B193D1A35DAB800F15B3E /* NSURL+Parameters.m in Sources */,
 				E28BAE3418F99C810095C089 /* GCDWebServer.m in Sources */,
 				E28BAE3618F99C810095C089 /* GCDWebServerConnection.m in Sources */,
 				E28BAE3C18F99C810095C089 /* GCDWebServerResponse.m in Sources */,
@@ -465,6 +480,7 @@
 				E28BAE3F18F99C810095C089 /* GCDWebServerDataRequest.m in Sources */,
 				E2BE850B18E77ECA0061360B /* GCDWebUploader.m in Sources */,
 				E22112951690B64F0048D2B2 /* AppDelegate.m in Sources */,
+				103B193E1A35DAB800F15B3E /* NSURL+Parameters.m in Sources */,
 				E28BAE4718F99C810095C089 /* GCDWebServerDataResponse.m in Sources */,
 				E28BAE3D18F99C810095C089 /* GCDWebServerResponse.m in Sources */,
 				E28BAE3518F99C810095C089 /* GCDWebServer.m in Sources */,
