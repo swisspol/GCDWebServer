@@ -40,6 +40,7 @@
 #import <netinet/in.h>
 
 #import "GCDWebServerPrivate.h"
+#import "NSURL+Parameters.h"
 
 #if TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
 #define kDefaultPort 80
@@ -898,31 +899,61 @@ static inline NSString* _EncodeBase64(NSString* string) {
   }];
 }
 
-- (GCDWebServerResponse*)_responseWithContentsOfDirectory:(NSString*)path {
-  NSDirectoryEnumerator* enumerator = [[NSFileManager defaultManager] enumeratorAtPath:path];
-  if (enumerator == nil) {
-    return nil;
-  }
-  NSMutableString* html = [NSMutableString string];
-  [html appendString:@"<!DOCTYPE html>\n"];
-  [html appendString:@"<html><head><meta charset=\"utf-8\"></head><body>\n"];
-  [html appendString:@"<ul>\n"];
-  for (NSString* file in enumerator) {
-    if (![file hasPrefix:@"."]) {
-      NSString* type = [[enumerator fileAttributes] objectForKey:NSFileType];
-      NSString* escapedFile = [file stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-      GWS_DCHECK(escapedFile);
-      if ([type isEqualToString:NSFileTypeRegular]) {
-        [html appendFormat:@"<li><a href=\"%@\">%@</a></li>\n", escapedFile, file];
-      } else if ([type isEqualToString:NSFileTypeDirectory]) {
-        [html appendFormat:@"<li><a href=\"%@/\">%@/</a></li>\n", escapedFile, file];
-      }
+- (GCDWebServerResponse*)_responseWithContentsOfDirectory:(NSString*)path forRequest:(GCDWebServerRequest*)request {
+    NSDirectoryEnumerator* enumerator = [[NSFileManager defaultManager] enumeratorAtPath:path];
+    if (enumerator == nil) {
+        return nil;
     }
-    [enumerator skipDescendents];
-  }
-  [html appendString:@"</ul>\n"];
-  [html appendString:@"</body></html>\n"];
-  return [GCDWebServerDataResponse responseWithHTML:html];
+    else if ([[[request URL] parameterForKey:@"dir"] isEqualToString:@"json"]) {
+        return [self _responseWithJSONContentsOfDirectory:enumerator withRequestPath:request.path];
+    } else {
+        return [self _responseWithHTMLContentsOfDirectory:enumerator withRequestPath:request.path];
+    }
+}
+
+- (GCDWebServerResponse*)_responseWithJSONContentsOfDirectory:(NSDirectoryEnumerator*)enumerator withRequestPath:(NSString*) requestPath
+{
+    NSMutableArray *folderArray = [[NSMutableArray alloc] init];
+    for (NSString*	file in enumerator)
+    {
+        
+        NSMutableDictionary* fileDict = [[NSMutableDictionary alloc] init];
+        [fileDict setObject:file forKey:@"name"];
+        
+        [folderArray addObject:fileDict];
+        [enumerator skipDescendents];
+        
+    }
+    
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:folderArray
+                                                       options:NSJSONWritingPrettyPrinted
+                                                         error:nil];
+    
+    return [GCDWebServerDataResponse responseWithData:jsonData contentType:@"application/json"];
+}
+
+- (GCDWebServerResponse*)_responseWithHTMLContentsOfDirectory:(NSDirectoryEnumerator*)enumerator withRequestPath:(NSString*) requestPath{
+    NSMutableString* html = [NSMutableString string];
+    [html appendString:@"<!DOCTYPE html>\n"];
+    [html appendString:@"<html><head><meta charset=\"utf-8\"></head><body>\n"];
+    [html appendFormat:@"<h1>%@</h1>", requestPath];
+    [html appendString:@"<ul>\n"];
+    for (NSString* file in enumerator) {
+        if (![file hasPrefix:@"."]) {
+            NSString* type = [[enumerator fileAttributes] objectForKey:NSFileType];
+            if ([type isEqualToString:NSFileTypeRegular]) {
+                [html appendFormat:@"<li><a href=\"%@/%@\">%@</a></li>\n", requestPath, file, file];
+            } else if ([type isEqualToString:NSFileTypeDirectory]) {
+                [html appendFormat:@"<li><a href=\"%@/%@\">%@/</a></li>\n", requestPath, file, file];
+            }
+        }
+        [enumerator skipDescendents];
+        
+    }
+    
+    [html appendString:@"</ul>\n"];
+    [html appendString:@"</body></html>\n"];
+    return [GCDWebServerDataResponse responseWithHTML:html];
 }
 
 - (void)addGETHandlerForBasePath:(NSString*)basePath directoryPath:(NSString*)directoryPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests {
@@ -952,7 +983,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
               return [GCDWebServerFileResponse responseWithFile:indexPath];
             }
           }
-          response = [server _responseWithContentsOfDirectory:filePath];
+          response = [server _responseWithContentsOfDirectory:filePath forRequest:request];
         } else if ([fileType isEqualToString:NSFileTypeRegular]) {
           if (allowRangeRequests) {
             response = [GCDWebServerFileResponse responseWithFile:filePath byteRange:request.byteRange];
