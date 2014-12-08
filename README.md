@@ -6,8 +6,6 @@ Overview
 [![Platform](http://cocoapod-badges.herokuapp.com/p/GCDWebServer/badge.png)](https://github.com/swisspol/GCDWebServer)
 [![License](http://img.shields.io/cocoapods/l/GCDWebServer.svg)](LICENSE)
 
-*ANNOUNCEMENT: If you like GCDWebServer, check out [XLFacility](https://github.com/swisspol/XLFacility), an elegant and powerful logging facility for OS X & iOS by the same author and also open-source. XLFacility can be used seemlessly to handle logging from GCDWebServer (see "Logging in GCDWebServer" below).*
-
 GCDWebServer is a modern and lightweight GCD based HTTP 1.1 server designed to be embedded in OS X & iOS apps. It was written from scratch with the following goals in mind:
 * Elegant and easy to use architecture with only 4 core classes: server, connection, request and response (see "Understanding GCDWebServer's Architecture" below)
 * Well designed API with fully documented headers for easy integration and customization
