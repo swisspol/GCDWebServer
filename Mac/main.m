@@ -52,7 +52,8 @@ typedef enum {
   kMode_WebDAV,
   kMode_WebUploader,
   kMode_StreamingResponse,
-  kMode_AsyncResponse
+  kMode_AsyncResponse,
+  kMode_AsyncResponse2
 } Mode;
 
 @interface Delegate : NSObject <GCDWebServerDelegate, GCDWebDAVServerDelegate, GCDWebUploaderDelegate>
@@ -144,7 +145,7 @@ int main(int argc, const char* argv[]) {
     BOOL bindToLocalhost = NO;
     
     if (argc == 1) {
-      fprintf(stdout, "Usage: %s [-mode webServer | htmlPage | htmlForm | htmlFileUpload | webDAV | webUploader | streamingResponse | asyncResponse] [-record] [-root directory] [-tests directory] [-authenticationMethod Basic | Digest] [-authenticationRealm realm] [-authenticationUser user] [-authenticationPassword password] [--localhost]\n\n", basename((char*)argv[0]));
+      fprintf(stdout, "Usage: %s [-mode webServer | htmlPage | htmlForm | htmlFileUpload | webDAV | webUploader | streamingResponse | asyncResponse | asyncResponse2] [-record] [-root directory] [-tests directory] [-authenticationMethod Basic | Digest] [-authenticationRealm realm] [-authenticationUser user] [-authenticationPassword password] [--localhost]\n\n", basename((char*)argv[0]));
     } else {
       for (int i = 1; i < argc; ++i) {
         if (argv[i][0] != '-') {
@@ -168,6 +169,8 @@ int main(int argc, const char* argv[]) {
             mode = kMode_StreamingResponse;
           } else if (!strcmp(argv[i], "asyncResponse")) {
             mode = kMode_AsyncResponse;
+          } else if (!strcmp(argv[i], "asyncResponse2")) {
+            mode = kMode_AsyncResponse2;
           }
         } else if (!strcmp(argv[i], "-record")) {
           recording = YES;
@@ -364,6 +367,36 @@ int main(int argc, const char* argv[]) {
           dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
             GCDWebServerDataResponse* response = [GCDWebServerDataResponse responseWithData:[@"Hello World!" dataUsingEncoding:NSUTF8StringEncoding] contentType:@"text/plain"];
             completionBlock(response);
+          });
+          
+        }];
+        break;
+      }
+      
+      // Test async responses 2
+      case kMode_AsyncResponse2: {
+        fprintf(stdout, "Running in Async Response 2 mode");
+        webServer = [[GCDWebServer alloc] init];
+        [webServer addHandlerForMethod:@"GET"
+                                  path:@"/"
+                          requestClass:[GCDWebServerRequest class]
+                     asyncProcessBlock:^(GCDWebServerRequest* request, GCDWebServerCompletionBlock handlerCompletionBlock) {
+          
+          dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            
+            __block int countDown = 10;
+            GCDWebServerStreamedResponse* response = [GCDWebServerStreamedResponse responseWithContentType:@"text/plain" asyncStreamBlock:^(GCDWebServerBodyReaderCompletionBlock readerCompletionBlock) {
+              
+              dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                
+                NSData* data = countDown ? [[NSString stringWithFormat:@"%i\n", countDown--] dataUsingEncoding:NSUTF8StringEncoding] : [NSData data];
+                readerCompletionBlock(data, nil);
+                
+              });
+              
+            }];
+            handlerCompletionBlock(response);
+            
           });
           
         }];
