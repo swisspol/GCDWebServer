@@ -47,6 +47,7 @@
 #import "GCDWebServerErrorResponse.h"
 #import "GCDWebServerFileResponse.h"
 #import "GCDWebServerStreamedResponse.h"
+#import "GCDWebServerAsyncPushResponse.h"
 
 /**
  *  Check if a custom logging facility should be used instead.
