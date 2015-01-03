@@ -421,7 +421,7 @@ int main(int argc, const char* argv[]) {
                            [response sendWithData:world];
                            dispatch_after(oneSecond, queue, ^{
                              [response sendWithData:fromPush];
-                             [response completeWithErorr:nil];
+                             [response completeWithError:nil];
                            });
                          });
                          

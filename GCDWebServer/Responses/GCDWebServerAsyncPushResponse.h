@@ -51,6 +51,6 @@
  *  And this method is called to signal completion
  *  Pass nil for the error if there are no problems
 */
-- (void)completeWithErorr:(NSError*)error;
+- (void)completeWithError:(NSError*)error;
 
 @end

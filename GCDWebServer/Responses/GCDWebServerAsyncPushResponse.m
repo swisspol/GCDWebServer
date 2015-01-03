@@ -105,7 +105,7 @@
   });
 }
 
-- (void)completeWithErorr:(NSError *)error {
+- (void)completeWithError:(NSError *)error {
   dispatch_sync(_serialQueue, ^{
     if (error == nil) {
       _haveFinished = YES;
