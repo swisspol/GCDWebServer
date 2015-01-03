@@ -29,7 +29,7 @@
 #error GCDWebServer requires ARC
 #endif
 
-#import "GCDWebServerPrivate.h"
+#import "GCDWebServerAsyncPushResponse.h"
 
 @interface GCDWebServerAsyncPushResponse () {
 @private
