@@ -188,22 +188,23 @@ New in GCDWebServer 3.0 is the ability to process HTTP requests aysnchronously i
                          requestClass:[GCDWebServerRequest class]
                          processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
   
+  NSMutableArray* contents = [NSMutableArray arrayWithObjects:@"<html><body><p>\n", @"Hello World!\n", @"</p></body></html>\n", nil];  // Fake data source we are reading from
   GCDWebServerStreamedResponse* response = [GCDWebServerStreamedResponse responseWithContentType:@"text/html" asyncStreamBlock:^(GCDWebServerBodyReaderCompletionBlock completionBlock) {
     
+    // Simulate a delay reading from the fake data source
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-      completionBlock([@"<html><body><p>Hello" dataUsingEncoding:NSUTF8StringEncoding], nil);  // Generate the 1st part of the stream data
-      
-      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        completionBlock([@"World</p></body></html>" dataUsingEncoding:NSUTF8StringEncoding], nil);  // Generate the 2nd part of the stream data
-        
+      NSString* string = contents.firstObject;
+      if (string) {
+        [contents removeObjectAtIndex:0];
+        completionBlock([string dataUsingEncoding:NSUTF8StringEncoding], nil);  // Generate the 2nd part of the stream data
+      } else {
         completionBlock([NSData data], nil);  // Must pass an empty NSData to signal the end of the stream
-       });
-       
+      }
     });
     
   }];
   return response;
-
+  
 }];
 ```
 

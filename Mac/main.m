@@ -54,7 +54,6 @@ typedef enum {
   kMode_WebUploader,
   kMode_StreamingResponse,
   kMode_AsyncResponse,
-  kMode_AsyncResponse2,
   kMode_AsyncPushResponse
 } Mode;
 
@@ -147,7 +146,7 @@ int main(int argc, const char* argv[]) {
     BOOL bindToLocalhost = NO;
     
     if (argc == 1) {
-      fprintf(stdout, "Usage: %s [-mode webServer | htmlPage | htmlForm | htmlFileUpload | webDAV | webUploader | streamingResponse | asyncResponse | asyncResponse2 | asyncPushResponse] [-record] [-root directory] [-tests directory] [-authenticationMethod Basic | Digest] [-authenticationRealm realm] [-authenticationUser user] [-authenticationPassword password] [--localhost]\n\n", basename((char*)argv[0]));
+      fprintf(stdout, "Usage: %s [-mode webServer | htmlPage | htmlForm | htmlFileUpload | webDAV | webUploader | streamingResponse | asyncResponse | asyncPushResponse] [-record] [-root directory] [-tests directory] [-authenticationMethod Basic | Digest] [-authenticationRealm realm] [-authenticationUser user] [-authenticationPassword password] [--localhost]\n\n", basename((char*)argv[0]));
     } else {
       for (int i = 1; i < argc; ++i) {
         if (argv[i][0] != '-') {
@@ -171,8 +170,6 @@ int main(int argc, const char* argv[]) {
             mode = kMode_StreamingResponse;
           } else if (!strcmp(argv[i], "asyncResponse")) {
             mode = kMode_AsyncResponse;
-          } else if (!strcmp(argv[i], "asyncResponse2")) {
-            mode = kMode_AsyncResponse2;
           } else if (!strcmp(argv[i], "asyncPushResponse")) {
             mode = kMode_AsyncPushResponse;
           }
@@ -364,7 +361,7 @@ int main(int argc, const char* argv[]) {
         fprintf(stdout, "Running in Async Response mode");
         webServer = [[GCDWebServer alloc] init];
         [webServer addHandlerForMethod:@"GET"
-                                  path:@"/"
+                                  path:@"/async"
                           requestClass:[GCDWebServerRequest class]
                      asyncProcessBlock:^(GCDWebServerRequest* request, GCDWebServerCompletionBlock completionBlock) {
           
@@ -374,15 +371,8 @@ int main(int argc, const char* argv[]) {
           });
           
         }];
-        break;
-      }
-      
-      // Test async responses 2
-      case kMode_AsyncResponse2: {
-        fprintf(stdout, "Running in Async Response 2 mode");
-        webServer = [[GCDWebServer alloc] init];
         [webServer addHandlerForMethod:@"GET"
-                                  path:@"/"
+                                  path:@"/async2"
                           requestClass:[GCDWebServerRequest class]
                      asyncProcessBlock:^(GCDWebServerRequest* request, GCDWebServerCompletionBlock handlerCompletionBlock) {
           
