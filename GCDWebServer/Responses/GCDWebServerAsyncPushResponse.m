@@ -37,6 +37,7 @@
   GCDWebServerBodyReaderCompletionBlock _pendingReadBlock;
   NSError* _pendingError;
   BOOL _haveFinished;
+  dispatch_queue_t _serialQueue;
 }
 @end
 
@@ -46,6 +47,8 @@
   if ((self = [super init])) {
     self.contentType = type;
     _buffer = [[NSMutableData alloc] init];
+    
+    _serialQueue = dispatch_queue_create("GCDWebServerAsyncPushResponse", NULL);
     
     _haveFinished = NO;
     _pendingError = nil;
@@ -59,52 +62,58 @@
   //The server has asked us for data
   //Provide the contents of the buffer if we can, otherwise defer providing the server
   //data until later
-  @synchronized(_buffer) {
-    if (_pendingError != nil) {
-      //Case #1: we have a problem
-      block(nil, _pendingError);
-      _pendingReadBlock = nil;
-      
-    } else if (_buffer.length > 0){
-      //Case #2: we have data
-      block([_buffer copy], nil);
-      _buffer.length = 0; //clear the buffer
-      _pendingReadBlock = nil;
-      
-    } else if (_haveFinished == YES) {
-      //Case #3: we are done, and the buffer is now empty
-      block([[NSData alloc] init], nil);
-      _pendingReadBlock = nil;
-      
-    } else {
-      //Case #4: we have none of these things; deferr our response until later
-      _pendingReadBlock = block;
-    }
+  //Make sure all access to the internal state of the response is serialised
+  dispatch_sync(_serialQueue, ^{
+    [self handleReadData:block];
+  });
+}
+
+- (void) handleReadData:(GCDWebServerBodyReaderCompletionBlock)block {
+  if (_pendingError != nil) {
+    //Case #1: we have a problem
+    block(nil, _pendingError);
+    _pendingReadBlock = nil;
+    
+  } else if (_buffer.length > 0){
+    //Case #2: we have data
+    block([_buffer copy], nil);
+    _buffer.length = 0; //clear the buffer
+    _pendingReadBlock = nil;
+    
+  } else if (_haveFinished == YES) {
+    //Case #3: we are done, and the buffer is now empty
+    block([[NSData alloc] init], nil);
+    _pendingReadBlock = nil;
+    
+  } else {
+    //Case #4: we have none of these things; deferr our response until later
+    _pendingReadBlock = block;
   }
 }
 
+//This guy should only be called from the serial queue
 - (void)pumpPendingRead {
   if (_pendingReadBlock != nil) {
-    [self asyncReadDataWithCompletion:_pendingReadBlock];
+    [self handleReadData:_pendingReadBlock];
   }
 }
 
 - (void)sendWithData:(NSData *)data {
-  @synchronized(_buffer) {
+  dispatch_sync(_serialQueue, ^{
     [_buffer appendData:data];
     [self pumpPendingRead];
-  }
+  });
 }
 
 - (void)completeWithErorr:(NSError *)error {
-  @synchronized(_buffer) {
+  dispatch_sync(_serialQueue, ^{
     if (error == nil) {
       _haveFinished = YES;
     } else {
       _pendingError = error;
     }
     [self pumpPendingRead];
-  }
+  });
 }
 
 @end
