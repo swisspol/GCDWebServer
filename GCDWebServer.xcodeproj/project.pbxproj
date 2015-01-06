@@ -422,8 +422,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd \"$BUILT_PRODUCTS_DIR\"\nrm -rf \"GCDWebUploader.bundle\"\n";
-			showEnvVarsInLog = 0;
+			shellScript = "if [ \"$CONFIGURATION\" == \"Debug\" ]; then\n  cd \"$BUILT_PRODUCTS_DIR\"\n  rm -rf \"GCDWebUploader.bundle\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
