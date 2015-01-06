@@ -35,6 +35,7 @@
 
 #import "GCDWebServerDataResponse.h"
 #import "GCDWebServerStreamedResponse.h"
+#import "GCDWebServerAsyncPushResponse.h"
 
 #import "GCDWebDAVServer.h"
 
@@ -52,7 +53,8 @@ typedef enum {
   kMode_WebDAV,
   kMode_WebUploader,
   kMode_StreamingResponse,
-  kMode_AsyncResponse
+  kMode_AsyncResponse,
+  kMode_AsyncPushResponse
 } Mode;
 
 @interface Delegate : NSObject <GCDWebServerDelegate, GCDWebDAVServerDelegate, GCDWebUploaderDelegate>
@@ -144,7 +146,7 @@ int main(int argc, const char* argv[]) {
     BOOL bindToLocalhost = NO;
     
     if (argc == 1) {
-      fprintf(stdout, "Usage: %s [-mode webServer | htmlPage | htmlForm | htmlFileUpload | webDAV | webUploader | streamingResponse | asyncResponse] [-record] [-root directory] [-tests directory] [-authenticationMethod Basic | Digest] [-authenticationRealm realm] [-authenticationUser user] [-authenticationPassword password] [--localhost]\n\n", basename((char*)argv[0]));
+      fprintf(stdout, "Usage: %s [-mode webServer | htmlPage | htmlForm | htmlFileUpload | webDAV | webUploader | streamingResponse | asyncResponse | asyncPushResponse] [-record] [-root directory] [-tests directory] [-authenticationMethod Basic | Digest] [-authenticationRealm realm] [-authenticationUser user] [-authenticationPassword password] [--localhost]\n\n", basename((char*)argv[0]));
     } else {
       for (int i = 1; i < argc; ++i) {
         if (argv[i][0] != '-') {
@@ -168,6 +170,8 @@ int main(int argc, const char* argv[]) {
             mode = kMode_StreamingResponse;
           } else if (!strcmp(argv[i], "asyncResponse")) {
             mode = kMode_AsyncResponse;
+          } else if (!strcmp(argv[i], "asyncPushResponse")) {
+            mode = kMode_AsyncPushResponse;
           }
         } else if (!strcmp(argv[i], "-record")) {
           recording = YES;
@@ -391,6 +395,42 @@ int main(int argc, const char* argv[]) {
           
         }];
         break;
+      }
+      case kMode_AsyncPushResponse: {
+        fprintf(stdout, "Running in Async Push Response mode");
+        
+        //The data we're going to send
+        NSData* hello = [@"hello" dataUsingEncoding:NSUTF8StringEncoding];
+        NSData* world = [@" world" dataUsingEncoding:NSUTF8StringEncoding];
+        NSData* fromPush = [@" from push" dataUsingEncoding:NSUTF8StringEncoding];
+        
+        dispatch_time_t oneSecond = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC));
+        dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+        
+        webServer = [[GCDWebServer alloc] init];
+        [webServer addHandlerForMethod:@"GET"
+                                  path:@"/"
+                          requestClass:[GCDWebServerRequest class]
+                     asyncProcessBlock:^(GCDWebServerRequest* request, GCDWebServerCompletionBlock handlerCompletionBlock) {
+        
+                       dispatch_after(oneSecond, queue, ^{
+                         GCDWebServerAsyncPushResponse* response = [[GCDWebServerAsyncPushResponse alloc] initWithContentType:@"text/plain"];
+                         [response sendWithData:hello];
+                         
+                         dispatch_after(oneSecond, queue, ^{
+                           [response sendWithData:world];
+                           dispatch_after(oneSecond, queue, ^{
+                             [response sendWithData:fromPush];
+                             [response completeWithError:nil];
+                           });
+                         });
+                         
+                         handlerCompletionBlock(response);
+                       });
+                       
+        }];
+        break;
+
       }
       
     }
