@@ -94,7 +94,9 @@
 - (BOOL)open:(NSError**)error {
   int result = deflateInit2(&_stream, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 15 + 16, 8, Z_DEFAULT_STRATEGY);
   if (result != Z_OK) {
-    *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
+    if (error) {
+      *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
+    }
     return NO;
   }
   if (![super open:error]) {
@@ -130,7 +132,9 @@
         if (result == Z_STREAM_END) {
           _finished = YES;
         } else if (result != Z_OK) {
-          *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
+          if (error) {
+            *error = [NSError errorWithDomain:kZlibErrorDomain code:result userInfo:nil];
+          }
           return nil;
         }
         length += maxLength - _stream.avail_out;
