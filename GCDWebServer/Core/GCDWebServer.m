@@ -361,10 +361,13 @@ static void _ExecuteMainThreadRunLoopSources() {
 static void _NetServiceRegisterCallBack(CFNetServiceRef service, CFStreamError* error, void* info) {
   GWS_DCHECK([NSThread isMainThread]);
   @autoreleasepool {
+    GCDWebServer* server = (__bridge GCDWebServer*)info;
     if (error->error) {
       GWS_LOG_ERROR(@"Bonjour registration error %i (domain %i)", (int)error->error, (int)error->domain);
+      if ([server.delegate respondsToSelector:@selector(webServerDidFailedBonjourRegistration:withError:)]) {
+        [server.delegate webServerDidFailedBonjourRegistration:server withError:[NSError errorWithDomain:kGCDWebServerBonjourErrorDomain code:(int)error->error userInfo:nil]];
+      }
     } else {
-      GCDWebServer* server = (__bridge GCDWebServer*)info;
       GWS_LOG_VERBOSE(@"Bonjour registration complete for %@", [server class]);
       CFNetServiceResolveWithTimeout(server->_resolutionService, 1.0, NULL);
     }
@@ -374,12 +377,15 @@ static void _NetServiceRegisterCallBack(CFNetServiceRef service, CFStreamError* 
 static void _NetServiceResolveCallBack(CFNetServiceRef service, CFStreamError* error, void* info) {
   GWS_DCHECK([NSThread isMainThread]);
   @autoreleasepool {
+    GCDWebServer* server = (__bridge GCDWebServer*)info;
     if (error->error) {
       if ((error->domain != kCFStreamErrorDomainNetServices) && (error->error != kCFNetServicesErrorTimeout)) {
         GWS_LOG_ERROR(@"Bonjour resolution error %i (domain %i)", (int)error->error, (int)error->domain);
+        if ([server.delegate respondsToSelector:@selector(webServerDidFailedBonjourRegistration:withError:)]) {
+            [server.delegate webServerDidFailedBonjourRegistration:server withError:[NSError errorWithDomain:kGCDWebServerBonjourErrorDomain code:(int)error->error userInfo:nil]];
+        }
       }
     } else {
-      GCDWebServer* server = (__bridge GCDWebServer*)info;
       GWS_LOG_INFO(@"%@ now reachable at %@", [server class], server.bonjourServerURL);
       if ([server.delegate respondsToSelector:@selector(webServerDidCompleteBonjourRegistration:)]) {
         [server.delegate webServerDidCompleteBonjourRegistration:server];
