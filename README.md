@@ -135,7 +135,7 @@ import Foundation
 
 let webServer = GCDWebServer()
 
-webServer.addDefaultHandlerForMethod("GET", requestClass: GCDWebServerRequest.self) { request in
+webServer.addDefaultHandlerForMethod("GET", requestClass: GCDWebServerRequest.self, processBlock: {request in
     return GCDWebServerDataResponse(HTML:"<html><body><p>Hello World</p></body></html>")
 }
 
