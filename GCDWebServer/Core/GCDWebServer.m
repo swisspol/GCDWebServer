@@ -484,6 +484,11 @@ static inline NSString* _EncodeBase64(NSString* string) {
         
         int noSigPipe = 1;
         setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &noSigPipe, sizeof(noSigPipe));  // Make sure this socket cannot generate SIG_PIPE
+          
+        int flag = 1;
+        setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
+        setsockopt(socket, SOL_SOCKET, SO_NOADDRERR, &flag, sizeof(flag));
+        setsockopt(socket, SOL_SOCKET, SO_UPCALLCLOSEWAIT, &flag, sizeof(flag));
         
         GCDWebServerConnection* connection = [[_connectionClass alloc] initWithServer:self localAddress:localAddress remoteAddress:remoteAddress socket:socket];  // Connection will automatically retain itself while opened
         [connection self];  // Prevent compiler from complaining about unused variable / useless statement
