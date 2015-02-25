@@ -248,6 +248,11 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  */
 - (void)webServerDidStop:(GCDWebServer*)server;
 
+
+/**
+ *  This method is called after connection finished to send data to client.
+ */
+- (void)webServerConnectionDidFinished:(GCDWebServer*)server withRequest:(GCDWebServerRequest*)request withStatusCode:(NSInteger)statusCode;
 @end
 
 /**
