@@ -217,8 +217,9 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 - (void)webServerDidCompleteBonjourRegistration:(GCDWebServer*)server;
 
 /**
- *  This method is called if Bonjour registration were failed for any reason */
-- (void)webServerDidFailedBonjourRegistration:(GCDWebServer*)server withError:(NSError*)error;
+ *  This method is called if the Bonjour registration fails for any reason.
+ */
+- (void)webServerDidCompleteBonjourRegistration:(GCDWebServer*)server withError:(NSError*)error;
 
 /**
  *  This method is called when the first GCDWebServerConnection is opened by the
