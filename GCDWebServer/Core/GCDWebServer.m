@@ -364,8 +364,8 @@ static void _NetServiceRegisterCallBack(CFNetServiceRef service, CFStreamError* 
     GCDWebServer* server = (__bridge GCDWebServer*)info;
     if (error->error) {
       GWS_LOG_ERROR(@"Bonjour registration error %i (domain %i)", (int)error->error, (int)error->domain);
-      if ([server.delegate respondsToSelector:@selector(webServerDidCompleteBonjourRegistration:withError:)]) {
-        [server.delegate webServerDidCompleteBonjourRegistration:server withError:[NSError errorWithDomain:kGCDWebServerBonjourErrorDomain code:(int)error->error userInfo:nil]];
+      if ([server.delegate respondsToSelector:@selector(webServerDidFailBonjourRegistration:withError:)]) {
+        [server.delegate webServerDidFailBonjourRegistration:server withError:[NSError errorWithDomain:kGCDWebServerBonjourErrorDomain code:(int)error->error userInfo:nil]];
       }
     } else {
       GWS_LOG_VERBOSE(@"Bonjour registration complete for %@", [server class]);
@@ -381,8 +381,8 @@ static void _NetServiceResolveCallBack(CFNetServiceRef service, CFStreamError* e
     if (error->error) {
       if ((error->domain != kCFStreamErrorDomainNetServices) && (error->error != kCFNetServicesErrorTimeout)) {
         GWS_LOG_ERROR(@"Bonjour resolution error %i (domain %i)", (int)error->error, (int)error->domain);
-        if ([server.delegate respondsToSelector:@selector(webServerDidCompleteBonjourRegistration:withError:)]) {
-            [server.delegate webServerDidCompleteBonjourRegistration:server withError:[NSError errorWithDomain:kGCDWebServerBonjourErrorDomain code:(int)error->error userInfo:nil]];
+        if ([server.delegate respondsToSelector:@selector(webServerDidFailBonjourRegistration:withError:)]) {
+            [server.delegate webServerDidFailBonjourRegistration:server withError:[NSError errorWithDomain:kGCDWebServerBonjourErrorDomain code:(int)error->error userInfo:nil]];
         }
       }
     } else {
@@ -578,8 +578,8 @@ static inline NSString* _EncodeBase64(NSString* string) {
       
       CFStreamError streamError = {0};
       if(!CFNetServiceRegisterWithOptions(_registrationService, 0, &streamError)){
-          if ([self.delegate respondsToSelector:@selector(webServerDidCompleteBonjourRegistration:withError:)]) {
-              [self.delegate webServerDidCompleteBonjourRegistration:self withError:[NSError errorWithDomain:kGCDWebServerBonjourErrorDomain code:(int)streamError.error userInfo:nil]];
+          if ([self.delegate respondsToSelector:@selector(webServerDidFailBonjourRegistration:withError:)]) {
+              [self.delegate webServerDidFailBonjourRegistration:self withError:[NSError errorWithDomain:kGCDWebServerBonjourErrorDomain code:(int)streamError.error userInfo:nil]];
           }
       }
       
