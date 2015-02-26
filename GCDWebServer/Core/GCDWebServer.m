@@ -576,17 +576,17 @@ static inline NSString* _EncodeBase64(NSString* string) {
       CFNetServiceSetClient(_registrationService, _NetServiceRegisterCallBack, &context);
       CFNetServiceScheduleWithRunLoop(_registrationService, CFRunLoopGetMain(), kCFRunLoopCommonModes);
       
-      _resolutionService = CFNetServiceCreateCopy(kCFAllocatorDefault, _registrationService);
-      if (_resolutionService) {
-        CFNetServiceSetClient(_resolutionService, _NetServiceResolveCallBack, &context);
-        CFNetServiceScheduleWithRunLoop(_resolutionService, CFRunLoopGetMain(), kCFRunLoopCommonModes);
-      }
-
       CFStreamError streamError = {0};
       if(!CFNetServiceRegisterWithOptions(_registrationService, 0, &streamError)){
           if ([self.delegate respondsToSelector:@selector(webServerDidCompleteBonjourRegistration:withError:)]) {
               [self.delegate webServerDidCompleteBonjourRegistration:self withError:[NSError errorWithDomain:kGCDWebServerBonjourErrorDomain code:(int)streamError.error userInfo:nil]];
           }
+      }
+      
+      _resolutionService = CFNetServiceCreateCopy(kCFAllocatorDefault, _registrationService);
+      if (_resolutionService) {
+          CFNetServiceSetClient(_resolutionService, _NetServiceResolveCallBack, &context);
+          CFNetServiceScheduleWithRunLoop(_resolutionService, CFRunLoopGetMain(), kCFRunLoopCommonModes);
       }
     } else {
       GWS_LOG_ERROR(@"Failed creating CFNetService");
