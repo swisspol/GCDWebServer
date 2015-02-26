@@ -460,6 +460,9 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     }];
   } else {
     [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
+    if ([_server.delegate respondsToSelector:@selector(webServerConnectionDidFinished:withRequest:withStatusCode:)]) {
+        [_server.delegate webServerConnectionDidFinished:_server withRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
+    }
   }
   
 }
