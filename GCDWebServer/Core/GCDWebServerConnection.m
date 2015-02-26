@@ -436,22 +436,33 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       CFHTTPMessageSetHeaderFieldValue(_responseMessage, (__bridge CFStringRef)key, (__bridge CFStringRef)obj);
     }];
     [self _writeHeadersWithCompletionBlock:^(BOOL success) {
-      
       if (success) {
         if (hasBody) {
           [self _writeBodyWithCompletionBlock:^(BOOL successInner) {
-            
             [_response performClose];  // TODO: There's nothing we can do on failure as headers have already been sent
-            
+            if ([_server.delegate respondsToSelector:@selector(webServerConnectionDidFinished:withRequest:withStatusCode:)]) {
+                [_server.delegate webServerConnectionDidFinished:_server withRequest:_request withStatusCode:(successInner?kGCDWebServerHTTPStatusCode_OK:kGCDWebServerHTTPStatusCode_InternalServerError)];
+            }
           }];
+        }else{
+            if ([_server.delegate respondsToSelector:@selector(webServerConnectionDidFinished:withRequest:withStatusCode:)]) {
+                [_server.delegate webServerConnectionDidFinished:_server withRequest:_request withStatusCode:(kGCDWebServerHTTPStatusCode_OK)];
+            }
         }
-      } else if (hasBody) {
-        [_response performClose];
+      } else {
+          if (hasBody) {
+              [_response performClose];
+          }
+          if ([_server.delegate respondsToSelector:@selector(webServerConnectionDidFinished:withRequest:withStatusCode:)]) {
+              [_server.delegate webServerConnectionDidFinished:_server withRequest:_request withStatusCode:(success?kGCDWebServerHTTPStatusCode_OK:kGCDWebServerHTTPStatusCode_InternalServerError)];
+          }
       }
-      
     }];
   } else {
     [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
+    if ([_server.delegate respondsToSelector:@selector(webServerConnectionDidFinished:withRequest:withStatusCode:)]) {
+        [_server.delegate webServerConnectionDidFinished:_server withRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
+    }
   }
   
 }

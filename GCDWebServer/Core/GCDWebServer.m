@@ -361,10 +361,13 @@ static void _ExecuteMainThreadRunLoopSources() {
 static void _NetServiceRegisterCallBack(CFNetServiceRef service, CFStreamError* error, void* info) {
   GWS_DCHECK([NSThread isMainThread]);
   @autoreleasepool {
+    GCDWebServer* server = (__bridge GCDWebServer*)info;
     if (error->error) {
       GWS_LOG_ERROR(@"Bonjour registration error %i (domain %i)", (int)error->error, (int)error->domain);
+      if ([server.delegate respondsToSelector:@selector(webServerDidFailBonjourRegistration:withError:)]) {
+        [server.delegate webServerDidFailBonjourRegistration:server withError:[NSError errorWithDomain:kGCDWebServerBonjourErrorDomain code:(int)error->error userInfo:nil]];
+      }
     } else {
-      GCDWebServer* server = (__bridge GCDWebServer*)info;
       GWS_LOG_VERBOSE(@"Bonjour registration complete for %@", [server class]);
       CFNetServiceResolveWithTimeout(server->_resolutionService, 1.0, NULL);
     }
@@ -374,12 +377,15 @@ static void _NetServiceRegisterCallBack(CFNetServiceRef service, CFStreamError* 
 static void _NetServiceResolveCallBack(CFNetServiceRef service, CFStreamError* error, void* info) {
   GWS_DCHECK([NSThread isMainThread]);
   @autoreleasepool {
+    GCDWebServer* server = (__bridge GCDWebServer*)info;
     if (error->error) {
       if ((error->domain != kCFStreamErrorDomainNetServices) && (error->error != kCFNetServicesErrorTimeout)) {
         GWS_LOG_ERROR(@"Bonjour resolution error %i (domain %i)", (int)error->error, (int)error->domain);
+        if ([server.delegate respondsToSelector:@selector(webServerDidFailBonjourRegistration:withError:)]) {
+            [server.delegate webServerDidFailBonjourRegistration:server withError:[NSError errorWithDomain:kGCDWebServerBonjourErrorDomain code:(int)error->error userInfo:nil]];
+        }
       }
     } else {
-      GCDWebServer* server = (__bridge GCDWebServer*)info;
       GWS_LOG_INFO(@"%@ now reachable at %@", [server class], server.bonjourServerURL);
       if ([server.delegate respondsToSelector:@selector(webServerDidCompleteBonjourRegistration:)]) {
         [server.delegate webServerDidCompleteBonjourRegistration:server];
@@ -478,6 +484,11 @@ static inline NSString* _EncodeBase64(NSString* string) {
         
         int noSigPipe = 1;
         setsockopt(socket, SOL_SOCKET, SO_NOSIGPIPE, &noSigPipe, sizeof(noSigPipe));  // Make sure this socket cannot generate SIG_PIPE
+          
+        int flag = 1;
+        setsockopt(socket, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
+        setsockopt(socket, SOL_SOCKET, SO_NOADDRERR, &flag, sizeof(flag));
+        setsockopt(socket, SOL_SOCKET, SO_UPCALLCLOSEWAIT, &flag, sizeof(flag));
         
         GCDWebServerConnection* connection = [[_connectionClass alloc] initWithServer:self localAddress:localAddress remoteAddress:remoteAddress socket:socket];  // Connection will automatically retain itself while opened
         [connection self];  // Prevent compiler from complaining about unused variable / useless statement
@@ -564,13 +575,18 @@ static inline NSString* _EncodeBase64(NSString* string) {
       
       CFNetServiceSetClient(_registrationService, _NetServiceRegisterCallBack, &context);
       CFNetServiceScheduleWithRunLoop(_registrationService, CFRunLoopGetMain(), kCFRunLoopCommonModes);
+      
       CFStreamError streamError = {0};
-      CFNetServiceRegisterWithOptions(_registrationService, 0, &streamError);
+      if(!CFNetServiceRegisterWithOptions(_registrationService, 0, &streamError)){
+          if ([self.delegate respondsToSelector:@selector(webServerDidFailBonjourRegistration:withError:)]) {
+              [self.delegate webServerDidFailBonjourRegistration:self withError:[NSError errorWithDomain:kGCDWebServerBonjourErrorDomain code:(int)streamError.error userInfo:nil]];
+          }
+      }
       
       _resolutionService = CFNetServiceCreateCopy(kCFAllocatorDefault, _registrationService);
       if (_resolutionService) {
-        CFNetServiceSetClient(_resolutionService, _NetServiceResolveCallBack, &context);
-        CFNetServiceScheduleWithRunLoop(_resolutionService, CFRunLoopGetMain(), kCFRunLoopCommonModes);
+          CFNetServiceSetClient(_resolutionService, _NetServiceResolveCallBack, &context);
+          CFNetServiceScheduleWithRunLoop(_resolutionService, CFRunLoopGetMain(), kCFRunLoopCommonModes);
       }
     } else {
       GWS_LOG_ERROR(@"Failed creating CFNetService");

@@ -217,6 +217,11 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 - (void)webServerDidCompleteBonjourRegistration:(GCDWebServer*)server;
 
 /**
+ *  This method is called if the Bonjour registration fails for any reason.
+ */
+- (void)webServerDidFailBonjourRegistration:(GCDWebServer*)server withError:(NSError*)error;
+
+/**
  *  This method is called when the first GCDWebServerConnection is opened by the
  *  server to serve a series of HTTP requests.
  *
@@ -244,6 +249,11 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  */
 - (void)webServerDidStop:(GCDWebServer*)server;
 
+
+/**
+ *  This method is called after connection finished to send data to client.
+ */
+- (void)webServerConnectionDidFinished:(GCDWebServer*)server withRequest:(GCDWebServerRequest*)request withStatusCode:(NSInteger)statusCode;
 @end
 
 /**
