@@ -492,6 +492,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 
 - (BOOL)_start:(NSError**)error {
   GWS_DCHECK(_source4 == NULL);
+  GWS_DCHECK(_options == nil);
   
   NSUInteger port = [_GetOption(_options, GCDWebServerOption_Port, @0) unsignedIntegerValue];
   BOOL bindToLocalhost = [_GetOption(_options, GCDWebServerOption_BindToLocalhost, @NO) boolValue];
