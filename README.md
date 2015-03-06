@@ -150,66 +150,6 @@ println("Visit \(webServer.serverURL) in your web browser")
 #import "GCDWebServerDataResponse.h"
 ```
 
-Asynchronous HTTP Responses
-===========================
-
-New in GCDWebServer 3.0 is the ability to process HTTP requests aysnchronously i.e. add handlers to the server which generate their ```GCDWebServerResponse``` asynchronously. This is achieved by adding handlers that use a ```GCDWebServerAsyncProcessBlock``` instead of a ```GCDWebServerProcessBlock```. Here's an example:
-
-**(Synchronous version)** The handler blocks while generating the HTTP response:
-```objectivec
-[webServer addDefaultHandlerForMethod:@"GET"
-                         requestClass:[GCDWebServerRequest class]
-                         processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-  
-  GCDWebServerDataResponse* response = [GCDWebServerDataResponse responseWithHTML:@"<html><body><p>Hello World</p></body></html>"];
-  return response;
-  
-}];
-```
-
-**(Asynchronous version)** The handler returns immediately and calls back GCDWebServer later with the generated HTTP response:
-```objectivec
-[webServer addDefaultHandlerForMethod:@"GET"
-                         requestClass:[GCDWebServerRequest class]
-                    asyncProcessBlock:^(GCDWebServerRequest* request, GCDWebServerCompletionBlock completionBlock) {
-  
-  // Do some async operation like network access or file I/O (simulated here using dispatch_after())
-  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    GCDWebServerDataResponse* response = [GCDWebServerDataResponse responseWithHTML:@"<html><body><p>Hello World</p></body></html>"];
-    completionBlock(response);
-  });
-
-}];
-```
-
-**(Advanced asynchronous version)** The handler returns immediately a streamed HTTP response which itself generates its contents asynchronously:
-```objectivec
-[webServer addDefaultHandlerForMethod:@"GET"
-                         requestClass:[GCDWebServerRequest class]
-                         processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-  
-  NSMutableArray* contents = [NSMutableArray arrayWithObjects:@"<html><body><p>\n", @"Hello World!\n", @"</p></body></html>\n", nil];  // Fake data source we are reading from
-  GCDWebServerStreamedResponse* response = [GCDWebServerStreamedResponse responseWithContentType:@"text/html" asyncStreamBlock:^(GCDWebServerBodyReaderCompletionBlock completionBlock) {
-    
-    // Simulate a delay reading from the fake data source
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-      NSString* string = contents.firstObject;
-      if (string) {
-        [contents removeObjectAtIndex:0];
-        completionBlock([string dataUsingEncoding:NSUTF8StringEncoding], nil);  // Generate the 2nd part of the stream data
-      } else {
-        completionBlock([NSData data], nil);  // Must pass an empty NSData to signal the end of the stream
-      }
-    });
-    
-  }];
-  return response;
-  
-}];
-```
-
-*Note that you can even combine both the asynchronous and advanced asynchronous versions to return asynchronously an asynchronous HTTP response!*
-
 Web Based Uploads in iOS Apps
 =============================
 
@@ -316,6 +256,66 @@ Handlers require 2 GCD blocks:
 * The ```GCDWebServerProcessBlock``` or ```GCDWebServerAsyncProcessBlock``` is called after the web request has been fully received and is passed the ```GCDWebServerRequest``` instance created at the previous step. It must return synchronously (if using ```GCDWebServerProcessBlock```) or asynchronously (if using ```GCDWebServerAsyncProcessBlock```) a ```GCDWebServerResponse``` instance (see above) or nil on error, which will result in a 500 HTTP status code returned to the client. It's however recommended to return an instance of [GCDWebServerErrorResponse](GCDWebServer/Responses/GCDWebServerErrorResponse.h) on error so more useful information can be returned to the client.
 
 Note that most methods on ```GCDWebServer``` to add handlers only require the ```GCDWebServerProcessBlock``` or ```GCDWebServerAsyncProcessBlock``` as they already provide a built-in ```GCDWebServerMatchBlock``` e.g. to match a URL path with a Regex.
+
+Asynchronous HTTP Responses
+===========================
+
+New in GCDWebServer 3.0 is the ability to process HTTP requests aysnchronously i.e. add handlers to the server which generate their ```GCDWebServerResponse``` asynchronously. This is achieved by adding handlers that use a ```GCDWebServerAsyncProcessBlock``` instead of a ```GCDWebServerProcessBlock```. Here's an example:
+
+**(Synchronous version)** The handler blocks while generating the HTTP response:
+```objectivec
+[webServer addDefaultHandlerForMethod:@"GET"
+                         requestClass:[GCDWebServerRequest class]
+                         processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+  
+  GCDWebServerDataResponse* response = [GCDWebServerDataResponse responseWithHTML:@"<html><body><p>Hello World</p></body></html>"];
+  return response;
+  
+}];
+```
+
+**(Asynchronous version)** The handler returns immediately and calls back GCDWebServer later with the generated HTTP response:
+```objectivec
+[webServer addDefaultHandlerForMethod:@"GET"
+                         requestClass:[GCDWebServerRequest class]
+                    asyncProcessBlock:^(GCDWebServerRequest* request, GCDWebServerCompletionBlock completionBlock) {
+  
+  // Do some async operation like network access or file I/O (simulated here using dispatch_after())
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    GCDWebServerDataResponse* response = [GCDWebServerDataResponse responseWithHTML:@"<html><body><p>Hello World</p></body></html>"];
+    completionBlock(response);
+  });
+
+}];
+```
+
+**(Advanced asynchronous version)** The handler returns immediately a streamed HTTP response which itself generates its contents asynchronously:
+```objectivec
+[webServer addDefaultHandlerForMethod:@"GET"
+                         requestClass:[GCDWebServerRequest class]
+                         processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
+  
+  NSMutableArray* contents = [NSMutableArray arrayWithObjects:@"<html><body><p>\n", @"Hello World!\n", @"</p></body></html>\n", nil];  // Fake data source we are reading from
+  GCDWebServerStreamedResponse* response = [GCDWebServerStreamedResponse responseWithContentType:@"text/html" asyncStreamBlock:^(GCDWebServerBodyReaderCompletionBlock completionBlock) {
+    
+    // Simulate a delay reading from the fake data source
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+      NSString* string = contents.firstObject;
+      if (string) {
+        [contents removeObjectAtIndex:0];
+        completionBlock([string dataUsingEncoding:NSUTF8StringEncoding], nil);  // Generate the 2nd part of the stream data
+      } else {
+        completionBlock([NSData data], nil);  // Must pass an empty NSData to signal the end of the stream
+      }
+    });
+    
+  }];
+  return response;
+  
+}];
+```
+
+*Note that you can even combine both the asynchronous and advanced asynchronous versions to return asynchronously an asynchronous HTTP response!*
 
 GCDWebServer & Background Mode for iOS Apps
 ===========================================
