@@ -42,8 +42,8 @@
 
 @synthesize temporaryPath=_temporaryPath;
 
-- (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
-  if ((self = [super initWithMethod:method url:url headers:headers path:path query:query])) {
+- (instancetype)initWithConnection:(GCDWebServerConnection *)connection method:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
+  if ((self = [super initWithConnection:connection method:method url:url headers:headers path:path query:query])) {
     _temporaryPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]];
   }
   return self;

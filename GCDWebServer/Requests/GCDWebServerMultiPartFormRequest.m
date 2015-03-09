@@ -364,8 +364,8 @@ static NSData* _dashNewlineData = nil;
   return @"multipart/form-data";
 }
 
-- (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
-  if ((self = [super initWithMethod:method url:url headers:headers path:path query:query])) {
+- (instancetype)initWithConnection:(GCDWebServerConnection *)connection method:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
+    if ((self = [super initWithConnection:connection method:method url:url headers:headers path:path query:query])) {
     _arguments = [[NSMutableArray alloc] init];
     _files = [[NSMutableArray alloc] init];
   }

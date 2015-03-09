@@ -796,12 +796,12 @@ static inline NSString* _EncodeBase64(NSString* string) {
 }
 
 - (void)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)aClass asyncProcessBlock:(GCDWebServerAsyncProcessBlock)block {
-  [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
+  [self addHandlerWithMatchBlock:^GCDWebServerRequest *(GCDWebServerConnection *connection, NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
     
     if (![requestMethod isEqualToString:method]) {
       return nil;
     }
-    return [[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery];
+    return [[aClass alloc] initWithConnection:connection method:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery];
     
   } asyncProcessBlock:block];
 }
@@ -814,7 +814,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 
 - (void)addHandlerForMethod:(NSString*)method path:(NSString*)path requestClass:(Class)aClass asyncProcessBlock:(GCDWebServerAsyncProcessBlock)block {
   if ([path hasPrefix:@"/"] && [aClass isSubclassOfClass:[GCDWebServerRequest class]]) {
-    [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
+    [self addHandlerWithMatchBlock:^GCDWebServerRequest *(GCDWebServerConnection *connection, NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
       
       if (![requestMethod isEqualToString:method]) {
         return nil;
@@ -822,7 +822,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
       if ([urlPath caseInsensitiveCompare:path] != NSOrderedSame) {
         return nil;
       }
-      return [[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery];
+      return [[aClass alloc] initWithConnection:connection method:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery];
       
     } asyncProcessBlock:block];
   } else {
@@ -839,7 +839,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 - (void)addHandlerForMethod:(NSString*)method pathRegex:(NSString*)regex requestClass:(Class)aClass asyncProcessBlock:(GCDWebServerAsyncProcessBlock)block {
   NSRegularExpression* expression = [NSRegularExpression regularExpressionWithPattern:regex options:NSRegularExpressionCaseInsensitive error:NULL];
   if (expression && [aClass isSubclassOfClass:[GCDWebServerRequest class]]) {
-    [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
+    [self addHandlerWithMatchBlock:^GCDWebServerRequest *(GCDWebServerConnection *connection, NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
       
       if (![requestMethod isEqualToString:method]) {
         return nil;
@@ -858,7 +858,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
         }
       }
 
-      GCDWebServerRequest* request = [[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery];
+      GCDWebServerRequest* request = [[aClass alloc] initWithConnection:connection method:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery];
       [request setAttribute:captures forKey:GCDWebServerRequestAttribute_RegexCaptures];
       return request;
       
@@ -928,7 +928,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 - (void)addGETHandlerForBasePath:(NSString*)basePath directoryPath:(NSString*)directoryPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests {
   if ([basePath hasPrefix:@"/"] && [basePath hasSuffix:@"/"]) {
     GCDWebServer* __unsafe_unretained server = self;
-    [self addHandlerWithMatchBlock:^GCDWebServerRequest *(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
+    [self addHandlerWithMatchBlock:^GCDWebServerRequest *(GCDWebServerConnection *connection,  NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
       
       if (![requestMethod isEqualToString:@"GET"]) {
         return nil;
@@ -936,7 +936,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
       if (![urlPath hasPrefix:basePath]) {
         return nil;
       }
-      return [[GCDWebServerRequest alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery];
+      return [[GCDWebServerRequest alloc] initWithConnection:connection method:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery];
       
     } processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
       

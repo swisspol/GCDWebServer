@@ -542,7 +542,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       NSDictionary* requestQuery = queryString ? GCDWebServerParseURLEncodedForm(queryString) : @{};
       if (requestMethod && requestURL && requestHeaders && requestPath && requestQuery) {
         for (_handler in _server.handlers) {
-          _request = _handler.matchBlock(requestMethod, requestURL, requestHeaders, requestPath, requestQuery);
+          _request = _handler.matchBlock(self, requestMethod, requestURL, requestHeaders, requestPath, requestQuery);
           if (_request) {
             break;
           }
@@ -584,7 +584,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
             [self _startProcessingRequest];
           }
         } else {
-          _request = [[GCDWebServerRequest alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:requestPath query:requestQuery];
+          _request = [[GCDWebServerRequest alloc] initWithConnection:self method:requestMethod url:requestURL headers:requestHeaders path:requestPath query:requestQuery];
           GWS_DCHECK(_request);
           [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_MethodNotAllowed];
         }

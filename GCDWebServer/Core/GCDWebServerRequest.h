@@ -27,6 +27,8 @@
 
 #import <Foundation/Foundation.h>
 
+@class GCDWebServerConnection;
+
 /**
  *  Attribute key to retrieve an NSArray containing NSStrings from a GCDWebServerRequest
  *  with the contents of any regular expression captures done on the request path.
@@ -86,6 +88,11 @@ extern NSString* const GCDWebServerRequestAttribute_RegexCaptures;
  *  @warning GCDWebServerRequest instances can be created and used on any GCD thread.
  */
 @interface GCDWebServerRequest : NSObject <GCDWebServerBodyWriter>
+
+/**
+ *  Returns the GCDWebServerConnection that owns the request.
+ */
+@property(nonatomic, weak, readonly) GCDWebServerConnection* connection;
 
 /**
  *  Returns the HTTP method for the request.
@@ -160,7 +167,7 @@ extern NSString* const GCDWebServerRequestAttribute_RegexCaptures;
 /**
  *  This method is the designated initializer for the class.
  */
-- (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query;
+- (instancetype)initWithConnection:(GCDWebServerConnection*)connection method:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query;
 
 /**
  *  Convenience method that checks if the contentType property is defined.

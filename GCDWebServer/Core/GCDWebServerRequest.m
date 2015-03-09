@@ -170,8 +170,9 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
 @synthesize method=_method, URL=_url, headers=_headers, path=_path, query=_query, contentType=_type, contentLength=_length, ifModifiedSince=_modifiedSince, ifNoneMatch=_noneMatch,
             byteRange=_range, acceptsGzipContentEncoding=_gzipAccepted, usesChunkedTransferEncoding=_chunked;
 
-- (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
+- (instancetype)initWithConnection:(GCDWebServerConnection*)connection method:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
   if ((self = [super init])) {
+    _connection = connection;
     _method = [method copy];
     _url = url;
     _headers = headers;
