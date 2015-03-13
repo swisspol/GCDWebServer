@@ -102,6 +102,13 @@ extern NSString* const GCDWebServerOption_BonjourType;
 extern NSString* const GCDWebServerOption_BindToLocalhost;
 
 /**
+ *  Disable IPv6 connections
+ *
+ *  The default value is NO.
+ */
+extern NSString* const GCDWebServerOption_DisableIPv6;
+
+/**
  *  The maximum number of incoming HTTP requests that can be queued waiting to
  *  be handled before new ones are dropped (NSNumber / NSUInteger).
  *
