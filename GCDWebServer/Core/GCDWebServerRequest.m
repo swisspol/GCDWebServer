@@ -157,6 +157,8 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
   NSString* _noneMatch;
   NSRange _range;
   BOOL _gzipAccepted;
+  NSData* _localAddress;
+  NSData* _remoteAddress;
   
   BOOL _opened;
   NSMutableArray* _decoders;
@@ -168,7 +170,7 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
 @implementation GCDWebServerRequest : NSObject
 
 @synthesize method=_method, URL=_url, headers=_headers, path=_path, query=_query, contentType=_type, contentLength=_length, ifModifiedSince=_modifiedSince, ifNoneMatch=_noneMatch,
-            byteRange=_range, acceptsGzipContentEncoding=_gzipAccepted, usesChunkedTransferEncoding=_chunked;
+            byteRange=_range, acceptsGzipContentEncoding=_gzipAccepted, usesChunkedTransferEncoding=_chunked, localAddressData=_localAddress, remoteAddressData=_remoteAddress;
 
 - (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
   if ((self = [super init])) {
@@ -306,6 +308,14 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
 
 - (void)setAttribute:(id)attribute forKey:(NSString*)key {
   [_attributes setValue:attribute forKey:key];
+}
+
+- (NSString*)localAddressString {
+  return GCDWebServerStringFromSockAddr(_localAddress.bytes, YES);
+}
+
+- (NSString*)remoteAddressString {
+  return GCDWebServerStringFromSockAddr(_remoteAddress.bytes, YES);
 }
 
 - (NSString*)description {

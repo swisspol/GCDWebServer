@@ -548,6 +548,8 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
           }
         }
         if (_request) {
+          _request.localAddressData = self.localAddressData;
+          _request.remoteAddressData = self.remoteAddressData;
           if ([_request hasBody]) {
             [_request prepareForWriting];
             if (_request.usesChunkedTransferEncoding || (extraData.length <= _request.contentLength)) {
