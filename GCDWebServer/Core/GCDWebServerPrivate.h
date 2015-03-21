@@ -87,15 +87,15 @@
  *  it as a logging facility.
  */
 
-#elif defined(__has_include) && __has_include("DDLogMacros.h")
+#elif defined(__has_include) && __has_include("CocoaLumberjack/CocoaLumberjack.h")
 
-#import "DDLogMacros.h"
+#import <CocoaLumberjack/CocoaLumberjack.h>
 
 #define __GCDWEBSERVER_LOGGING_FACILITY_COCOALUMBERJACK__
 
 #undef LOG_LEVEL_DEF
 #define LOG_LEVEL_DEF GCDWebServerLogLevel
-extern int GCDWebServerLogLevel;
+extern DDLogLevel GCDWebServerLogLevel;
 
 #define GWS_LOG_DEBUG(...) DDLogDebug(__VA_ARGS__)
 #define GWS_LOG_VERBOSE(...) DDLogVerbose(__VA_ARGS__)
