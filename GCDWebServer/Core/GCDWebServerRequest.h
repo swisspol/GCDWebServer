@@ -158,6 +158,30 @@ extern NSString* const GCDWebServerRequestAttribute_RegexCaptures;
 @property(nonatomic, readonly) BOOL acceptsGzipContentEncoding;
 
 /**
+ *  Returns the address of the local peer (i.e. server) for the request
+ *  as a raw "struct sockaddr".
+ */
+@property(nonatomic, readonly) NSData* localAddressData;
+
+/**
+ *  Returns the address of the local peer (i.e. server) for the request
+ *  as a string.
+ */
+@property(nonatomic, readonly) NSString* localAddressString;
+
+/**
+ *  Returns the address of the remote peer (i.e. client) for the request
+ *  as a raw "struct sockaddr".
+ */
+@property(nonatomic, readonly) NSData* remoteAddressData;
+
+/**
+ *  Returns the address of the remote peer (i.e. client) for the request
+ *  as a string.
+ */
+@property(nonatomic, readonly) NSString* remoteAddressString;
+
+/**
  *  This method is the designated initializer for the class.
  */
 - (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query;
