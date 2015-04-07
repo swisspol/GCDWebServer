@@ -30,6 +30,16 @@
 #import "GCDWebServerRequest.h"
 #import "GCDWebServerResponse.h"
 
+#import "GCDWebServerDataRequest.h"
+#import "GCDWebServerFileRequest.h"
+#import "GCDWebServerMultiPartFormRequest.h"
+#import "GCDWebServerURLEncodedFormRequest.h"
+
+#import "GCDWebServerDataResponse.h"
+#import "GCDWebServerErrorResponse.h"
+#import "GCDWebServerFileResponse.h"
+#import "GCDWebServerStreamedResponse.h"
+
 /**
  *  The GCDWebServerMatchBlock is called for every handler added to the
  *  GCDWebServer whenever a new HTTP request has started (i.e. HTTP headers have
