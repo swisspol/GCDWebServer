@@ -292,6 +292,8 @@
 @synthesize uploadDirectory=_uploadDirectory, allowedFileExtensions=_allowedExtensions, allowHiddenItems=_allowHidden,
             title=_title, header=_header, prologue=_prologue, epilogue=_epilogue, footer=_footer;
 
+@dynamic delegate;
+
 - (instancetype)initWithUploadDirectory:(NSString*)path {
   if ((self = [super init])) {
     NSBundle* siteBundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"GCDWebUploader" ofType:@"bundle"]];

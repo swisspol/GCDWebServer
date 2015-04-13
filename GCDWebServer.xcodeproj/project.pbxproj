@@ -535,6 +535,7 @@
 					"-Wno-documentation",
 					"-Wno-documentation-unknown-command",
 					"-Wno-objc-missing-property-synthesis",
+					"-Wno-cstring-format-directive",
 				);
 			};
 			name = Debug;

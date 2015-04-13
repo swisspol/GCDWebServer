@@ -602,6 +602,8 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
 
 @synthesize uploadDirectory=_uploadDirectory, allowedFileExtensions=_allowedExtensions, allowHiddenItems=_allowHidden;
 
+@dynamic delegate;
+
 - (instancetype)initWithUploadDirectory:(NSString*)path {
   if ((self = [super init])) {
     _uploadDirectory = [[path stringByStandardizingPath] copy];
