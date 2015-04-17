@@ -298,7 +298,6 @@
 		08FB7794FE84155DC02AAC07 /* LittleCMS */ = {
 			isa = PBXGroup;
 			children = (
-				CEE28D691AE1ABAA00F4023C /* UIKit.framework */,
 				E26DC18819E84BC000C68DDC /* README.md */,
 				E26DC18719E84B2200C68DDC /* GCDWebServer.podspec */,
 				E28BAE1418F99C810095C089 /* GCDWebServer */,
@@ -355,6 +354,7 @@
 		E221129E1690B7CB0048D2B2 /* iOS Frameworks and Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				CEE28D691AE1ABAA00F4023C /* UIKit.framework */,
 				CEE28D531AE00ADC00F4023C /* Foundation.framework */,
 				E221129C1690B7BA0048D2B2 /* MobileCoreServices.framework */,
 				E221129A1690B7B10048D2B2 /* UIKit.framework */,
