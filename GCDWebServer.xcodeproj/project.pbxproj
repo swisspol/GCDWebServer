@@ -13,8 +13,8 @@
 			buildPhases = (
 			);
 			dependencies = (
-				CE54F3891AE844E5003C110E /* PBXTargetDependency */,
-				CE54F38B1AE844E5003C110E /* PBXTargetDependency */,
+				CE54F3941AE84FCA003C110E /* PBXTargetDependency */,
+				CE54F3961AE84FCA003C110E /* PBXTargetDependency */,
 				E274F87D187E77E5009E0582 /* PBXTargetDependency */,
 				E274F87B187E77E3009E0582 /* PBXTargetDependency */,
 			);
@@ -152,14 +152,28 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		CE54F3881AE844E5003C110E /* PBXContainerItemProxy */ = {
+		CE54F3931AE84FCA003C110E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = CEE28CD01AE004D800F4023C;
 			remoteInfo = "GCDWebServers (Mac)";
 		};
-		CE54F38A1AE844E5003C110E /* PBXContainerItemProxy */ = {
+		CE54F3951AE84FCA003C110E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CEE28CEE1AE0051F00F4023C;
+			remoteInfo = "GCDWebServers (iOS)";
+		};
+		CE54F3971AE84FD3003C110E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CEE28CD01AE004D800F4023C;
+			remoteInfo = "GCDWebServers (Mac)";
+		};
+		CE54F3991AE84FD9003C110E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
 			proxyType = 1;
@@ -541,6 +555,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				CE54F3981AE84FD3003C110E /* PBXTargetDependency */,
 			);
 			name = "GCDWebServer (Mac)";
 			productInstallPath = "$(HOME)/bin";
@@ -595,6 +610,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				CE54F39A1AE84FD9003C110E /* PBXTargetDependency */,
 			);
 			name = "GCDWebServer (iOS)";
 			productName = GCDWebServer;
@@ -780,15 +796,25 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		CE54F3891AE844E5003C110E /* PBXTargetDependency */ = {
+		CE54F3941AE84FCA003C110E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = CEE28CD01AE004D800F4023C /* GCDWebServers (Mac) */;
-			targetProxy = CE54F3881AE844E5003C110E /* PBXContainerItemProxy */;
+			targetProxy = CE54F3931AE84FCA003C110E /* PBXContainerItemProxy */;
 		};
-		CE54F38B1AE844E5003C110E /* PBXTargetDependency */ = {
+		CE54F3961AE84FCA003C110E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = CEE28CEE1AE0051F00F4023C /* GCDWebServers (iOS) */;
-			targetProxy = CE54F38A1AE844E5003C110E /* PBXContainerItemProxy */;
+			targetProxy = CE54F3951AE84FCA003C110E /* PBXContainerItemProxy */;
+		};
+		CE54F3981AE84FD3003C110E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CEE28CD01AE004D800F4023C /* GCDWebServers (Mac) */;
+			targetProxy = CE54F3971AE84FD3003C110E /* PBXContainerItemProxy */;
+		};
+		CE54F39A1AE84FD9003C110E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CEE28CEE1AE0051F00F4023C /* GCDWebServers (iOS) */;
+			targetProxy = CE54F3991AE84FD9003C110E /* PBXContainerItemProxy */;
 		};
 		E274F87B187E77E3009E0582 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
