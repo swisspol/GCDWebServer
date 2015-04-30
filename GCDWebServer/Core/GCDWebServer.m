@@ -244,7 +244,9 @@ static void _ExecuteMainThreadRunLoopSources() {
   GWS_LOG_DEBUG(@"Did connect");
   
 #if TARGET_OS_IPHONE
-  [self _startBackgroundTask];
+  if ([[UIApplication sharedApplication] applicationState] != UIApplicationStateBackground) {
+    [self _startBackgroundTask];
+  }
 #endif
   
   if ([_delegate respondsToSelector:@selector(webServerDidConnect:)]) {
