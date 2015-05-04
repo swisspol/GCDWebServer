@@ -3,3 +3,4 @@ xcuserdata
 project.xcworkspace
 
 Tests/Payload
+Carthage/Build
