@@ -61,6 +61,8 @@ Hello World
 
 These code snippets show how to implement a custom HTTP server that runs on port 8080 and returns a "Hello World" HTML page to any request. Since GCDWebServer uses GCD blocks to handle requests, no subclassing or delegates are needed, which results in very clean code.
 
+**IMPORTANT:** If not using CocoaPods, be sure to add the `libz` shared system library to the Xcode target for your app.
+
 **OS X version (command line tool):**
 ```objectivec
 #import "GCDWebServer.h"
@@ -213,6 +215,7 @@ Serving a Static Website
 
 GCDWebServer includes a built-in handler that can recursively serve a directory (it also lets you control how the ["Cache-Control"](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9) header should be set):
 
+**OS X version (command line tool):**
 ```objectivec
 #import "GCDWebServer.h"
 
