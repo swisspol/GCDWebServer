@@ -186,7 +186,6 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
     if (lengthHeader) {
       NSInteger length = [lengthHeader integerValue];
       if (_chunked || (length < 0)) {
-        GWS_LOG_WARNING(@"Invalid 'Content-Length' header '%@' for '%@' request on \"%@\"", lengthHeader, _method, _url);
         GWS_DNOT_REACHED();
         return nil;
       }
@@ -201,8 +200,8 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
       _length = NSUIntegerMax;
     } else {
       if (_type) {
-        GWS_LOG_WARNING(@"Ignoring 'Content-Type' header for '%@' request on \"%@\"", _method, _url);
-        _type = nil;  // Content-Type without Content-Length or chunked-encoding doesn't make sense
+        GWS_DNOT_REACHED();
+        return nil;
       }
       _length = NSUIntegerMax;
     }
