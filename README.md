@@ -43,7 +43,7 @@ Getting Started
 
 Download or check out the [latest release](https://github.com/swisspol/GCDWebServer/releases) of GCDWebServer then add the entire "GCDWebServer" subfolder to your Xcode project. If you intend to use one of the extensions like GCDWebDAVServer or GCDWebUploader, add these subfolders as well.
 
-Alternatively, you can install GCDWebServer using [CocoaPods](http://cocoapods.org/) by simply adding this line to your Xcode project's Podfile:
+Alternatively, you can install GCDWebServer using [CocoaPods](http://cocoapods.org/) by simply adding this line to your Podfile:
 ```
 pod "GCDWebServer", "~> 3.0"
 ```
@@ -55,6 +55,15 @@ Or this line for GCDWebDAVServer:
 ```
 pod "GCDWebServer/WebDAV", "~> 3.0"
 ```
+
+And finally run `$ pod install`.
+
+You can also use [Carthage](https://github.com/Carthage/Carthage) by adding this line to your Cartfile:
+```
+github "swisspol/GCDWebServer" "master"
+```
+
+Then run `$ carthage update` and add the generated frameworks to your Xcode projects (see [Carthage instructions](https://github.com/Carthage/Carthage#adding-frameworks-to-an-application)).
 
 Hello World
 ===========
