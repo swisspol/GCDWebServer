@@ -463,18 +463,18 @@ static inline NSString* _EncodeBase64(NSString* string) {
   dispatch_source_set_event_handler(source, ^{
     
     @autoreleasepool {
-      struct sockaddr remoteSockAddr;
+      struct sockaddr_storage remoteSockAddr;
       socklen_t remoteAddrLen = sizeof(remoteSockAddr);
-      int socket = accept(listeningSocket, &remoteSockAddr, &remoteAddrLen);
+      int socket = accept(listeningSocket, (struct sockaddr*)&remoteSockAddr, &remoteAddrLen);
       if (socket > 0) {
         NSData* remoteAddress = [NSData dataWithBytes:&remoteSockAddr length:remoteAddrLen];
         
-        struct sockaddr localSockAddr;
+        struct sockaddr_storage localSockAddr;
         socklen_t localAddrLen = sizeof(localSockAddr);
         NSData* localAddress = nil;
-        if (getsockname(socket, &localSockAddr, &localAddrLen) == 0) {
+        if (getsockname(socket, (struct sockaddr*)&localSockAddr, &localAddrLen) == 0) {
           localAddress = [NSData dataWithBytes:&localSockAddr length:localAddrLen];
-          GWS_DCHECK((!isIPv6 && localSockAddr.sa_family == AF_INET) || (isIPv6 && localSockAddr.sa_family == AF_INET6));
+          GWS_DCHECK((!isIPv6 && localSockAddr.ss_family == AF_INET) || (isIPv6 && localSockAddr.ss_family == AF_INET6));
         } else {
           GWS_DNOT_REACHED();
         }
@@ -511,11 +511,10 @@ static inline NSString* _EncodeBase64(NSString* string) {
     return NO;
   }
   if (port == 0) {
-    struct sockaddr addr;
+    struct sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
-    if (getsockname(listeningSocket4, &addr, &addrlen) == 0) {
-      struct sockaddr_in* sockaddr = (struct sockaddr_in*)&addr;
-      port = ntohs(sockaddr->sin_port);
+    if (getsockname(listeningSocket4, (struct sockaddr*)&addr, &addrlen) == 0) {
+      port = ntohs(addr.sin_port);
     } else {
       GWS_LOG_ERROR(@"Failed retrieving socket address: %s (%i)", strerror(errno), errno);
     }
