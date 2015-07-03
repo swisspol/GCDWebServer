@@ -91,6 +91,14 @@ extern NSString* const GCDWebServerOption_BonjourName;
 extern NSString* const GCDWebServerOption_BonjourType;
 
 /**
+ *  The TXT record used by the GCDWebServer (NSDictionary). If set to nil no TXT
+ *  record will be set for the Bonjour service.
+ *
+ *  The default value is nil.
+ */
+extern NSString* const GCDWebServerOption_TXTRecordDictionary;
+
+/**
  *  Only accept HTTP requests coming from localhost i.e. not from the outside
  *  network (NSNumber / BOOL).
  *
