@@ -58,9 +58,9 @@ pod "GCDWebServer/WebDAV", "~> 3.0"
 
 And finally run `$ pod install`.
 
-You can also use [Carthage](https://github.com/Carthage/Carthage) by adding this line to your Cartfile:
+You can also use [Carthage](https://github.com/Carthage/Carthage) by adding this line to your Cartfile (3.2.5 is the first release with Carthage support):
 ```
-github "swisspol/GCDWebServer" "master"
+github "swisspol/GCDWebServer" "~> 3.2.5"
 ```
 
 Then run `$ carthage update` and add the generated frameworks to your Xcode projects (see [Carthage instructions](https://github.com/Carthage/Carthage#adding-frameworks-to-an-application)).
