@@ -143,22 +143,27 @@ int main(int argc, const char* argv[]) {
 ***webServer.swift***
 ```swift
 import Foundation
+import GCDWebServers
 
-let webServer = GCDWebServer()
+func initWebServer() {
 
-webServer.addDefaultHandlerForMethod("GET", requestClass: GCDWebServerRequest.self, processBlock: {request in
+    let webServer = GCDWebServer()
+
+    webServer.addDefaultHandlerForMethod("GET", requestClass: GCDWebServerRequest.self, processBlock: {request in
     return GCDWebServerDataResponse(HTML:"<html><body><p>Hello World</p></body></html>")
+        
+    })
+    
+    webServer.runWithPort(8080, bonjourName: "GCD Web Server")
+    
+    print("Visit \(webServer.serverURL) in your web browser")
 }
-
-webServer.runWithPort(8080, bonjourName: nil)
-
-println("Visit \(webServer.serverURL) in your web browser")
 ```
 
 ***WebServer-Bridging-Header.h***
 ```objectivec
-#import "GCDWebServer.h"
-#import "GCDWebServerDataResponse.h"
+#import <GCDWebServers/GCDWebServer.h>
+#import <GCDWebServers/GCDWebServerDataResponse.h>
 ```
 
 Web Based Uploads in iOS Apps
