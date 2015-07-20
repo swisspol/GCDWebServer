@@ -435,6 +435,9 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     [_response.additionalHeaders enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL* stop) {
       CFHTTPMessageSetHeaderFieldValue(_responseMessage, (__bridge CFStringRef)key, (__bridge CFStringRef)obj);
     }];
+    [_response.cookies enumerateObjectsUsingBlock:^(id  __nonnull obj, NSUInteger idx, BOOL * __nonnull stop) {
+      CFHTTPMessageSetHeaderFieldValue(_responseMessage, (__bridge CFStringRef)@"Set-Cookie", (__bridge CFStringRef)obj);
+    }];
     [self _writeHeadersWithCompletionBlock:^(BOOL success) {
       
       if (success) {
