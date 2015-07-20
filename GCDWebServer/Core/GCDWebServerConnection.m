@@ -439,7 +439,6 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       NSString *setCookieString = [NSString stringWithFormat:@"Set-Cookie: %@\r\n", obj];
       NSData *cookieData = [setCookieString dataUsingEncoding:NSASCIIStringEncoding];
       CFHTTPMessageAppendBytes(_responseMessage, (UInt8 *)cookieData.bytes, cookieData.length);
-//      CFHTTPMessageSetHeaderFieldValue(_responseMessage, (__bridge CFStringRef)@"Set-Cookie", (__bridge CFStringRef)obj);
     }];
     [self _writeHeadersWithCompletionBlock:^(BOOL success) {
       
