@@ -38,6 +38,8 @@ Requirements:
 * iOS 5.0 or later (armv7, armv7s or arm64)
 * ARC memory management only (if you need MRC support use GCDWebServer 3.1 and earlier)
 
+**For support with using GCDWebServer, ask your question on Stack Overflow with the [`gcdwebserver`](http://stackoverflow.com/questions/tagged/gcdwebserver) tag. For bug reports or enhancement requests, please use [GitHub issues](https://github.com/swisspol/GCDWebServer/issues) instead.**
+
 Getting Started
 ===============
 
