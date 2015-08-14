@@ -38,8 +38,6 @@ Requirements:
 * iOS 5.0 or later (armv7, armv7s or arm64)
 * ARC memory management only (if you need MRC support use GCDWebServer 3.1 and earlier)
 
-**For support with using GCDWebServer, ask your question on Stack Overflow with the [`gcdwebserver`](http://stackoverflow.com/questions/tagged/gcdwebserver) tag. For bug reports or enhancement requests, please use [GitHub issues](https://github.com/swisspol/GCDWebServer/issues) instead.**
-
 Getting Started
 ===============
 
@@ -66,6 +64,13 @@ github "swisspol/GCDWebServer" ~> 3.2.5
 ```
 
 Then run `$ carthage update` and add the generated frameworks to your Xcode projects (see [Carthage instructions](https://github.com/Carthage/Carthage#adding-frameworks-to-an-application)).
+
+Help & Support
+==============
+
+For help with using GCDWebServer, it's best to ask your question on Stack Overflow with the [`gcdwebserver`](http://stackoverflow.com/questions/tagged/gcdwebserver) tag. Be sure to read this entire README first though!
+
+For bug reports or enhancement requests, please use [GitHub issues](https://github.com/swisspol/GCDWebServer/issues) instead.
 
 Hello World
 ===========
