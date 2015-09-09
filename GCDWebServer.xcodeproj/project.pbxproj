@@ -474,23 +474,23 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CEE28D471AE0078A00F4023C /* GCDWebUploader.h in Headers */,
+				CEE28D521AE00A7A00F4023C /* GCDWebServers.h in Headers */,
 				CEE28D151AE006ED00F4023C /* GCDWebServerHTTPStatusCodes.h in Headers */,
 				CEE28D191AE006FD00F4023C /* GCDWebServerRequest.h in Headers */,
 				CEE28D091AE006C200F4023C /* GCDWebServer.h in Headers */,
 				CEE28D351AE0074D00F4023C /* GCDWebServerErrorResponse.h in Headers */,
 				CEE28D2D1AE0073300F4023C /* GCDWebServerURLEncodedFormRequest.h in Headers */,
-				CEE28D411AE0077800F4023C /* GCDWebDAVServer.h in Headers */,
 				CEE28D1D1AE0070600F4023C /* GCDWebServerResponse.h in Headers */,
 				CEE28D391AE0075C00F4023C /* GCDWebServerFileResponse.h in Headers */,
 				CEE28D291AE0072800F4023C /* GCDWebServerMultiPartFormRequest.h in Headers */,
 				CEE28D3D1AE0076700F4023C /* GCDWebServerStreamedResponse.h in Headers */,
 				CEE28D0D1AE006D700F4023C /* GCDWebServerConnection.h in Headers */,
 				CEE28D211AE0071200F4023C /* GCDWebServerDataRequest.h in Headers */,
-				CEE28D521AE00A7A00F4023C /* GCDWebServers.h in Headers */,
 				CEE28D311AE0074200F4023C /* GCDWebServerDataResponse.h in Headers */,
 				CEE28D111AE006E200F4023C /* GCDWebServerFunctions.h in Headers */,
 				CEE28D251AE0071E00F4023C /* GCDWebServerFileRequest.h in Headers */,
+				CEE28D411AE0077800F4023C /* GCDWebDAVServer.h in Headers */,
+				CEE28D471AE0078A00F4023C /* GCDWebUploader.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -502,11 +502,9 @@
 				CEE28D261AE0071E00F4023C /* GCDWebServerFileRequest.h in Headers */,
 				CEE28D321AE0074200F4023C /* GCDWebServerDataResponse.h in Headers */,
 				CEE28D121AE006E300F4023C /* GCDWebServerFunctions.h in Headers */,
-				CEE28D481AE0078B00F4023C /* GCDWebUploader.h in Headers */,
 				CEE28D221AE0071300F4023C /* GCDWebServerDataRequest.h in Headers */,
 				CEE28D1A1AE006FD00F4023C /* GCDWebServerRequest.h in Headers */,
 				CEE28D0E1AE006D800F4023C /* GCDWebServerConnection.h in Headers */,
-				CEE28D421AE0077800F4023C /* GCDWebDAVServer.h in Headers */,
 				CEE28D161AE006EE00F4023C /* GCDWebServerHTTPStatusCodes.h in Headers */,
 				CEE28D3A1AE0075D00F4023C /* GCDWebServerFileResponse.h in Headers */,
 				CEE28D2A1AE0072800F4023C /* GCDWebServerMultiPartFormRequest.h in Headers */,
@@ -515,6 +513,8 @@
 				CEE28D2E1AE0073400F4023C /* GCDWebServerURLEncodedFormRequest.h in Headers */,
 				CEE28D0A1AE006C300F4023C /* GCDWebServer.h in Headers */,
 				CEE28D361AE0074E00F4023C /* GCDWebServerErrorResponse.h in Headers */,
+				CEE28D421AE0077800F4023C /* GCDWebDAVServer.h in Headers */,
+				CEE28D481AE0078B00F4023C /* GCDWebUploader.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

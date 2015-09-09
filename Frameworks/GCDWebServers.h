@@ -25,21 +25,25 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// GCDWebServer
+// GCDWebServer Core
 #import <GCDWebServers/GCDWebServer.h>
-#import <GCDWebServers/GCDWebServerHTTPStatusCodes.h>
-#import <GCDWebServers/GCDWebServerRequest.h>
-#import <GCDWebServers/GCDWebServerErrorResponse.h>
-#import <GCDWebServers/GCDWebServerURLEncodedFormRequest.h>
-#import <GCDWebServers/GCDWebServerResponse.h>
-#import <GCDWebServers/GCDWebServerFileResponse.h>
-#import <GCDWebServers/GCDWebServerMultiPartFormRequest.h>
-#import <GCDWebServers/GCDWebServerStreamedResponse.h>
 #import <GCDWebServers/GCDWebServerConnection.h>
-#import <GCDWebServers/GCDWebServerDataRequest.h>
-#import <GCDWebServers/GCDWebServerDataResponse.h>
 #import <GCDWebServers/GCDWebServerFunctions.h>
+#import <GCDWebServers/GCDWebServerHTTPStatusCodes.h>
+#import <GCDWebServers/GCDWebServerResponse.h>
+#import <GCDWebServers/GCDWebServerRequest.h>
+
+// GCDWebServer Requests
+#import <GCDWebServers/GCDWebServerDataRequest.h>
 #import <GCDWebServers/GCDWebServerFileRequest.h>
+#import <GCDWebServers/GCDWebServerMultiPartFormRequest.h>
+#import <GCDWebServers/GCDWebServerURLEncodedFormRequest.h>
+
+// GCDWebServer Responses
+#import <GCDWebServers/GCDWebServerDataResponse.h>
+#import <GCDWebServers/GCDWebServerErrorResponse.h>
+#import <GCDWebServers/GCDWebServerFileResponse.h>
+#import <GCDWebServers/GCDWebServerStreamedResponse.h>
 
 // GCDWebUploader
 #import <GCDWebServers/GCDWebUploader.h>
