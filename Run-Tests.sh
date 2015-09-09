@@ -6,10 +6,14 @@ if [ -z "$TRAVIS" ]; then
 else
   IOS_SDK="iphonesimulator"
 fi
+OSX_SDK_VERSION=`xcodebuild -version -sdk | grep -A 1 '^MacOSX' | tail -n 1 |  awk '{ print $2 }'`
+IOS_SDK_VERSION=`xcodebuild -version -sdk | grep -A 1 '^iPhone' | tail -n 1 |  awk '{ print $2 }'`
 
 OSX_TARGET="GCDWebServer (Mac)"
 IOS_TARGET="GCDWebServer (iOS)"
 CONFIGURATION="Release"
+
+OSX_TEST_SCHEME="GCDWebServers (Mac)"
 
 BUILD_DIR="/tmp/GCDWebServer-Build"
 PRODUCT="$BUILD_DIR/$CONFIGURATION/GCDWebServer"
@@ -30,21 +34,25 @@ function runTests {
   logLevel=2 $1 -mode "$2" -root "$PAYLOAD_DIR/Payload" -tests "$3"
 }
 
-# Build for iOS for oldest deployment target (TODO: run tests on iOS)
+# Run built-in OS X tests
 rm -rf "$BUILD_DIR"
-xcodebuild -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$BUILD_DIR" "IPHONEOS_DEPLOYMENT_TARGET=5.1.1" > /dev/null
+xcodebuild test -scheme "$OSX_TEST_SCHEME" "SYMROOT=$BUILD_DIR"
 
-# Build for iOS for default deployment target (TODO: run tests on iOS)
+# Build for iOS for oldest supported deployment target (TODO: run tests on iOS)
 rm -rf "$BUILD_DIR"
-xcodebuild -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$BUILD_DIR" > /dev/null
+xcodebuild build -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" "SYMROOT=$BUILD_DIR" "IPHONEOS_DEPLOYMENT_TARGET=5.1.1" > /dev/null
 
-# Build for OS X for oldest deployment target
+# Build for iOS for current deployment target (TODO: run tests on iOS)
 rm -rf "$BUILD_DIR"
-xcodebuild -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$BUILD_DIR" "MACOSX_DEPLOYMENT_TARGET=10.7" > /dev/null
+xcodebuild build -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" "SYMROOT=$BUILD_DIR" "IPHONEOS_DEPLOYMENT_TARGET=$IOS_SDK_VERSION" > /dev/null
 
-# Build for OS X for default deployment target
+# Build for OS X for oldest supported deployment target
 rm -rf "$BUILD_DIR"
-xcodebuild -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" build "SYMROOT=$BUILD_DIR" > /dev/null
+xcodebuild build -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" "SYMROOT=$BUILD_DIR" "MACOSX_DEPLOYMENT_TARGET=10.7" > /dev/null
+
+# Build for OS X for current deployment target
+rm -rf "$BUILD_DIR"
+xcodebuild build -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" "SYMROOT=$BUILD_DIR" "MACOSX_DEPLOYMENT_TARGET=$OSX_SDK_VERSION" > /dev/null
 
 # Run tests
 runTests $PRODUCT "htmlForm" "Tests/HTMLForm"
