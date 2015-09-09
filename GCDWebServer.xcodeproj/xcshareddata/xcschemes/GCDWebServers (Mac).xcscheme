@@ -28,16 +28,17 @@
       shouldUseLaunchSchemeArgsEnv = "YES"
       buildConfiguration = "Debug">
       <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "E24039241BA09207000B7089"
+               BuildableName = "Tests.xctest"
+               BlueprintName = "Tests (Mac)"
+               ReferencedContainer = "container:GCDWebServer.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "CEE28CD01AE004D800F4023C"
-            BuildableName = "GCDWebServers.framework"
-            BlueprintName = "GCDWebServers (Mac)"
-            ReferencedContainer = "container:GCDWebServer.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
       <AdditionalOptions>
       </AdditionalOptions>
    </TestAction>
