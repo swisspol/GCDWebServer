@@ -7,12 +7,14 @@
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
-	<string>net.pol-online.$(PRODUCT_NAME:rfc1034identifier)</string>
+	<string>${PRODUCT_BUNDLE_IDENTIFIER}</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
+	<key>CFBundleShortVersionString</key>
+	<string>${BUNDLE_VERSION_STRING}</string>
 </dict>
 </plist>
