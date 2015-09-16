@@ -232,7 +232,8 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 - (void)webServerDidCompleteBonjourRegistration:(GCDWebServer*)server;
 
 /**
- *  This method is called after the NAT port mapping has been updated.
+ *  This method is called after the NAT port mapping for the server has been
+ *  updated.
  *
  *  Use the "publicServerURL" property to retrieve the public address of the
  *  server.
