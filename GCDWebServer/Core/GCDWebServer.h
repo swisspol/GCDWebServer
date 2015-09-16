@@ -91,13 +91,25 @@ extern NSString* const GCDWebServerOption_BonjourName;
 extern NSString* const GCDWebServerOption_BonjourType;
 
 /**
+ *  Request a port mapping in the NAT gateway (NSNumber / BOOL).
+ *
+ *  This uses the DNSService API under the hood which supports IPv4 mappings only.
+ *
+ *  The default value is NO.
+ *
+ *  @warning The external port set up by the NAT gateway may be different than
+ *  the one used by the GCDWebServer.
+ */
+extern NSString* const GCDWebServerOption_RequestNATPortMapping;
+
+/**
  *  Only accept HTTP requests coming from localhost i.e. not from the outside
  *  network (NSNumber / BOOL).
  *
  *  The default value is NO.
  *
- *  @warning Bonjour should be disabled if using this option since the server
- *  will not be reachable from the outside network anyway.
+ *  @warning Bonjour and NAT port mapping should be disabled if using this option
+ *  since the server will not be reachable from the outside network anyway.
  */
 extern NSString* const GCDWebServerOption_BindToLocalhost;
 
@@ -213,8 +225,19 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 /**
  *  This method is called after the Bonjour registration for the server has
  *  successfully completed.
+ *
+ *  Use the "bonjourServerURL" property to retrieve the Bonjour address of the
+ *  server.
  */
 - (void)webServerDidCompleteBonjourRegistration:(GCDWebServer*)server;
+
+/**
+ *  This method is called after the NAT port mapping has been updated.
+ *
+ *  Use the "publicServerURL" property to retrieve the public address of the
+ *  server.
+ */
+- (void)webServerDidUpdateNATPortMapping:(GCDWebServer*)server;
 
 /**
  *  This method is called when the first GCDWebServerConnection is opened by the
@@ -361,6 +384,14 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *  has been dynamically changed after the server started running (this should be rare).
  */
 @property(nonatomic, readonly) NSURL* bonjourServerURL;
+
+/**
+ *  Returns the server's public URL.
+ *
+ *  @warning This property is only valid if the server is running and NAT port
+ *  mapping is active.
+ */
+@property(nonatomic, readonly) NSURL* publicServerURL;
 
 /**
  *  Starts the server on port 8080 (OS X & iOS Simulator) or port 80 (iOS)
