@@ -616,9 +616,11 @@ static inline NSString* _EncodeBase64(NSString* string) {
       if (_resolutionService) {
         CFNetServiceSetClient(_resolutionService, _NetServiceResolveCallBack, &context);
         CFNetServiceScheduleWithRunLoop(_resolutionService, CFRunLoopGetMain(), kCFRunLoopCommonModes);
+      } else {
+        GWS_LOG_ERROR(@"Failed creating CFNetService for resolution");
       }
     } else {
-      GWS_LOG_ERROR(@"Failed creating CFNetService");
+      GWS_LOG_ERROR(@"Failed creating CFNetService for registration");
     }
   }
   
