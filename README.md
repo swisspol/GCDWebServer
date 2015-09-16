@@ -24,6 +24,7 @@ Extra built-in features:
 * [Basic](https://en.wikipedia.org/wiki/Basic_access_authentication) and [Digest Access](https://en.wikipedia.org/wiki/Digest_access_authentication) authentications for password protection
 * Automatically handle transitions between foreground, background and suspended modes in iOS apps
 * Full support for both IPv4 and IPv6
+* NAT port mapping (IPv4 only)
 
 Included extensions:
 * [GCDWebUploader](GCDWebUploader/GCDWebUploader.h): subclass of ```GCDWebServer``` that implements an interface for uploading and downloading files using a web browser
