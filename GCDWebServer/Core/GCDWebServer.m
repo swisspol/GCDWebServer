@@ -48,6 +48,8 @@
 #define kDefaultPort 8080
 #endif
 
+#define kBonjourResolutionTimeout 5.0
+
 NSString* const GCDWebServerOption_Port = @"Port";
 NSString* const GCDWebServerOption_BonjourName = @"BonjourName";
 NSString* const GCDWebServerOption_BonjourType = @"BonjourType";
@@ -376,7 +378,10 @@ static void _NetServiceRegisterCallBack(CFNetServiceRef service, CFStreamError* 
     } else {
       GCDWebServer* server = (__bridge GCDWebServer*)info;
       GWS_LOG_VERBOSE(@"Bonjour registration complete for %@", [server class]);
-      CFNetServiceResolveWithTimeout(server->_resolutionService, 1.0, NULL);
+      if (!CFNetServiceResolveWithTimeout(server->_resolutionService, kBonjourResolutionTimeout, NULL)) {
+        GWS_LOG_ERROR(@"Failed starting Bonjour resolution");
+        GWS_DNOT_REACHED();
+      }
     }
   }
 }
