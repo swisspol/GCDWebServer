@@ -96,7 +96,6 @@
 		CEE28D501AE0098600F4023C /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2BE851018E79DAF0061360B /* SystemConfiguration.framework */; };
 		CEE28D511AE0098C00F4023C /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E208D1B2167BB17E00500836 /* CoreServices.framework */; };
 		CEE28D521AE00A7A00F4023C /* GCDWebServers.h in Headers */ = {isa = PBXBuildFile; fileRef = CEE28CF31AE0051F00F4023C /* GCDWebServers.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		CEE28D541AE00ADC00F4023C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEE28D531AE00ADC00F4023C /* Foundation.framework */; };
 		CEE28D571AE00AFE00F4023C /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E221129C1690B7BA0048D2B2 /* MobileCoreServices.framework */; };
 		CEE28D591AE00AFE00F4023C /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E22112981690B7AA0048D2B2 /* CFNetwork.framework */; };
 		CEE28D5A1AE00AFE00F4023C /* libxml2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E2A0E80C18F35C9A00C580B1 /* libxml2.dylib */; };
@@ -209,7 +208,6 @@
 		CEE28CF21AE0051F00F4023C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		CEE28CF31AE0051F00F4023C /* GCDWebServers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GCDWebServers.h; sourceTree = "<group>"; };
 		CEE28D4B1AE0095600F4023C /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		CEE28D531AE00ADC00F4023C /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.3.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		CEE28D691AE1ABAA00F4023C /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.3.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		E208D148167B76B700500836 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
 		E208D1B2167BB17E00500836 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
@@ -295,7 +293,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				CEE28D6A1AE1ABAA00F4023C /* UIKit.framework in Frameworks */,
-				CEE28D541AE00ADC00F4023C /* Foundation.framework in Frameworks */,
 				CEE28D571AE00AFE00F4023C /* MobileCoreServices.framework in Frameworks */,
 				CEE28D591AE00AFE00F4023C /* CFNetwork.framework in Frameworks */,
 				CEE28D5A1AE00AFE00F4023C /* libxml2.dylib in Frameworks */,
@@ -387,7 +384,6 @@
 			isa = PBXGroup;
 			children = (
 				CEE28D691AE1ABAA00F4023C /* UIKit.framework */,
-				CEE28D531AE00ADC00F4023C /* Foundation.framework */,
 				E221129C1690B7BA0048D2B2 /* MobileCoreServices.framework */,
 				E221129A1690B7B10048D2B2 /* UIKit.framework */,
 				E22112981690B7AA0048D2B2 /* CFNetwork.framework */,
