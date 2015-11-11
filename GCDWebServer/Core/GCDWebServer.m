@@ -223,11 +223,11 @@ static void _ExecuteMainThreadRunLoopSources() {
   GWS_DCHECK([NSThread isMainThread]);
   if (_backgroundTask == UIBackgroundTaskInvalid) {
     GWS_LOG_DEBUG(@"Did start background task");
+    __weak GCDWebServer *weakself = self;
     _backgroundTask = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
-      
-      GWS_LOG_WARNING(@"Application is being suspended while %@ is still connected", [self class]);
-      [self _endBackgroundTask];
-      
+      GCDWebServer *strongself = weakself;
+      GWS_LOG_WARNING(@"Application is being suspended while %@ is still connected", [strongself class]);
+      [strongself _endBackgroundTask];
     }];
   } else {
     GWS_DNOT_REACHED();
