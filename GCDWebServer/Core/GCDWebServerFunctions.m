@@ -247,7 +247,9 @@ NSString* GCDWebServerGetPrimaryIPAddress(BOOL useIPv6) {
   NSString* address = nil;
 #if TARGET_OS_IPHONE || TARGET_OS_TV
 #if !TARGET_IPHONE_SIMULATOR
-  const char* primaryInterface = "en0";  // WiFi interface on iOS
+#if TARGET_OS_IOS
+	const char* primaryInterface = "en0";  // WiFi interface on iOS
+#endif
 #endif
 #else
   const char* primaryInterface = NULL;
