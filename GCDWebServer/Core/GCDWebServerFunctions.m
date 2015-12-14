@@ -245,7 +245,7 @@ NSString* GCDWebServerStringFromSockAddr(const struct sockaddr* addr, BOOL inclu
 
 NSString* GCDWebServerGetPrimaryIPAddress(BOOL useIPv6) {
   NSString* address = nil;
-#if TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE || TARGET_OS_TV
 #if !TARGET_IPHONE_SIMULATOR
   const char* primaryInterface = "en0";  // WiFi interface on iOS
 #endif
