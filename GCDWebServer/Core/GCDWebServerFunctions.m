@@ -245,9 +245,11 @@ NSString* GCDWebServerStringFromSockAddr(const struct sockaddr* addr, BOOL inclu
 
 NSString* GCDWebServerGetPrimaryIPAddress(BOOL useIPv6) {
   NSString* address = nil;
-#if TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE || TARGET_OS_TV
 #if !TARGET_IPHONE_SIMULATOR
-  const char* primaryInterface = "en0";  // WiFi interface on iOS
+#if TARGET_OS_IOS
+	const char* primaryInterface = "en0";  // WiFi interface on iOS
+#endif
 #endif
 #else
   const char* primaryInterface = NULL;
@@ -267,7 +269,7 @@ NSString* GCDWebServerGetPrimaryIPAddress(BOOL useIPv6) {
   struct ifaddrs* list;
   if (getifaddrs(&list) >= 0) {
     for (struct ifaddrs* ifap = list; ifap; ifap = ifap->ifa_next) {
-#if TARGET_IPHONE_SIMULATOR
+#if TARGET_IPHONE_SIMULATOR || TARGET_OS_TV
       if (strcmp(ifap->ifa_name, "en0") && strcmp(ifap->ifa_name, "en1"))  // Assume en0 is Ethernet and en1 is WiFi since there is no way to use SystemConfiguration framework in iOS Simulator
 #else
       if (strcmp(ifap->ifa_name, primaryInterface))
