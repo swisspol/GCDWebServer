@@ -854,7 +854,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0710;
+				LastUpgradeCheck = 0720;
 				TargetAttributes = {
 					CEE28CD01AE004D800F4023C = {
 						CreatedOnToolsVersion = 6.3;
@@ -1520,6 +1520,7 @@
 				E2DDD1911BE69404002CE867 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		E2DDD1D81BE698A8002CE867 /* Build configuration list for PBXNativeTarget "GCDWebServer (tvOS)" */ = {
 			isa = XCConfigurationList;
@@ -1528,6 +1529,7 @@
 				E2DDD1DA1BE698A8002CE867 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		E2DDD20A1BE69EE5002CE867 /* Build configuration list for PBXNativeTarget "GCDWebServer (iOS)" */ = {
 			isa = XCConfigurationList;
@@ -1536,6 +1538,7 @@
 				E2DDD20C1BE69EE5002CE867 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
