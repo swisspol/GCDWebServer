@@ -292,14 +292,14 @@
 }
 
 - (instancetype)initWithStatusCode:(NSInteger)statusCode {
-  if ((self = [self init])) {
+  if ((self = [super init])) {
     self.statusCode = statusCode;
   }
   return self;
 }
 
 - (instancetype)initWithRedirect:(NSURL*)location permanent:(BOOL)permanent {
-  if ((self = [self init])) {
+  if ((self = [super init])) {
     self.statusCode = permanent ? kGCDWebServerHTTPStatusCode_MovedPermanently : kGCDWebServerHTTPStatusCode_TemporaryRedirect;
     [self setValue:[location absoluteString] forAdditionalHeader:@"Location"];
   }
