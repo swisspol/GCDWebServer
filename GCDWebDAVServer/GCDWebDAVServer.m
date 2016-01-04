@@ -115,6 +115,11 @@ static inline BOOL _IsMacFinder(GCDWebServerRequest* request) {
       [self.delegate davServer:self didDownloadFileAtPath:absolutePath];
     });
   }
+    
+  if ([request hasByteRange]) {
+    return [GCDWebServerFileResponse responseWithFile:absolutePath byteRange:request.byteRange];
+  }
+    
   return [GCDWebServerFileResponse responseWithFile:absolutePath];
 }
 
