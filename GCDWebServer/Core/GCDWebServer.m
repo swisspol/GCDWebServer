@@ -957,7 +957,12 @@ static inline NSString* _EncodeBase64(NSString* string) {
       for (NSTextCheckingResult* result in matches) {
         // Start at 1; index 0 is the whole string
         for (NSUInteger i = 1; i < result.numberOfRanges; i++) {
-          [captures addObject:[urlPath substringWithRange:[result rangeAtIndex:i]]];
+          NSRange range = [result rangeAtIndex:i];
+          // range is {NSNotFound, 0} "if one of the capture groups did not participate in this particular match"
+          // see discussion in -[NSRegularExpression firstMatchInString:options:range:]
+          if (range.location != NSNotFound) {
+            [captures addObject:[urlPath substringWithRange:range]];
+          }
         }
       }
 
