@@ -50,4 +50,9 @@ Pod::Spec.new do |s|
     cs.resource = "GCDWebUploader/GCDWebUploader.bundle"
   end
   
+  s.subspec "CocoaLumberjack" do |cs|
+    cs.dependency 'GCDWebServer/Core'
+    cs.dependency 'CocoaLumberjack', '~> 2.0'
+  end
+
 end
