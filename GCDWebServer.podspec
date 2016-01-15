@@ -33,21 +33,43 @@ Pod::Spec.new do |s|
     cs.osx.framework = 'SystemConfiguration'
   end
   
-  s.subspec 'WebDAV' do |cs|
+  s.subspec "CocoaLumberjack" do |cs|
     cs.dependency 'GCDWebServer/Core'
-    cs.source_files = 'GCDWebDAVServer/*.{h,m}'
-    cs.requires_arc = true
-    cs.ios.library = 'xml2'
-    cs.tvos.library = 'xml2'
-    cs.osx.library = 'xml2'
-    cs.compiler_flags = '-I$(SDKROOT)/usr/include/libxml2'
+    cs.dependency 'CocoaLumberjack', '~> 2'
+  end
+  
+  s.subspec 'WebDAV' do |cs|
+    cs.default_subspec = 'Core'
+
+    cs.subspec "Core" do |ccs|
+      ccs.dependency 'GCDWebServer/Core'
+      ccs.source_files = 'GCDWebDAVServer/*.{h,m}'
+      ccs.requires_arc = true
+      ccs.ios.library = 'xml2'
+      ccs.tvos.library = 'xml2'
+      ccs.osx.library = 'xml2'
+      ccs.compiler_flags = '-I$(SDKROOT)/usr/include/libxml2'
+    end
+
+    cs.subspec "CocoaLumberjack" do |cscl|
+      cscl.dependency 'GCDWebServer/WebDAV/Core'
+      cscl.dependency 'GCDWebServer/CocoaLumberjack'
+    end
   end
   
   s.subspec 'WebUploader' do |cs|
-    cs.dependency 'GCDWebServer/Core'
-    cs.source_files = 'GCDWebUploader/*.{h,m}'
-    cs.requires_arc = true
-    cs.resource = "GCDWebUploader/GCDWebUploader.bundle"
-  end
-  
+    cs.default_subspec = 'Core'
+
+    cs.subspec "Core" do |ccs|
+      ccs.dependency 'GCDWebServer/Core'
+      ccs.source_files = 'GCDWebUploader/*.{h,m}'
+      ccs.requires_arc = true
+      ccs.resource = "GCDWebUploader/GCDWebUploader.bundle"
+    end
+
+    cs.subspec "CocoaLumberjack" do |cscl|
+      cscl.dependency 'GCDWebServer/WebUploader/Core'
+      cscl.dependency 'GCDWebServer/CocoaLumberjack'
+    end
+  end 
 end
