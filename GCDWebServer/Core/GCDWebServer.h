@@ -52,7 +52,7 @@ typedef GCDWebServerRequest* (^GCDWebServerMatchBlock)(NSString* requestMethod, 
  *  recommended to return a GCDWebServerErrorResponse on error so more useful
  *  information can be returned to the client.
  */
-typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* request);
+typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(__kindof GCDWebServerRequest* request);
 
 /**
  *  The GCDWebServerAsynchronousProcessBlock works like the GCDWebServerProcessBlock
@@ -65,7 +65,7 @@ typedef GCDWebServerResponse* (^GCDWebServerProcessBlock)(GCDWebServerRequest* r
  *  useful information can be returned to the client.
  */
 typedef void (^GCDWebServerCompletionBlock)(GCDWebServerResponse* response);
-typedef void (^GCDWebServerAsyncProcessBlock)(GCDWebServerRequest* request, GCDWebServerCompletionBlock completionBlock);
+typedef void (^GCDWebServerAsyncProcessBlock)(__kindof GCDWebServerRequest* request, GCDWebServerCompletionBlock completionBlock);
 
 /**
  *  The port used by the GCDWebServer (NSNumber / NSUInteger).
