@@ -168,7 +168,7 @@ extern void GCDWebServerLogMessage(GCDWebServerLoggingLevel level, NSString* for
  */
 
 #define kGCDWebServerDefaultMimeType @"application/octet-stream"
-#define kGCDWebServerGCDQueue dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+#define kGCDWebServerGCDQueue dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0)
 #define kGCDWebServerErrorDomain @"GCDWebServerErrorDomain"
 
 static inline BOOL GCDWebServerIsValidByteRange(NSRange range) {
