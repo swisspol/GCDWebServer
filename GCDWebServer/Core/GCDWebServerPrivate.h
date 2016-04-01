@@ -168,7 +168,6 @@ extern void GCDWebServerLogMessage(GCDWebServerLoggingLevel level, NSString* for
  */
 
 #define kGCDWebServerDefaultMimeType @"application/octet-stream"
-#define kGCDWebServerGCDQueue dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
 #define kGCDWebServerErrorDomain @"GCDWebServerErrorDomain"
 
 static inline BOOL GCDWebServerIsValidByteRange(NSRange range) {
@@ -200,6 +199,7 @@ extern NSString* GCDWebServerStringFromSockAddr(const struct sockaddr* addr, BOO
 @property(nonatomic, readonly) NSDictionary* authenticationBasicAccounts;
 @property(nonatomic, readonly) NSDictionary* authenticationDigestAccounts;
 @property(nonatomic, readonly) BOOL shouldAutomaticallyMapHEADToGET;
+@property(nonatomic, readonly) dispatch_queue_priority_t dispatchQueuePriority;
 - (void)willStartConnection:(GCDWebServerConnection*)connection;
 - (void)didEndConnection:(GCDWebServerConnection*)connection;
 @end
