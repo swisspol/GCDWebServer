@@ -63,6 +63,7 @@ NSString* const GCDWebServerOption_AuthenticationAccounts = @"AuthenticationAcco
 NSString* const GCDWebServerOption_ConnectionClass = @"ConnectionClass";
 NSString* const GCDWebServerOption_AutomaticallyMapHEADToGET = @"AutomaticallyMapHEADToGET";
 NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval = @"ConnectedStateCoalescingInterval";
+NSString* const GCDWebServerOption_DispatchQueuePriority = @"DispatchQueuePriority";
 #if TARGET_OS_IPHONE
 NSString* const GCDWebServerOption_AutomaticallySuspendInBackground = @"AutomaticallySuspendInBackground";
 #endif
@@ -170,6 +171,7 @@ static void _ExecuteMainThreadRunLoopSources() {
   Class _connectionClass;
   BOOL _mapHEADToGET;
   CFTimeInterval _disconnectDelay;
+  dispatch_queue_priority_t _dispatchQueuePriority;
   NSUInteger _port;
   dispatch_source_t _source4;
   dispatch_source_t _source6;
@@ -195,7 +197,7 @@ static void _ExecuteMainThreadRunLoopSources() {
 
 @synthesize delegate=_delegate, handlers=_handlers, port=_port, serverName=_serverName, authenticationRealm=_authenticationRealm,
             authenticationBasicAccounts=_authenticationBasicAccounts, authenticationDigestAccounts=_authenticationDigestAccounts,
-            shouldAutomaticallyMapHEADToGET=_mapHEADToGET;
+            shouldAutomaticallyMapHEADToGET=_mapHEADToGET, dispatchQueuePriority=_dispatchQueuePriority;
 
 + (void)initialize {
   GCDWebServerInitializeFunctions();
@@ -493,7 +495,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 
 - (dispatch_source_t)_createDispatchSourceWithListeningSocket:(int)listeningSocket isIPv6:(BOOL)isIPv6 {
   dispatch_group_enter(_sourceGroup);
-  dispatch_source_t source = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, listeningSocket, 0, kGCDWebServerGCDQueue);
+  dispatch_source_t source = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, listeningSocket, 0, dispatch_get_global_queue(_dispatchQueuePriority, 0));
   dispatch_source_set_cancel_handler(source, ^{
     
     @autoreleasepool {
@@ -599,6 +601,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
   _connectionClass = _GetOption(_options, GCDWebServerOption_ConnectionClass, [GCDWebServerConnection class]);
   _mapHEADToGET = [_GetOption(_options, GCDWebServerOption_AutomaticallyMapHEADToGET, @YES) boolValue];
   _disconnectDelay = [_GetOption(_options, GCDWebServerOption_ConnectedStateCoalescingInterval, @1.0) doubleValue];
+  _dispatchQueuePriority = [_GetOption(_options, GCDWebServerOption_DispatchQueuePriority, @(DISPATCH_QUEUE_PRIORITY_DEFAULT)) longValue];
   
   _source4 = [self _createDispatchSourceWithListeningSocket:listeningSocket4 isIPv6:NO];
   _source6 = [self _createDispatchSourceWithListeningSocket:listeningSocket6 isIPv6:YES];

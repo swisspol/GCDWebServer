@@ -176,6 +176,15 @@ extern NSString* const GCDWebServerOption_AutomaticallyMapHEADToGET;
  */
 extern NSString* const GCDWebServerOption_ConnectedStateCoalescingInterval;
 
+/**
+ *  Set the dispatch queue priority on which server connection will be 
+ *  run (NSNumber / long).
+ *
+ *
+ *  The default value is DISPATCH_QUEUE_PRIORITY_DEFAULT.
+ */
+extern NSString* const GCDWebServerOption_DispatchQueuePriority;
+
 #if TARGET_OS_IPHONE
 
 /**
