@@ -72,6 +72,10 @@
   [_reader close];
 }
 
+- (BOOL)isOpened {
+  return [_reader isOpened];
+}
+
 @end
 
 @interface GCDWebServerGZipEncoder () {
@@ -220,6 +224,10 @@
   ;
 }
 
+- (BOOL)isOpened {
+  return _opened;
+}
+
 - (void)prepareForReading {
   _reader = self;
   if (_gzipped) {
@@ -251,8 +259,11 @@
 }
 
 - (void)performClose {
-  GWS_DCHECK(_opened);
+  if (!_opened) {
+    return;
+  }
   [_reader close];
+  _opened = NO;
 }
 
 - (NSString*)description {
