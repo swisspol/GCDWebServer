@@ -241,6 +241,7 @@
 }
 
 - (void)performReadDataWithCompletion:(GCDWebServerBodyReaderCompletionBlock)block {
+  GWS_DCHECK(_opened);
   if ([_reader respondsToSelector:@selector(asyncReadDataWithCompletion:)]) {
     [_reader asyncReadDataWithCompletion:[block copy]];
   } else {
