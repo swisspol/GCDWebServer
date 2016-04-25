@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2012-2014, Pierre-Olivier Latour
+ Copyright (c) 2012-2015, Pierre-Olivier Latour
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
@@ -241,8 +241,9 @@
 }
 
 - (void)performReadDataWithCompletion:(GCDWebServerBodyReaderCompletionBlock)block {
+  GWS_DCHECK(_opened);
   if ([_reader respondsToSelector:@selector(asyncReadDataWithCompletion:)]) {
-    [_reader asyncReadDataWithCompletion:block];
+    [_reader asyncReadDataWithCompletion:[block copy]];
   } else {
     NSError* error = nil;
     NSData* data = [_reader readData:&error];

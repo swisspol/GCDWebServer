@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2012-2014, Pierre-Olivier Latour
+ Copyright (c) 2012-2015, Pierre-Olivier Latour
  All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
@@ -69,6 +69,10 @@ typedef enum {
 }
 
 - (void)webServerDidCompleteBonjourRegistration:(GCDWebServer*)server {
+  [self _logDelegateCall:_cmd];
+}
+
+- (void)webServerDidUpdateNATPortMapping:(GCDWebServer*)server {
   [self _logDelegateCall:_cmd];
 }
 
@@ -142,6 +146,7 @@ int main(int argc, const char* argv[]) {
     NSString* authenticationUser = nil;
     NSString* authenticationPassword = nil;
     BOOL bindToLocalhost = NO;
+    BOOL requestNATPortMapping = NO;
     
     if (argc == 1) {
       fprintf(stdout, "Usage: %s [-mode webServer | htmlPage | htmlForm | htmlFileUpload | webDAV | webUploader | streamingResponse | asyncResponse] [-record] [-root directory] [-tests directory] [-authenticationMethod Basic | Digest] [-authenticationRealm realm] [-authenticationUser user] [-authenticationPassword password] [--localhost]\n\n", basename((char*)argv[0]));
@@ -191,6 +196,8 @@ int main(int argc, const char* argv[]) {
           authenticationPassword = [NSString stringWithUTF8String:argv[i]];
         } else if (!strcmp(argv[i], "--localhost")) {
           bindToLocalhost = YES;
+        } else if (!strcmp(argv[i], "--nat")) {
+          requestNATPortMapping = YES;
         }
       }
     }
@@ -412,6 +419,7 @@ int main(int argc, const char* argv[]) {
         fprintf(stdout, "\n");
         NSMutableDictionary* options = [NSMutableDictionary dictionary];
         [options setObject:@8080 forKey:GCDWebServerOption_Port];
+        [options setObject:@(requestNATPortMapping) forKey:GCDWebServerOption_RequestNATPortMapping];
         [options setObject:@(bindToLocalhost) forKey:GCDWebServerOption_BindToLocalhost];
         [options setObject:@"" forKey:GCDWebServerOption_BonjourName];
         if (authenticationUser && authenticationPassword) {

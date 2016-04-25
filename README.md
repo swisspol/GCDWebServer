@@ -24,6 +24,7 @@ Extra built-in features:
 * [Basic](https://en.wikipedia.org/wiki/Basic_access_authentication) and [Digest Access](https://en.wikipedia.org/wiki/Digest_access_authentication) authentications for password protection
 * Automatically handle transitions between foreground, background and suspended modes in iOS apps
 * Full support for both IPv4 and IPv6
+* NAT port mapping (IPv4 only)
 
 Included extensions:
 * [GCDWebUploader](GCDWebUploader/GCDWebUploader.h): subclass of ```GCDWebServer``` that implements an interface for uploading and downloading files using a web browser
@@ -43,7 +44,9 @@ Getting Started
 
 Download or check out the [latest release](https://github.com/swisspol/GCDWebServer/releases) of GCDWebServer then add the entire "GCDWebServer" subfolder to your Xcode project. If you intend to use one of the extensions like GCDWebDAVServer or GCDWebUploader, add these subfolders as well.
 
-Alternatively, you can install GCDWebServer using [CocoaPods](http://cocoapods.org/) by simply adding this line to your Xcode project's Podfile:
+If you add the files directly then (1) link to `libz` (via Target > Build Phases > Link Binary With Libraries) and (2) add `$(SDKROOT)/usr/include/libxml2` to your header search paths (via Target > Build Settings > HEADER_SEARCH_PATHS).
+
+Alternatively, you can install GCDWebServer using [CocoaPods](http://cocoapods.org/) by simply adding this line to your Podfile:
 ```
 pod "GCDWebServer", "~> 3.0"
 ```
@@ -55,6 +58,22 @@ Or this line for GCDWebDAVServer:
 ```
 pod "GCDWebServer/WebDAV", "~> 3.0"
 ```
+
+And finally run `$ pod install`.
+
+You can also use [Carthage](https://github.com/Carthage/Carthage) by adding this line to your Cartfile (3.2.5 is the first release with Carthage support):
+```
+github "swisspol/GCDWebServer" ~> 3.2.5
+```
+
+Then run `$ carthage update` and add the generated frameworks to your Xcode projects (see [Carthage instructions](https://github.com/Carthage/Carthage#adding-frameworks-to-an-application)).
+
+Help & Support
+==============
+
+For help with using GCDWebServer, it's best to ask your question on Stack Overflow with the [`gcdwebserver`](http://stackoverflow.com/questions/tagged/gcdwebserver) tag.
+
+Be sure to read this entire README first though!
 
 Hello World
 ===========
@@ -134,22 +153,27 @@ int main(int argc, const char* argv[]) {
 ***webServer.swift***
 ```swift
 import Foundation
+import GCDWebServers
 
-let webServer = GCDWebServer()
+func initWebServer() {
 
-webServer.addDefaultHandlerForMethod("GET", requestClass: GCDWebServerRequest.self, processBlock: {request in
+    let webServer = GCDWebServer()
+
+    webServer.addDefaultHandlerForMethod("GET", requestClass: GCDWebServerRequest.self, processBlock: {request in
     return GCDWebServerDataResponse(HTML:"<html><body><p>Hello World</p></body></html>")
+        
+    })
+    
+    webServer.runWithPort(8080, bonjourName: "GCD Web Server")
+    
+    print("Visit \(webServer.serverURL) in your web browser")
 }
-
-webServer.runWithPort(8080, bonjourName: nil)
-
-println("Visit \(webServer.serverURL) in your web browser")
 ```
 
 ***WebServer-Bridging-Header.h***
 ```objectivec
-#import "GCDWebServer.h"
-#import "GCDWebServerDataResponse.h"
+#import <GCDWebServers/GCDWebServer.h>
+#import <GCDWebServers/GCDWebServerDataResponse.h>
 ```
 
 Web Based Uploads in iOS Apps
@@ -263,7 +287,7 @@ Note that most methods on ```GCDWebServer``` to add handlers only require the ``
 Asynchronous HTTP Responses
 ===========================
 
-New in GCDWebServer 3.0 is the ability to process HTTP requests aysnchronously i.e. add handlers to the server which generate their ```GCDWebServerResponse``` asynchronously. This is achieved by adding handlers that use a ```GCDWebServerAsyncProcessBlock``` instead of a ```GCDWebServerProcessBlock```. Here's an example:
+New in GCDWebServer 3.0 is the ability to process HTTP requests asynchronously i.e. add handlers to the server which generate their ```GCDWebServerResponse``` asynchronously. This is achieved by adding handlers that use a ```GCDWebServerAsyncProcessBlock``` instead of a ```GCDWebServerProcessBlock```. Here's an example:
 
 **(Synchronous version)** The handler blocks while generating the HTTP response:
 ```objectivec
