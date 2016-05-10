@@ -245,6 +245,7 @@ NSString* GCDWebServerStringFromSockAddr(const struct sockaddr* addr, BOOL inclu
 
 NSString* GCDWebServerGetPrimaryIPAddress(BOOL useIPv6) {
   NSString* address = nil;
+  NSString *VPNAddress = nil;
 #if TARGET_OS_IPHONE
 #if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_TV
   const char* primaryInterface = "en0";  // WiFi interface on iOS
@@ -272,19 +273,23 @@ NSString* GCDWebServerGetPrimaryIPAddress(BOOL useIPv6) {
         // Assumption holds for Apple TV running tvOS
       if (strcmp(ifap->ifa_name, "en0") && strcmp(ifap->ifa_name, "en1"))
 #else
-      if (strcmp(ifap->ifa_name, primaryInterface))
+      if (strcmp(ifap->ifa_name, primaryInterface) && strcmp(ifap->ifa_name, "ppp0"))
 #endif
       {
         continue;
       }
       if ((ifap->ifa_flags & IFF_UP) && ((!useIPv6 && (ifap->ifa_addr->sa_family == AF_INET)) || (useIPv6 && (ifap->ifa_addr->sa_family == AF_INET6)))) {
-        address = GCDWebServerStringFromSockAddr(ifap->ifa_addr, NO);
-        break;
+        NSString *interfaceAddress = GCDWebServerStringFromSockAddr(ifap->ifa_addr, NO);
+        if (strcmp(ifap->ifa_name, primaryInterface) == 0) {
+          address = interfaceAddress;
+        } else {
+          VPNAddress = interfaceAddress;
+        }
       }
     }
     freeifaddrs(list);
   }
-  return address;
+  return address ? address : VPNAddress;
 }
 
 NSString* GCDWebServerComputeMD5Digest(NSString* format, ...) {
