@@ -280,11 +280,15 @@ NSString* GCDWebServerGetPrimaryIPAddress(BOOL useIPv6) {
       }
       if ((ifap->ifa_flags & IFF_UP) && ((!useIPv6 && (ifap->ifa_addr->sa_family == AF_INET)) || (useIPv6 && (ifap->ifa_addr->sa_family == AF_INET6)))) {
         NSString *interfaceAddress = GCDWebServerStringFromSockAddr(ifap->ifa_addr, NO);
+#if TARGET_IPHONE_SIMULATOR  || TARGET_OS_TV
+        address = interfaceAddress;
+#else
         if (strcmp(ifap->ifa_name, primaryInterface) == 0) {
           address = interfaceAddress;
         } else {
           VPNAddress = interfaceAddress;
         }
+#endif
       }
     }
     freeifaddrs(list);
