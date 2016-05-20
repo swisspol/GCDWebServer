@@ -1,7 +1,7 @@
 /*
  Copyright (c) 2012-2015, Pierre-Olivier Latour
  All rights reserved.
- 
+
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
  * Redistributions of source code must retain the above copyright
@@ -12,7 +12,7 @@
  * The name of Pierre-Olivier Latour may not be used to endorse
  or promote products derived from this software without specific
  prior written permission.
- 
+
  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -66,14 +66,14 @@ static int32_t _connectionCounter = 0;
   NSUInteger _bytesRead;
   NSUInteger _bytesWritten;
   BOOL _virtualHEAD;
-  
+
   CFHTTPMessageRef _requestMessage;
   GCDWebServerRequest* _request;
   GCDWebServerHandler* _handler;
   CFHTTPMessageRef _responseMessage;
   GCDWebServerResponse* _response;
   NSInteger _statusCode;
-  
+
   BOOL _opened;
 #ifdef __GCDWEBSERVER_ENABLE_TESTING__
   NSUInteger _connectionIndex;
@@ -89,7 +89,7 @@ static int32_t _connectionCounter = 0;
 
 - (void)_readData:(NSMutableData*)data withLength:(NSUInteger)length completionBlock:(ReadDataCompletionBlock)block {
   dispatch_read(_socket, length, dispatch_get_global_queue(_server.dispatchQueuePriority, 0), ^(dispatch_data_t buffer, int error) {
-    
+
     @autoreleasepool {
       if (error == 0) {
         size_t size = dispatch_data_get_size(buffer);
@@ -114,14 +114,14 @@ static int32_t _connectionCounter = 0;
         block(NO);
       }
     }
-    
+
   });
 }
 
 - (void)_readHeaders:(NSMutableData*)headersData withCompletionBlock:(ReadHeadersCompletionBlock)block {
   GWS_DCHECK(_requestMessage);
   [self _readData:headersData withLength:NSUIntegerMax completionBlock:^(BOOL success) {
-    
+
     if (success) {
       NSRange range = [headersData rangeOfData:_CRLFCRLFData options:0 range:NSMakeRange(0, headersData.length)];
       if (range.location == NSNotFound) {
@@ -143,7 +143,7 @@ static int32_t _connectionCounter = 0;
     } else {
       block(nil);
     }
-    
+
   }];
 }
 
@@ -151,7 +151,7 @@ static int32_t _connectionCounter = 0;
   GWS_DCHECK([_request hasBody] && ![_request usesChunkedTransferEncoding]);
   NSMutableData* bodyData = [[NSMutableData alloc] initWithCapacity:kBodyReadCapacity];
   [self _readData:bodyData withLength:length completionBlock:^(BOOL success) {
-    
+
     if (success) {
       if (bodyData.length <= length) {
         NSError* error = nil;
@@ -174,7 +174,7 @@ static int32_t _connectionCounter = 0;
     } else {
       block(NO);
     }
-    
+
   }];
 }
 
@@ -189,7 +189,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 
 - (void)_readNextBodyChunk:(NSMutableData*)chunkData completionBlock:(ReadBodyCompletionBlock)block {
   GWS_DCHECK([_request hasBody] && [_request usesChunkedTransferEncoding]);
-  
+
   while (1) {
     NSRange range = [chunkData rangeOfData:_CRLFData options:0 range:NSMakeRange(0, chunkData.length)];
     if (range.location == NSNotFound) {
@@ -230,15 +230,15 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       return;
     }
   }
-  
+
   [self _readData:chunkData withLength:NSUIntegerMax completionBlock:^(BOOL success) {
-    
+
     if (success) {
       [self _readNextBodyChunk:chunkData completionBlock:block];
     } else {
       block(NO);
     }
-    
+
   }];
 }
 
@@ -251,7 +251,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     [data self];  // Keeps ARC from releasing data too early
   });
   dispatch_write(_socket, buffer, dispatch_get_global_queue(_server.dispatchQueuePriority, 0), ^(dispatch_data_t remainingData, int error) {
-    
+
     @autoreleasepool {
       if (error == 0) {
         GWS_DCHECK(remainingData == NULL);
@@ -262,7 +262,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
         block(NO);
       }
     }
-    
+
   });
 #if !OS_OBJECT_USE_OBJC_RETAIN_RELEASE
   dispatch_release(buffer);
@@ -279,7 +279,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 - (void)_writeBodyWithCompletionBlock:(WriteBodyCompletionBlock)block {
   GWS_DCHECK([_response hasBody]);
   [_response performReadDataWithCompletion:^(NSData* data, NSError* error) {
-    
+
     if (data) {
       if (data.length) {
         if (_response.usesChunkedTransferEncoding) {
@@ -303,20 +303,20 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
           data = chunk;
         }
         [self _writeData:data withCompletionBlock:^(BOOL success) {
-          
+
           if (success) {
             [self _writeBodyWithCompletionBlock:block];
           } else {
             block(NO);
           }
-          
+
         }];
       } else {
         if (_response.usesChunkedTransferEncoding) {
           [self _writeData:_lastChunkData withCompletionBlock:^(BOOL success) {
-            
+
             block(success);
-            
+
           }];
         } else {
           block(YES);
@@ -326,7 +326,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       GWS_LOG_ERROR(@"Failed reading response body for socket %i: %@", _socket, error);
       block(NO);
     }
-    
+
   }];
 }
 
@@ -376,7 +376,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 
 - (void)_startProcessingRequest {
   GWS_DCHECK(_responseMessage == NULL);
-  
+
   GCDWebServerResponse* preflightResponse = [self preflightRequest:_request];
   if (preflightResponse) {
     [self _finishProcessingRequest:preflightResponse];
@@ -391,7 +391,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 - (void)_finishProcessingRequest:(GCDWebServerResponse*)response {
   GWS_DCHECK(_responseMessage == NULL);
   BOOL hasBody = NO;
-  
+
   if (response) {
     response = [self overrideResponse:response forRequest:_request];
   }
@@ -407,7 +407,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       _response = response;
     }
   }
-  
+
   if (_response) {
     [self _initializeResponseHeadersWithStatusCode:_response.statusCode];
     if (_response.lastModifiedDate) {
@@ -436,24 +436,24 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       CFHTTPMessageSetHeaderFieldValue(_responseMessage, (__bridge CFStringRef)key, (__bridge CFStringRef)obj);
     }];
     [self _writeHeadersWithCompletionBlock:^(BOOL success) {
-      
+
       if (success) {
         if (hasBody) {
           [self _writeBodyWithCompletionBlock:^(BOOL successInner) {
-            
+
             [_response performClose];  // TODO: There's nothing we can do on failure as headers have already been sent
-            
+
           }];
         }
       } else if (hasBody) {
         [_response performClose];
       }
-      
+
     }];
   } else {
     [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
   }
-  
+
 }
 
 - (void)_readBodyWithLength:(NSUInteger)length initialData:(NSData*)initialData {
@@ -463,7 +463,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
     return;
   }
-  
+
   if (initialData.length) {
     if (![_request performWriteData:initialData error:&error]) {
       GWS_LOG_ERROR(@"Failed writing request body on socket %i: %@", _socket, error);
@@ -475,10 +475,10 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     }
     length -= initialData.length;
   }
-  
+
   if (length) {
     [self _readBodyWithRemainingLength:length completionBlock:^(BOOL success) {
-      
+
       NSError* localError = nil;
       if ([_request performClose:&localError]) {
         [self _startProcessingRequest];
@@ -486,7 +486,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
         GWS_LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
         [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
       }
-      
+
     }];
   } else {
     if ([_request performClose:&error]) {
@@ -505,10 +505,10 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
     return;
   }
-  
+
   NSMutableData* chunkData = [[NSMutableData alloc] initWithData:initialData];
   [self _readNextBodyChunk:chunkData completionBlock:^(BOOL success) {
-  
+
     NSError* localError = nil;
     if ([_request performClose:&localError]) {
       [self _startProcessingRequest];
@@ -516,7 +516,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       GWS_LOG_ERROR(@"Failed closing request body for socket %i: %@", _socket, error);
       [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
     }
-    
+
   }];
 }
 
@@ -524,7 +524,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   _requestMessage = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, true);
   NSMutableData* headersData = [[NSMutableData alloc] initWithCapacity:kHeadersReadCapacity];
   [self _readHeaders:headersData withCompletionBlock:^(NSData* extraData) {
-    
+
     if (extraData) {
       NSString* requestMethod = CFBridgingRelease(CFHTTPMessageCopyRequestMethod(_requestMessage));  // Method verbs are case-sensitive and uppercase
       if (_server.shouldAutomaticallyMapHEADToGET && [requestMethod isEqualToString:@"HEAD"]) {
@@ -541,7 +541,8 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
       NSString* queryString = requestURL ? CFBridgingRelease(CFURLCopyQueryString((CFURLRef)requestURL, NULL)) : nil;  // Don't use -[NSURL query] to make sure query is not unescaped;
       NSDictionary* requestQuery = queryString ? GCDWebServerParseURLEncodedForm(queryString) : @{};
       if (requestMethod && requestURL && requestHeaders && requestPath && requestQuery) {
-        for (_handler in _server.handlers) {
+        NSMutableArray *handlersCopy = [_server.handlers copy];
+        for (_handler in handlersCopy) {
           _request = _handler.matchBlock(requestMethod, requestURL, requestHeaders, requestPath, requestQuery);
           if (_request) {
             break;
@@ -557,7 +558,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
               if (expectHeader) {
                 if ([expectHeader caseInsensitiveCompare:@"100-continue"] == NSOrderedSame) {  // TODO: Actually validate request before continuing
                   [self _writeData:_continueData withCompletionBlock:^(BOOL success) {
-                    
+
                     if (success) {
                       if (_request.usesChunkedTransferEncoding) {
                         [self _readChunkedBodyWithInitialData:extraData];
@@ -565,7 +566,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
                         [self _readBodyWithLength:_request.contentLength initialData:extraData];
                       }
                     }
-                    
+
                   }];
                 } else {
                   GWS_LOG_ERROR(@"Unsupported 'Expect' / 'Content-Length' header combination on socket %i", _socket);
@@ -597,7 +598,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     } else {
       [self abortRequest:nil withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
     }
-    
+
   }];
 }
 
@@ -608,15 +609,15 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     _remoteAddress = remoteAddress;
     _socket = socket;
     GWS_LOG_DEBUG(@"Did open connection on socket %i", _socket);
-    
+
     [_server willStartConnection:self];
-    
+
     if (![self open]) {
       close(_socket);
       return nil;
     }
     _opened = YES;
-    
+
     [self _readRequestHeaders];
   }
   return self;
@@ -637,17 +638,17 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   } else {
     GWS_LOG_DEBUG(@"Did close connection on socket %i", _socket);
   }
-  
+
   if (_opened) {
     [self close];
   }
-  
+
   [_server didEndConnection:self];
-  
+
   if (_requestMessage) {
     CFRelease(_requestMessage);
   }
-  
+
   if (_responseMessage) {
     CFRelease(_responseMessage);
   }
@@ -661,24 +662,24 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 #ifdef __GCDWEBSERVER_ENABLE_TESTING__
   if (_server.recordingEnabled) {
     _connectionIndex = OSAtomicIncrement32(&_connectionCounter);
-    
+
     _requestPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]];
     _requestFD = open([_requestPath fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     GWS_DCHECK(_requestFD > 0);
-    
+
     _responsePath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]];
     _responseFD = open([_responsePath fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     GWS_DCHECK(_responseFD > 0);
   }
 #endif
-  
+
   return YES;
 }
 
 - (void)didReadBytes:(const void*)bytes length:(NSUInteger)length {
   GWS_LOG_DEBUG(@"Connection received %lu bytes on socket %i", (unsigned long)length, _socket);
   _bytesRead += length;
-  
+
 #ifdef __GCDWEBSERVER_ENABLE_TESTING__
   if ((_requestFD > 0) && (write(_requestFD, bytes, length) != (ssize_t)length)) {
     GWS_LOG_ERROR(@"Failed recording request data: %s (%i)", strerror(errno), errno);
@@ -691,7 +692,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 - (void)didWriteBytes:(const void*)bytes length:(NSUInteger)length {
   GWS_LOG_DEBUG(@"Connection sent %lu bytes on socket %i", (unsigned long)length, _socket);
   _bytesWritten += length;
-  
+
 #ifdef __GCDWEBSERVER_ENABLE_TESTING__
   if ((_responseFD > 0) && (write(_responseFD, bytes, length) != (ssize_t)length)) {
     GWS_LOG_ERROR(@"Failed recording response data: %s (%i)", strerror(errno), errno);
@@ -824,7 +825,7 @@ static inline BOOL _CompareResources(NSString* responseETag, NSString* requestET
     }
     unlink([_requestPath fileSystemRepresentation]);
   }
-  
+
   if (_responsePath) {
     BOOL success = NO;
     NSError* error = nil;
@@ -840,7 +841,7 @@ static inline BOOL _CompareResources(NSString* responseETag, NSString* requestET
     unlink([_responsePath fileSystemRepresentation]);
   }
 #endif
-  
+
   if (_request) {
     GWS_LOG_VERBOSE(@"[%@] %@ %i \"%@ %@\" (%lu | %lu)", self.localAddressString, self.remoteAddressString, (int)_statusCode, _virtualHEAD ? @"HEAD" : _request.method, _request.path, (unsigned long)_bytesRead, (unsigned long)_bytesWritten);
   } else {
