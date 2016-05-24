@@ -779,7 +779,6 @@ static inline NSString* _EncodeBase64(NSString* string) {
 }
 
 - (void)stop {
-  if (_options) {
 #if TARGET_OS_IPHONE
     if (_suspendInBackground) {
       [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
@@ -790,9 +789,6 @@ static inline NSString* _EncodeBase64(NSString* string) {
       [self _stop];
     }
     _options = nil;
-  } else {
-    GWS_DNOT_REACHED();
-  }
 }
 
 @end
