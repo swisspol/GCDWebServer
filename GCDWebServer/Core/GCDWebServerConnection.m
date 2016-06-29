@@ -763,6 +763,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
   }
   @catch (NSException* exception) {
     GWS_LOG_EXCEPTION(exception);
+    @throw;
   }
 }
 
