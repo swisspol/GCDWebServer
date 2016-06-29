@@ -7,7 +7,7 @@
 
 Pod::Spec.new do |s|
   s.name     = 'GCDWebServer'
-  s.version  = '3.3.3'
+  s.version  = '3.3.4'
   s.author   =  { 'Pierre-Olivier Latour' => 'info@pol-online.net' }
   s.license  = { :type => 'BSD', :file => 'LICENSE' }
   s.homepage = 'https://github.com/swisspol/GCDWebServer'
