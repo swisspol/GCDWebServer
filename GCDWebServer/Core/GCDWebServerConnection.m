@@ -762,8 +762,13 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     _handler.asyncProcessBlock(request, [completion copy]);
   }
   @catch (NSException* exception) {
+    [self handleException:exception forRequest:request];
     GWS_LOG_EXCEPTION(exception);
   }
+}
+
+- (void)handleException:(NSException *)exception forRequest:(GCDWebServerRequest *)request {
+  [self abortRequest:request withStatusCode:500];
 }
 
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.25
