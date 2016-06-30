@@ -149,6 +149,15 @@
 - (void)processRequest:(GCDWebServerRequest*)request completion:(GCDWebServerCompletionBlock)completion;
 
 /**
+ *  GCDWebserver will not throw the exception for keeping server running.
+ *
+ *  This method is called in processRequest:completion: if exception happen.
+ *
+ *  The default implementation will call abortRequest:withStatusCode: with 500 status code.
+ */
+- (void)handleException:(NSException *)exception forRequest:(GCDWebServerRequest *)request;
+
+/**
  *  Assuming a valid HTTP request was received and either -preflightRequest:
  *  or -processRequest:completion: returned a non-nil GCDWebServerResponse,
  *  this method is called to override the response.
