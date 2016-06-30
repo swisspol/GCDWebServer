@@ -758,12 +758,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 
 - (void)processRequest:(GCDWebServerRequest*)request completion:(GCDWebServerCompletionBlock)completion {
   GWS_LOG_DEBUG(@"Connection on socket %i processing request \"%@ %@\" with %lu bytes body", _socket, _virtualHEAD ? @"HEAD" : _request.method, _request.path, (unsigned long)_bytesRead);
-  @try {
-    _handler.asyncProcessBlock(request, [completion copy]);
-  }
-  @catch (NSException* exception) {
-    GWS_LOG_EXCEPTION(exception);
-  }
+  _handler.asyncProcessBlock(request, [completion copy]);
 }
 
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.25

@@ -92,7 +92,7 @@ static BOOL _run;
 #ifdef __GCDWEBSERVER_LOGGING_FACILITY_BUILTIN__
 
 void GCDWebServerLogMessage(GCDWebServerLoggingLevel level, NSString* format, ...) {
-  static const char* levelNames[] = {"DEBUG", "VERBOSE", "INFO", "WARNING", "ERROR", "EXCEPTION"};
+  static const char* levelNames[] = {"DEBUG", "VERBOSE", "INFO", "WARNING", "ERROR"};
   static int enableLogging = -1;
   if (enableLogging < 0) {
     enableLogging = (isatty(STDERR_FILENO) ? 1 : 0);
@@ -1129,10 +1129,6 @@ static inline NSString* _EncodeBase64(NSString* string) {
   va_start(arguments, format);
   GWS_LOG_ERROR(@"%@", [[NSString alloc] initWithFormat:format arguments:arguments]);
   va_end(arguments);
-}
-
-- (void)logException:(NSException*)exception {
-  GWS_LOG_EXCEPTION(exception);
 }
 
 @end
