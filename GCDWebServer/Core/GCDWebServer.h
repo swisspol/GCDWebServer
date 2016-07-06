@@ -281,6 +281,9 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 
 @end
 
+@interface GCDWebServerHandler : NSObject
+@end
+
 /**
  *  The GCDWebServer class listens for incoming HTTP requests on a given port,
  *  then passes each one to a "handler" capable of generating an HTTP response
