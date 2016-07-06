@@ -355,21 +355,30 @@ static void _ExecuteMainThreadRunLoopSources() {
   return type && CFStringGetLength(type) ? CFBridgingRelease(CFStringCreateCopy(kCFAllocatorDefault, type)) : nil;
 }
 
-- (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock {
-  [self addHandlerWithMatchBlock:matchBlock asyncProcessBlock:^(GCDWebServerRequest* request, GCDWebServerCompletionBlock completionBlock) {
+- (GCDWebServerHandler*)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock {
+  return [self addHandlerWithMatchBlock:matchBlock asyncProcessBlock:^(GCDWebServerRequest* request, GCDWebServerCompletionBlock completionBlock) {
     completionBlock(processBlock(request));
   }];
 }
 
-- (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock asyncProcessBlock:(GCDWebServerAsyncProcessBlock)processBlock {
-  GWS_DCHECK(_options == nil);
+- (GCDWebServerHandler*)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock asyncProcessBlock:(GCDWebServerAsyncProcessBlock)processBlock {
   GCDWebServerHandler* handler = [[GCDWebServerHandler alloc] initWithMatchBlock:matchBlock asyncProcessBlock:processBlock];
-  [_handlers insertObject:handler atIndex:0];
+  @synchronized (self) {
+    [_handlers insertObject:handler atIndex:0];
+  }
+  return handler;
+}
+
+- (void)removeHandler:(GCDWebServerHandler*)handler {
+  @synchronized (self) {
+    [_handlers removeObject: handler];
+  }
 }
 
 - (void)removeAllHandlers {
-  GWS_DCHECK(_options == nil);
-  [_handlers removeAllObjects];
+  @synchronized (self) {
+    [_handlers removeAllObjects];
+  }
 }
 
 static void _NetServiceRegisterCallBack(CFNetServiceRef service, CFStreamError* error, void* info) {
