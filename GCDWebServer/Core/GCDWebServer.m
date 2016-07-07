@@ -943,6 +943,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
   } else {
     GWS_DNOT_REACHED();
   }
+  return nil;
 }
 
 - (GCDWebServerHandler*)addHandlerForMethod:(NSString*)method pathRegex:(NSString*)regex requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block {
@@ -986,6 +987,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
   } else {
     GWS_DNOT_REACHED();
   }
+  return nil;
 }
 
 @end
@@ -1096,6 +1098,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
   } else {
     GWS_DNOT_REACHED();
   }
+  return nil;
 }
 
 @end
