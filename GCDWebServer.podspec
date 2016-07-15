@@ -39,8 +39,6 @@ Pod::Spec.new do |s|
   end
   
   s.subspec 'WebDAV' do |cs|
-    cs.default_subspec = 'Core'
-
     cs.subspec "Core" do |ccs|
       ccs.dependency 'GCDWebServer/Core'
       ccs.source_files = 'GCDWebDAVServer/*.{h,m}'
@@ -58,8 +56,6 @@ Pod::Spec.new do |s|
   end
   
   s.subspec 'WebUploader' do |cs|
-    cs.default_subspec = 'Core'
-
     cs.subspec "Core" do |ccs|
       ccs.dependency 'GCDWebServer/Core'
       ccs.source_files = 'GCDWebUploader/*.{h,m}'
