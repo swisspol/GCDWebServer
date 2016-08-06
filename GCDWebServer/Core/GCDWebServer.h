@@ -546,12 +546,10 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *    GWS_LOG_INFO(...)
  *    GWS_LOG_WARNING(...)
  *    GWS_LOG_ERROR(...)
- *    GWS_LOG_EXCEPTION(__EXCEPTION__)
  *
- *  IMPORTANT: Except for GWS_LOG_EXCEPTION() which gets passed an NSException,
- *  these macros must behave like NSLog(). Furthermore the GWS_LOG_DEBUG() macro
- *  should not do anything unless the preprocessor constant "DEBUG" evaluates to
- *  non-zero.
+ *  IMPORTANT: These macros must behave like NSLog(). Furthermore the GWS_LOG_DEBUG()
+ *  macro should not do anything unless the preprocessor constant "DEBUG" evaluates
+ *  to non-zero.
  *
  *  The logging methods below send log messages to the same logging facility
  *  used by GCDWebServer. They can be used for consistency wherever you interact
@@ -571,7 +569,6 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *  INFO = 2
  *  WARNING = 3
  *  ERROR = 4
- *  EXCEPTION = 5
  */
 + (void)setLogLevel:(int)level;
 
@@ -594,11 +591,6 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *  Logs a message to the logging facility at the ERROR level.
  */
 - (void)logError:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
-
-/**
- *  Logs an exception to the logging facility at the EXCEPTION level.
- */
-- (void)logException:(NSException*)exception;
 
 @end
 

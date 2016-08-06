@@ -153,7 +153,7 @@ int main(int argc, const char* argv[]) {
 ***webServer.swift***
 ```swift
 import Foundation
-import GCDWebServers
+import GCDWebServer
 
 func initWebServer() {
 
@@ -172,8 +172,8 @@ func initWebServer() {
 
 ***WebServer-Bridging-Header.h***
 ```objectivec
-#import <GCDWebServers/GCDWebServer.h>
-#import <GCDWebServers/GCDWebServerDataResponse.h>
+#import <GCDWebServer/GCDWebServer.h>
+#import <GCDWebServer/GCDWebServerDataResponse.h>
 ```
 
 Web Based Uploads in iOS Apps
