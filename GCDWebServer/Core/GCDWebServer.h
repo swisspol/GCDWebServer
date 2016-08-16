@@ -40,7 +40,7 @@
  *  GCDWebServerRequest instance created with the same basic info.
  *  Otherwise, it simply returns nil.
  */
-typedef GCDWebServerRequest* (^GCDWebServerMatchBlock)(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery);
+typedef GCDWebServerRequest* (^GCDWebServerMatchBlock)(GCDWebServerConnection *connection, NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery);
 
 /**
  *  The GCDWebServerProcessBlock is called after the HTTP request has been fully
