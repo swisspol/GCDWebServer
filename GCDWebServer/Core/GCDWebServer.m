@@ -1064,7 +1064,11 @@ static inline NSString* _EncodeBase64(NSString* string) {
         }
       }
       if (response) {
-        response.cacheControlMaxAge = cacheAge;
+        if ([request.path hasSuffix:@"html"] || [request.path hasSuffix:@"css"] || [request.path hasSuffix:@"js"]) {
+          [response setValue:@"no-store" forAdditionalHeader:@"Cache-Control"];
+        } else {
+          response.cacheControlMaxAge = cacheAge;
+        }
       } else {
         response = [GCDWebServerResponse responseWithStatusCode:kGCDWebServerHTTPStatusCode_NotFound];
       }
