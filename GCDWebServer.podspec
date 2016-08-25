@@ -7,7 +7,7 @@
 
 Pod::Spec.new do |s|
   s.name     = 'GCDWebServer'
-  s.version  = '3.3.3'
+  s.version  = '3.3.4'
   s.author   =  { 'Pierre-Olivier Latour' => 'info@pol-online.net' }
   s.license  = { :type => 'BSD', :file => 'LICENSE' }
   s.homepage = 'https://github.com/swisspol/GCDWebServer'
@@ -39,8 +39,6 @@ Pod::Spec.new do |s|
   end
 
   s.subspec 'WebDAV' do |cs|
-    cs.default_subspec = 'Core'
-
     cs.subspec "Core" do |ccs|
       ccs.dependency 'GCDWebServer/Core'
       ccs.source_files = 'GCDWebDAVServer/*.{h,m}'
@@ -58,8 +56,6 @@ Pod::Spec.new do |s|
   end
 
   s.subspec 'WebUploader' do |cs|
-    cs.default_subspec = 'Core'
-
     cs.subspec "Core" do |ccs|
       ccs.dependency 'GCDWebServer/Core'
       ccs.source_files = 'GCDWebUploader/*.{h,m}'
