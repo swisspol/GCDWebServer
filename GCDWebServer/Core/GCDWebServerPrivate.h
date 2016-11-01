@@ -92,9 +92,6 @@
 
 #define __GCDWEBSERVER_LOGGING_FACILITY_COCOALUMBERJACK__
 
-/**
- * Whether async should be used by log messages, excluding error messages that are always sent sync.
- **/
 #ifndef LOG_ASYNC_ENABLED
     #define LOG_ASYNC_ENABLED YES
 #endif
