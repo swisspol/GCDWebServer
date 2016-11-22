@@ -30,6 +30,8 @@
 #import "GCDWebServerRequest.h"
 #import "GCDWebServerResponse.h"
 
+@class GCDWebServerHandler;
+
 /**
  *  The GCDWebServerMatchBlock is called for every handler added to the
  *  GCDWebServer whenever a new HTTP request has started (i.e. HTTP headers have
@@ -279,6 +281,9 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 
 @end
 
+@interface GCDWebServerHandler : NSObject
+@end
+
 /**
  *  The GCDWebServer class listens for incoming HTTP requests on a given port,
  *  then passes each one to a "handler" capable of generating an HTTP response
@@ -336,9 +341,11 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *  Handlers are called in a LIFO queue, so if multiple handlers can potentially
  *  respond to a given request, the latest added one wins.
  *
- *  @warning Addling handlers while the server is running is not allowed.
+ *  Adding and removing handlers during runtime is allowed.
+ *
+ *  Returns a reference to the newly added handler. Keep this reference, if you want to remove the handler later.
  */
-- (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
+- (GCDWebServerHandler*)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock processBlock:(GCDWebServerProcessBlock)processBlock;
 
 /**
  *  Adds to the server a handler that generates responses asynchronously when handling incoming HTTP requests.
@@ -346,14 +353,19 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *  Handlers are called in a LIFO queue, so if multiple handlers can potentially
  *  respond to a given request, the latest added one wins.
  *
- *  @warning Addling handlers while the server is running is not allowed.
+ *  Adding and removing handlers during runtime is allowed.
+ *
+ *  Returns a reference to the newly added handler. Keep this reference, if you want to remove the handler later.
  */
-- (void)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock asyncProcessBlock:(GCDWebServerAsyncProcessBlock)processBlock;
+- (GCDWebServerHandler*)addHandlerWithMatchBlock:(GCDWebServerMatchBlock)matchBlock asyncProcessBlock:(GCDWebServerAsyncProcessBlock)processBlock;
+
+/**
+ *  Removes the given handler from the server. See addHandlerWithMatchBlock:asyncProcessBlock:.
+ */
+- (void)removeHandler:(GCDWebServerHandler*)handler;
 
 /**
  *  Removes all handlers previously added to the server.
- *
- *  @warning Removing handlers while the server is running is not allowed.
  */
 - (void)removeAllHandlers;
 
@@ -454,41 +466,41 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *  Adds a default handler to the server to handle all incoming HTTP requests
  *  with a given HTTP method and generate responses synchronously.
  */
-- (void)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block;
+- (GCDWebServerHandler*)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block;
 
 /**
  *  Adds a default handler to the server to handle all incoming HTTP requests
  *  with a given HTTP method and generate responses asynchronously.
  */
-- (void)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)aClass asyncProcessBlock:(GCDWebServerAsyncProcessBlock)block;
+- (GCDWebServerHandler*)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)aClass asyncProcessBlock:(GCDWebServerAsyncProcessBlock)block;
 
 /**
  *  Adds a handler to the server to handle incoming HTTP requests with a given
  *  HTTP method and a specific case-insensitive path  and generate responses
  *  synchronously.
  */
-- (void)addHandlerForMethod:(NSString*)method path:(NSString*)path requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block;
+- (GCDWebServerHandler*)addHandlerForMethod:(NSString*)method path:(NSString*)path requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block;
 
 /**
  *  Adds a handler to the server to handle incoming HTTP requests with a given
  *  HTTP method and a specific case-insensitive path and generate responses
  *  asynchronously.
  */
-- (void)addHandlerForMethod:(NSString*)method path:(NSString*)path requestClass:(Class)aClass asyncProcessBlock:(GCDWebServerAsyncProcessBlock)block;
+- (GCDWebServerHandler*)addHandlerForMethod:(NSString*)method path:(NSString*)path requestClass:(Class)aClass asyncProcessBlock:(GCDWebServerAsyncProcessBlock)block;
 
 /**
  *  Adds a handler to the server to handle incoming HTTP requests with a given
  *  HTTP method and a path matching a case-insensitive regular expression and
  *  generate responses synchronously.
  */
-- (void)addHandlerForMethod:(NSString*)method pathRegex:(NSString*)regex requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block;
+- (GCDWebServerHandler*)addHandlerForMethod:(NSString*)method pathRegex:(NSString*)regex requestClass:(Class)aClass processBlock:(GCDWebServerProcessBlock)block;
 
 /**
  *  Adds a handler to the server to handle incoming HTTP requests with a given
  *  HTTP method and a path matching a case-insensitive regular expression and
  *  generate responses asynchronously.
  */
-- (void)addHandlerForMethod:(NSString*)method pathRegex:(NSString*)regex requestClass:(Class)aClass asyncProcessBlock:(GCDWebServerAsyncProcessBlock)block;
+- (GCDWebServerHandler*)addHandlerForMethod:(NSString*)method pathRegex:(NSString*)regex requestClass:(Class)aClass asyncProcessBlock:(GCDWebServerAsyncProcessBlock)block;
 
 @end
 
@@ -498,13 +510,13 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *  Adds a handler to the server to respond to incoming "GET" HTTP requests
  *  with a specific case-insensitive path with in-memory data.
  */
-- (void)addGETHandlerForPath:(NSString*)path staticData:(NSData*)staticData contentType:(NSString*)contentType cacheAge:(NSUInteger)cacheAge;
+- (GCDWebServerHandler*)addGETHandlerForPath:(NSString*)path staticData:(NSData*)staticData contentType:(NSString*)contentType cacheAge:(NSUInteger)cacheAge;
 
 /**
  *  Adds a handler to the server to respond to incoming "GET" HTTP requests
  *  with a specific case-insensitive path with a file.
  */
-- (void)addGETHandlerForPath:(NSString*)path filePath:(NSString*)filePath isAttachment:(BOOL)isAttachment cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests;
+- (GCDWebServerHandler*)addGETHandlerForPath:(NSString*)path filePath:(NSString*)filePath isAttachment:(BOOL)isAttachment cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests;
 
 /**
  *  Adds a handler to the server to respond to incoming "GET" HTTP requests
@@ -515,7 +527,7 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *  The "indexFilename" argument allows to specify an "index" file name to use
  *  when the request path corresponds to a directory.
  */
-- (void)addGETHandlerForBasePath:(NSString*)basePath directoryPath:(NSString*)directoryPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests;
+- (GCDWebServerHandler*)addGETHandlerForBasePath:(NSString*)basePath directoryPath:(NSString*)directoryPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests;
 
 @end
 
