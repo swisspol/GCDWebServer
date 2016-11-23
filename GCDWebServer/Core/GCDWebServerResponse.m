@@ -166,6 +166,7 @@
   NSDate* _lastModified;
   NSString* _eTag;
   NSMutableDictionary* _headers;
+  NSMutableArray *_cookies;
   BOOL _chunked;
   BOOL _gzipped;
   
@@ -178,7 +179,7 @@
 @implementation GCDWebServerResponse
 
 @synthesize contentType=_type, contentLength=_length, statusCode=_status, cacheControlMaxAge=_maxAge, lastModifiedDate=_lastModified, eTag=_eTag,
-            gzipContentEncodingEnabled=_gzipped, additionalHeaders=_headers;
+            gzipContentEncodingEnabled=_gzipped, additionalHeaders=_headers, cookies=_cookies;
 
 + (instancetype)response {
   return [[[self class] alloc] init];
@@ -192,12 +193,17 @@
     _maxAge = 0;
     _headers = [[NSMutableDictionary alloc] init];
     _encoders = [[NSMutableArray alloc] init];
+    _cookies = [[NSMutableArray alloc] init];
   }
   return self;
 }
 
 - (void)setValue:(NSString*)value forAdditionalHeader:(NSString*)header {
   [_headers setValue:value forKey:header];
+}
+
+- (void)appendCookieString:(NSString *)cookieString {
+  [_cookies addObject:cookieString];
 }
 
 - (BOOL)hasBody {

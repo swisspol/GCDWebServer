@@ -177,6 +177,13 @@ typedef void (^GCDWebServerBodyReaderCompletionBlock)(NSData* data, NSError* err
 - (void)setValue:(NSString*)value forAdditionalHeader:(NSString*)header;
 
 /**
+ *  Sets an additional "Set-Cookie" HTTP header on the response.
+ *
+ *  @warning There is no way to remove set cookies for now.
+ */
+- (void)appendCookieString:(NSString *)cookieString;
+
+/**
  *  Convenience method that checks if the contentType property is defined.
  */
 - (BOOL)hasBody;
