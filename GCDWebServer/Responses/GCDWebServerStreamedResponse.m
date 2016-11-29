@@ -34,6 +34,7 @@
 @interface GCDWebServerStreamedResponse () {
 @private
   GCDWebServerAsyncStreamBlock _block;
+  dispatch_once_t _haveCalledBlockToken;
 }
 @end
 
@@ -60,6 +61,7 @@
 - (instancetype)initWithContentType:(NSString*)type asyncStreamBlock:(GCDWebServerAsyncStreamBlock)block {
   if ((self = [super init])) {
     _block = [block copy];
+    _haveCalledBlockToken = 0;
     
     self.contentType = type;
   }
@@ -67,7 +69,14 @@
 }
 
 - (void)asyncReadDataWithCompletion:(GCDWebServerBodyReaderCompletionBlock)block {
-  _block(block);
+  //We do not want to repeatedly invoke the callback provided to us;
+  //This method being called means the webserver is ready for more data. Once the
+  //caller of this library has the GCDWebServerBodyReaderCompletionBlock, it can
+  //keep calling it without having it's asyncProgressBlock called many times.
+  //See PR #118
+  dispatch_once(&_haveCalledBlockToken, ^{
+    _block(block);
+  });
 }
 
 - (NSString*)description {
