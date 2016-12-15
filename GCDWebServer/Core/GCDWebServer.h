@@ -303,6 +303,11 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 @property(nonatomic, readonly, getter=isRunning) BOOL running;
 
 /**
+ *  Returns YES if the server has active connections.
+ */
+@property(nonatomic, readonly, getter=hasActiveConnections) BOOL activeConnections;
+
+/**
  *  Returns the port used by the server.
  *
  *  @warning This property is only valid if the server is running.
