@@ -147,7 +147,7 @@ int main(int argc, const char* argv[]) {
     NSString* authenticationPassword = nil;
     BOOL bindToLocalhost = NO;
     BOOL requestNATPortMapping = NO;
-    
+
     if (argc == 1) {
       fprintf(stdout, "Usage: %s [-mode webServer | htmlPage | htmlForm | htmlFileUpload | webDAV | webUploader | streamingResponse | asyncResponse] [-record] [-root directory] [-tests directory] [-authenticationMethod Basic | Digest] [-authenticationRealm realm] [-authenticationUser user] [-authenticationPassword password] [--localhost]\n\n", basename((char*)argv[0]));
     } else {
@@ -201,10 +201,9 @@ int main(int argc, const char* argv[]) {
         }
       }
     }
-    
+
     GCDWebServer* webServer = nil;
     switch (mode) {
-      
       // Simply serve contents of home directory
       case kMode_WebServer: {
         fprintf(stdout, "Running in Web Server mode from \"%s\"", [rootDirectory UTF8String]);
@@ -212,21 +211,21 @@ int main(int argc, const char* argv[]) {
         [webServer addGETHandlerForBasePath:@"/" directoryPath:rootDirectory indexFilename:nil cacheAge:0 allowRangeRequests:YES];
         break;
       }
-      
+
       // Renders a HTML page
       case kMode_HTMLPage: {
         fprintf(stdout, "Running in HTML Page mode");
         webServer = [[GCDWebServer alloc] init];
         [webServer addDefaultHandlerForMethod:@"GET"
                                  requestClass:[GCDWebServerRequest class]
-                                 processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-          
-          return [GCDWebServerDataResponse responseWithHTML:@"<html><body><p>Hello World</p></body></html>"];
-          
-        }];
+                                 processBlock:^GCDWebServerResponse*(GCDWebServerRequest* request) {
+
+                                   return [GCDWebServerDataResponse responseWithHTML:@"<html><body><p>Hello World</p></body></html>"];
+
+                                 }];
         break;
       }
-      
+
       // Implements an HTML form
       case kMode_HTMLForm: {
         fprintf(stdout, "Running in HTML Form mode");
@@ -234,9 +233,9 @@ int main(int argc, const char* argv[]) {
         [webServer addHandlerForMethod:@"GET"
                                   path:@"/"
                           requestClass:[GCDWebServerRequest class]
-                          processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-          
-          NSString* html = @" \
+                          processBlock:^GCDWebServerResponse*(GCDWebServerRequest* request) {
+
+                            NSString* html = @" \
             <html><body> \
               <form name=\"input\" action=\"/\" method=\"post\" enctype=\"application/x-www-form-urlencoded\"> \
               Value: <input type=\"text\" name=\"value\"> \
@@ -244,22 +243,22 @@ int main(int argc, const char* argv[]) {
               </form> \
             </body></html> \
           ";
-          return [GCDWebServerDataResponse responseWithHTML:html];
-          
-        }];
+                            return [GCDWebServerDataResponse responseWithHTML:html];
+
+                          }];
         [webServer addHandlerForMethod:@"POST"
                                   path:@"/"
                           requestClass:[GCDWebServerURLEncodedFormRequest class]
-                          processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-          
-          NSString* value = [[(GCDWebServerURLEncodedFormRequest*)request arguments] objectForKey:@"value"];
-          NSString* html = [NSString stringWithFormat:@"<html><body><p>%@</p></body></html>", value];
-          return [GCDWebServerDataResponse responseWithHTML:html];
-          
-        }];
+                          processBlock:^GCDWebServerResponse*(GCDWebServerRequest* request) {
+
+                            NSString* value = [[(GCDWebServerURLEncodedFormRequest*)request arguments] objectForKey:@"value"];
+                            NSString* html = [NSString stringWithFormat:@"<html><body><p>%@</p></body></html>", value];
+                            return [GCDWebServerDataResponse responseWithHTML:html];
+
+                          }];
         break;
       }
-      
+
       // Implements HTML file upload
       case kMode_HTMLFileUpload: {
         fprintf(stdout, "Running in HTML File Upload mode");
@@ -274,48 +273,48 @@ int main(int argc, const char* argv[]) {
         [webServer addHandlerForMethod:@"GET"
                                   path:@"/"
                           requestClass:[GCDWebServerRequest class]
-                          processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-          
-          NSString* html = [NSString stringWithFormat:@"<html><body>%@</body></html>", formHTML];
-          return [GCDWebServerDataResponse responseWithHTML:html];
-          
-        }];
+                          processBlock:^GCDWebServerResponse*(GCDWebServerRequest* request) {
+
+                            NSString* html = [NSString stringWithFormat:@"<html><body>%@</body></html>", formHTML];
+                            return [GCDWebServerDataResponse responseWithHTML:html];
+
+                          }];
         [webServer addHandlerForMethod:@"POST"
                                   path:@"/"
                           requestClass:[GCDWebServerMultiPartFormRequest class]
-                          processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-          
-          NSMutableString* string = [NSMutableString string];
-          for (GCDWebServerMultiPartArgument* argument in [(GCDWebServerMultiPartFormRequest*)request arguments]) {
-            [string appendFormat:@"%@ = %@<br>", argument.controlName, argument.string];
-          }
-          for (GCDWebServerMultiPartFile* file in [(GCDWebServerMultiPartFormRequest*)request files]) {
-            NSDictionary* attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:file.temporaryPath error:NULL];
-            [string appendFormat:@"%@ = &quot;%@&quot; (%@ | %llu %@)<br>", file.controlName, file.fileName, file.mimeType,
-                                 attributes.fileSize >= 1000 ? attributes.fileSize / 1000 : attributes.fileSize,
-                                 attributes.fileSize >= 1000 ? @"KB" : @"Bytes"];
-          };
-          NSString* html = [NSString stringWithFormat:@"<html><body><p>%@</p><hr>%@</body></html>", string, formHTML];
-          return [GCDWebServerDataResponse responseWithHTML:html];
-          
-        }];
+                          processBlock:^GCDWebServerResponse*(GCDWebServerRequest* request) {
+
+                            NSMutableString* string = [NSMutableString string];
+                            for (GCDWebServerMultiPartArgument* argument in [(GCDWebServerMultiPartFormRequest*)request arguments]) {
+                              [string appendFormat:@"%@ = %@<br>", argument.controlName, argument.string];
+                            }
+                            for (GCDWebServerMultiPartFile* file in [(GCDWebServerMultiPartFormRequest*)request files]) {
+                              NSDictionary* attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:file.temporaryPath error:NULL];
+                              [string appendFormat:@"%@ = &quot;%@&quot; (%@ | %llu %@)<br>", file.controlName, file.fileName, file.mimeType,
+                                                   attributes.fileSize >= 1000 ? attributes.fileSize / 1000 : attributes.fileSize,
+                                                   attributes.fileSize >= 1000 ? @"KB" : @"Bytes"];
+                            };
+                            NSString* html = [NSString stringWithFormat:@"<html><body><p>%@</p><hr>%@</body></html>", string, formHTML];
+                            return [GCDWebServerDataResponse responseWithHTML:html];
+
+                          }];
         break;
       }
-      
+
       // Serve home directory through WebDAV
       case kMode_WebDAV: {
         fprintf(stdout, "Running in WebDAV mode from \"%s\"", [rootDirectory UTF8String]);
         webServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:rootDirectory];
         break;
       }
-      
+
       // Serve home directory through web uploader
       case kMode_WebUploader: {
         fprintf(stdout, "Running in Web Uploader mode from \"%s\"", [rootDirectory UTF8String]);
         webServer = [[GCDWebUploader alloc] initWithUploadDirectory:rootDirectory];
         break;
       }
-      
+
       // Test streaming responses
       case kMode_StreamingResponse: {
         fprintf(stdout, "Running in Streaming Response mode");
@@ -323,42 +322,44 @@ int main(int argc, const char* argv[]) {
         [webServer addHandlerForMethod:@"GET"
                                   path:@"/sync"
                           requestClass:[GCDWebServerRequest class]
-                          processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-          
-          __block int countDown = 10;
-          return [GCDWebServerStreamedResponse responseWithContentType:@"text/plain" streamBlock:^NSData *(NSError** error) {
-            
-            usleep(100 * 1000);
-            if (countDown) {
-              return [[NSString stringWithFormat:@"%i\n", countDown--] dataUsingEncoding:NSUTF8StringEncoding];
-            } else {
-              return [NSData data];
-            }
-            
-          }];
-          
-        }];
+                          processBlock:^GCDWebServerResponse*(GCDWebServerRequest* request) {
+
+                            __block int countDown = 10;
+                            return [GCDWebServerStreamedResponse responseWithContentType:@"text/plain"
+                                                                             streamBlock:^NSData*(NSError** error) {
+
+                                                                               usleep(100 * 1000);
+                                                                               if (countDown) {
+                                                                                 return [[NSString stringWithFormat:@"%i\n", countDown--] dataUsingEncoding:NSUTF8StringEncoding];
+                                                                               } else {
+                                                                                 return [NSData data];
+                                                                               }
+
+                                                                             }];
+
+                          }];
         [webServer addHandlerForMethod:@"GET"
                                   path:@"/async"
                           requestClass:[GCDWebServerRequest class]
-                          processBlock:^GCDWebServerResponse *(GCDWebServerRequest* request) {
-          
-          __block int countDown = 10;
-          return [GCDWebServerStreamedResponse responseWithContentType:@"text/plain" asyncStreamBlock:^(GCDWebServerBodyReaderCompletionBlock completionBlock) {
-            
-            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-              
-              NSData* data = countDown ? [[NSString stringWithFormat:@"%i\n", countDown--] dataUsingEncoding:NSUTF8StringEncoding] : [NSData data];
-              completionBlock(data, nil);
-              
-            });
-            
-          }];
-          
-        }];
+                          processBlock:^GCDWebServerResponse*(GCDWebServerRequest* request) {
+
+                            __block int countDown = 10;
+                            return [GCDWebServerStreamedResponse responseWithContentType:@"text/plain"
+                                                                        asyncStreamBlock:^(GCDWebServerBodyReaderCompletionBlock completionBlock) {
+
+                                                                          dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+
+                                                                            NSData* data = countDown ? [[NSString stringWithFormat:@"%i\n", countDown--] dataUsingEncoding:NSUTF8StringEncoding] : [NSData data];
+                                                                            completionBlock(data, nil);
+
+                                                                          });
+
+                                                                        }];
+
+                          }];
         break;
       }
-      
+
       // Test async responses
       case kMode_AsyncResponse: {
         fprintf(stdout, "Running in Async Response mode");
@@ -367,41 +368,41 @@ int main(int argc, const char* argv[]) {
                                   path:@"/async"
                           requestClass:[GCDWebServerRequest class]
                      asyncProcessBlock:^(GCDWebServerRequest* request, GCDWebServerCompletionBlock completionBlock) {
-          
-          dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            GCDWebServerDataResponse* response = [GCDWebServerDataResponse responseWithData:[@"Hello World!" dataUsingEncoding:NSUTF8StringEncoding] contentType:@"text/plain"];
-            completionBlock(response);
-          });
-          
-        }];
+
+                       dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                         GCDWebServerDataResponse* response = [GCDWebServerDataResponse responseWithData:[@"Hello World!" dataUsingEncoding:NSUTF8StringEncoding] contentType:@"text/plain"];
+                         completionBlock(response);
+                       });
+
+                     }];
         [webServer addHandlerForMethod:@"GET"
                                   path:@"/async2"
                           requestClass:[GCDWebServerRequest class]
                      asyncProcessBlock:^(GCDWebServerRequest* request, GCDWebServerCompletionBlock handlerCompletionBlock) {
-          
-          dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            
-            __block int countDown = 10;
-            GCDWebServerStreamedResponse* response = [GCDWebServerStreamedResponse responseWithContentType:@"text/plain" asyncStreamBlock:^(GCDWebServerBodyReaderCompletionBlock readerCompletionBlock) {
-              
-              dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                
-                NSData* data = countDown ? [[NSString stringWithFormat:@"%i\n", countDown--] dataUsingEncoding:NSUTF8StringEncoding] : [NSData data];
-                readerCompletionBlock(data, nil);
-                
-              });
-              
-            }];
-            handlerCompletionBlock(response);
-            
-          });
-          
-        }];
+
+                       dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+
+                         __block int countDown = 10;
+                         GCDWebServerStreamedResponse* response = [GCDWebServerStreamedResponse responseWithContentType:@"text/plain"
+                                                                                                       asyncStreamBlock:^(GCDWebServerBodyReaderCompletionBlock readerCompletionBlock) {
+
+                                                                                                         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+
+                                                                                                           NSData* data = countDown ? [[NSString stringWithFormat:@"%i\n", countDown--] dataUsingEncoding:NSUTF8StringEncoding] : [NSData data];
+                                                                                                           readerCompletionBlock(data, nil);
+
+                                                                                                         });
+
+                                                                                                       }];
+                         handlerCompletionBlock(response);
+
+                       });
+
+                     }];
         break;
       }
-      
     }
-    
+
     if (webServer) {
       Delegate* delegate = [[Delegate alloc] init];
       if (testDirectory) {
@@ -409,7 +410,7 @@ int main(int argc, const char* argv[]) {
         webServer.delegate = delegate;
 #endif
         fprintf(stdout, "<RUNNING TESTS FROM \"%s\">\n\n", [testDirectory UTF8String]);
-        result = (int)[webServer runTestsWithOptions:@{GCDWebServerOption_Port: @8080} inDirectory:testDirectory];
+        result = (int)[webServer runTestsWithOptions:@{ GCDWebServerOption_Port : @8080 } inDirectory:testDirectory];
       } else {
         webServer.delegate = delegate;
         if (recording) {
@@ -424,7 +425,7 @@ int main(int argc, const char* argv[]) {
         [options setObject:@"" forKey:GCDWebServerOption_BonjourName];
         if (authenticationUser && authenticationPassword) {
           [options setValue:authenticationRealm forKey:GCDWebServerOption_AuthenticationRealm];
-          [options setObject:@{authenticationUser: authenticationPassword} forKey:GCDWebServerOption_AuthenticationAccounts];
+          [options setObject:@{ authenticationUser : authenticationPassword } forKey:GCDWebServerOption_AuthenticationAccounts];
           if ([authenticationMethod isEqualToString:@"Basic"]) {
             [options setObject:GCDWebServerAuthenticationMethod_Basic forKey:GCDWebServerOption_AuthenticationMethod];
           } else if ([authenticationMethod isEqualToString:@"Digest"]) {

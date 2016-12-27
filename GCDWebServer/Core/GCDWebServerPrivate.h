@@ -123,14 +123,29 @@ extern GCDWebServerLoggingLevel GCDWebServerLogLevel;
 extern void GCDWebServerLogMessage(GCDWebServerLoggingLevel level, NSString* format, ...) NS_FORMAT_FUNCTION(2, 3);
 
 #if DEBUG
-#define GWS_LOG_DEBUG(...) do { if (GCDWebServerLogLevel <= kGCDWebServerLoggingLevel_Debug) GCDWebServerLogMessage(kGCDWebServerLoggingLevel_Debug, __VA_ARGS__); } while (0)
+#define GWS_LOG_DEBUG(...)                                                                                                             \
+  do {                                                                                                                                 \
+    if (GCDWebServerLogLevel <= kGCDWebServerLoggingLevel_Debug) GCDWebServerLogMessage(kGCDWebServerLoggingLevel_Debug, __VA_ARGS__); \
+  } while (0)
 #else
 #define GWS_LOG_DEBUG(...)
 #endif
-#define GWS_LOG_VERBOSE(...) do { if (GCDWebServerLogLevel <= kGCDWebServerLoggingLevel_Verbose) GCDWebServerLogMessage(kGCDWebServerLoggingLevel_Verbose, __VA_ARGS__); } while (0)
-#define GWS_LOG_INFO(...) do { if (GCDWebServerLogLevel <= kGCDWebServerLoggingLevel_Info) GCDWebServerLogMessage(kGCDWebServerLoggingLevel_Info, __VA_ARGS__); } while (0)
-#define GWS_LOG_WARNING(...) do { if (GCDWebServerLogLevel <= kGCDWebServerLoggingLevel_Warning) GCDWebServerLogMessage(kGCDWebServerLoggingLevel_Warning, __VA_ARGS__); } while (0)
-#define GWS_LOG_ERROR(...) do { if (GCDWebServerLogLevel <= kGCDWebServerLoggingLevel_Error) GCDWebServerLogMessage(kGCDWebServerLoggingLevel_Error, __VA_ARGS__); } while (0)
+#define GWS_LOG_VERBOSE(...)                                                                                                               \
+  do {                                                                                                                                     \
+    if (GCDWebServerLogLevel <= kGCDWebServerLoggingLevel_Verbose) GCDWebServerLogMessage(kGCDWebServerLoggingLevel_Verbose, __VA_ARGS__); \
+  } while (0)
+#define GWS_LOG_INFO(...)                                                                                                            \
+  do {                                                                                                                               \
+    if (GCDWebServerLogLevel <= kGCDWebServerLoggingLevel_Info) GCDWebServerLogMessage(kGCDWebServerLoggingLevel_Info, __VA_ARGS__); \
+  } while (0)
+#define GWS_LOG_WARNING(...)                                                                                                               \
+  do {                                                                                                                                     \
+    if (GCDWebServerLogLevel <= kGCDWebServerLoggingLevel_Warning) GCDWebServerLogMessage(kGCDWebServerLoggingLevel_Warning, __VA_ARGS__); \
+  } while (0)
+#define GWS_LOG_ERROR(...)                                                                                                             \
+  do {                                                                                                                                 \
+    if (GCDWebServerLogLevel <= kGCDWebServerLoggingLevel_Error) GCDWebServerLogMessage(kGCDWebServerLoggingLevel_Error, __VA_ARGS__); \
+  } while (0)
 
 #endif
 
@@ -143,10 +158,10 @@ extern void GCDWebServerLogMessage(GCDWebServerLoggingLevel level, NSString* for
 #if DEBUG
 
 #define GWS_DCHECK(__CONDITION__) \
-  do { \
-    if (!(__CONDITION__)) { \
-      abort(); \
-    } \
+  do {                            \
+    if (!(__CONDITION__)) {       \
+      abort();                    \
+    }                             \
   } while (0)
 #define GWS_DNOT_REACHED() abort()
 
@@ -171,7 +186,7 @@ static inline BOOL GCDWebServerIsValidByteRange(NSRange range) {
 }
 
 static inline NSError* GCDWebServerMakePosixError(int code) {
-  return [NSError errorWithDomain:NSPOSIXErrorDomain code:code userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithUTF8String:strerror(code)]}];
+  return [NSError errorWithDomain:NSPOSIXErrorDomain code:code userInfo:@{NSLocalizedDescriptionKey : [NSString stringWithUTF8String:strerror(code)]}];
 }
 
 extern void GCDWebServerInitializeFunctions();
@@ -181,7 +196,7 @@ extern NSString* GCDWebServerExtractHeaderValueParameter(NSString* header, NSStr
 extern NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset);
 extern BOOL GCDWebServerIsTextContentType(NSString* type);
 extern NSString* GCDWebServerDescribeData(NSData* data, NSString* contentType);
-extern NSString* GCDWebServerComputeMD5Digest(NSString* format, ...) NS_FORMAT_FUNCTION(1,2);
+extern NSString* GCDWebServerComputeMD5Digest(NSString* format, ...) NS_FORMAT_FUNCTION(1, 2);
 extern NSString* GCDWebServerStringFromSockAddr(const struct sockaddr* addr, BOOL includeService);
 
 @interface GCDWebServerConnection ()

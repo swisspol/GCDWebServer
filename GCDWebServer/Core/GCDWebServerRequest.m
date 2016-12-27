@@ -159,7 +159,7 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
   BOOL _gzipAccepted;
   NSData* _localAddress;
   NSData* _remoteAddress;
-  
+
   BOOL _opened;
   NSMutableArray* _decoders;
   NSMutableDictionary* _attributes;
@@ -169,8 +169,8 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
 
 @implementation GCDWebServerRequest : NSObject
 
-@synthesize method=_method, URL=_url, headers=_headers, path=_path, query=_query, contentType=_type, contentLength=_length, ifModifiedSince=_modifiedSince, ifNoneMatch=_noneMatch,
-            byteRange=_range, acceptsGzipContentEncoding=_gzipAccepted, usesChunkedTransferEncoding=_chunked, localAddressData=_localAddress, remoteAddressData=_remoteAddress;
+@synthesize method = _method, URL = _url, headers = _headers, path = _path, query = _query, contentType = _type, contentLength = _length, ifModifiedSince = _modifiedSince, ifNoneMatch = _noneMatch,
+            byteRange = _range, acceptsGzipContentEncoding = _gzipAccepted, usesChunkedTransferEncoding = _chunked, localAddressData = _localAddress, remoteAddressData = _remoteAddress;
 
 - (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
   if ((self = [super init])) {
@@ -179,7 +179,7 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
     _headers = headers;
     _path = [path copy];
     _query = query;
-    
+
     _type = GCDWebServerNormalizeHeaderValue([_headers objectForKey:@"Content-Type"]);
     _chunked = [GCDWebServerNormalizeHeaderValue([_headers objectForKey:@"Transfer-Encoding"]) isEqualToString:@"chunked"];
     NSString* lengthHeader = [_headers objectForKey:@"Content-Length"];
@@ -206,13 +206,13 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
       }
       _length = NSUIntegerMax;
     }
-    
+
     NSString* modifiedHeader = [_headers objectForKey:@"If-Modified-Since"];
     if (modifiedHeader) {
       _modifiedSince = [GCDWebServerParseRFC822(modifiedHeader) copy];
     }
     _noneMatch = [_headers objectForKey:@"If-None-Match"];
-    
+
     _range = NSMakeRange(NSUIntegerMax, 0);
     NSString* rangeHeader = GCDWebServerNormalizeHeaderValue([_headers objectForKey:@"Range"]);
     if (rangeHeader) {
@@ -242,11 +242,11 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
         GWS_LOG_WARNING(@"Failed to parse 'Range' header \"%@\" for url: %@", rangeHeader, url);
       }
     }
-    
+
     if ([[_headers objectForKey:@"Accept-Encoding"] rangeOfString:@"gzip"].location != NSNotFound) {
       _gzipAccepted = YES;
     }
-    
+
     _decoders = [[NSMutableArray alloc] init];
     _attributes = [[NSMutableDictionary alloc] init];
   }

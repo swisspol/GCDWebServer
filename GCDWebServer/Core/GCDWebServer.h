@@ -575,22 +575,22 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 /**
  *  Logs a message to the logging facility at the VERBOSE level.
  */
-- (void)logVerbose:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
+- (void)logVerbose:(NSString*)format, ... NS_FORMAT_FUNCTION(1, 2);
 
 /**
  *  Logs a message to the logging facility at the INFO level.
  */
-- (void)logInfo:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
+- (void)logInfo:(NSString*)format, ... NS_FORMAT_FUNCTION(1, 2);
 
 /**
  *  Logs a message to the logging facility at the WARNING level.
  */
-- (void)logWarning:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
+- (void)logWarning:(NSString*)format, ... NS_FORMAT_FUNCTION(1, 2);
 
 /**
  *  Logs a message to the logging facility at the ERROR level.
  */
-- (void)logError:(NSString*)format, ... NS_FORMAT_FUNCTION(1,2);
+- (void)logError:(NSString*)format, ... NS_FORMAT_FUNCTION(1, 2);
 
 @end
 

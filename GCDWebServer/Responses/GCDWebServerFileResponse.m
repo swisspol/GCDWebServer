@@ -91,7 +91,7 @@ static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
   }
 #endif
   NSUInteger fileSize = (NSUInteger)info.st_size;
-  
+
   BOOL hasByteRange = GCDWebServerIsValidByteRange(range);
   if (hasByteRange) {
     if (range.location != NSUIntegerMax) {
@@ -108,7 +108,7 @@ static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
     range.location = 0;
     range.length = fileSize;
   }
-  
+
   if ((self = [super init])) {
     _path = [path copy];
     _offset = range.location;
@@ -118,7 +118,7 @@ static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
       [self setValue:[NSString stringWithFormat:@"bytes %lu-%lu/%lu", (unsigned long)_offset, (unsigned long)(_offset + _size - 1), (unsigned long)fileSize] forAdditionalHeader:@"Content-Range"];
       GWS_LOG_DEBUG(@"Using content bytes range [%lu-%lu] for file \"%@\"", (unsigned long)_offset, (unsigned long)(_offset + _size - 1), path);
     }
-    
+
     if (attachment) {
       NSString* fileName = [path lastPathComponent];
       NSData* data = [[fileName stringByReplacingOccurrencesOfString:@"\"" withString:@""] dataUsingEncoding:NSISOLatin1StringEncoding allowLossyConversion:YES];
@@ -130,7 +130,7 @@ static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
         GWS_DNOT_REACHED();
       }
     }
-    
+
     self.contentType = GCDWebServerGetMimeTypeForExtension([_path pathExtension]);
     self.contentLength = _size;
     self.lastModifiedDate = _NSDateFromTimeSpec(&info.st_mtimespec);

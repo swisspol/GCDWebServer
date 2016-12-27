@@ -40,7 +40,7 @@
 
 @implementation GCDWebServerFileRequest
 
-@synthesize temporaryPath=_temporaryPath;
+@synthesize temporaryPath = _temporaryPath;
 
 - (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
   if ((self = [super initWithMethod:method url:url headers:headers path:path query:query])) {
@@ -85,14 +85,14 @@
   NSString* creationDateHeader = [self.headers objectForKey:@"X-GCDWebServer-CreationDate"];
   if (creationDateHeader) {
     NSDate* date = GCDWebServerParseISO8601(creationDateHeader);
-    if (!date || ![[NSFileManager defaultManager] setAttributes:@{NSFileCreationDate: date} ofItemAtPath:_temporaryPath error:error]) {
+    if (!date || ![[NSFileManager defaultManager] setAttributes:@{ NSFileCreationDate : date } ofItemAtPath:_temporaryPath error:error]) {
       return NO;
     }
   }
   NSString* modifiedDateHeader = [self.headers objectForKey:@"X-GCDWebServer-ModifiedDate"];
   if (modifiedDateHeader) {
     NSDate* date = GCDWebServerParseRFC822(modifiedDateHeader);
-    if (!date || ![[NSFileManager defaultManager] setAttributes:@{NSFileModificationDate: date} ofItemAtPath:_temporaryPath error:error]) {
+    if (!date || ![[NSFileManager defaultManager] setAttributes:@{ NSFileModificationDate : date } ofItemAtPath:_temporaryPath error:error]) {
       return NO;
     }
   }
