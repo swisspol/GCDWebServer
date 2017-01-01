@@ -861,18 +861,15 @@
 					};
 					CEE28CEE1AE0051F00F4023C = {
 						CreatedOnToolsVersion = 6.3;
-						ProvisioningStyle = Manual;
 					};
 					E24039241BA09207000B7089 = {
 						CreatedOnToolsVersion = 6.4;
 					};
 					E2DDD18A1BE69404002CE867 = {
 						CreatedOnToolsVersion = 7.1;
-						ProvisioningStyle = Manual;
 					};
 					E2DDD1C61BE698A8002CE867 = {
 						CreatedOnToolsVersion = 7.1;
-						DevelopmentTeam = 88W3E55T4B;
 					};
 					E2DDD1F51BE69EE4002CE867 = {
 						CreatedOnToolsVersion = 7.1;
