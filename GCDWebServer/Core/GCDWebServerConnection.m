@@ -672,7 +672,10 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 - (BOOL)open {
 #ifdef __GCDWEBSERVER_ENABLE_TESTING__
   if (_server.recordingEnabled) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     _connectionIndex = OSAtomicIncrement32(&_connectionCounter);
+#pragma clang diagnostic pop
 
     _requestPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]];
     _requestFD = open([_requestPath fileSystemRepresentation], O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
