@@ -58,7 +58,7 @@ xcodebuild build -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGUR
 
 # Build for iOS for oldest supported deployment target
 rm -rf "$BUILD_DIR"
-xcodebuild build -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" "SYMROOT=$BUILD_DIR" "IPHONEOS_DEPLOYMENT_TARGET=6.0" > /dev/null
+xcodebuild build -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" "SYMROOT=$BUILD_DIR" "IPHONEOS_DEPLOYMENT_TARGET=8.0" > /dev/null
 
 # Build for iOS for current deployment target
 rm -rf "$BUILD_DIR"
