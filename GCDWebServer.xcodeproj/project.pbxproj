@@ -1375,7 +1375,6 @@
 		E2DDD1901BE69404002CE867 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "";
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -1392,7 +1391,6 @@
 		E2DDD1911BE69404002CE867 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "";
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -1409,7 +1407,6 @@
 		E2DDD1D91BE698A8002CE867 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = tvOS/Info.plist;
 				PRODUCT_NAME = GCDWebServer;
 				PROVISIONING_PROFILE = "";
@@ -1421,7 +1418,6 @@
 		E2DDD1DA1BE698A8002CE867 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = tvOS/Info.plist;
 				PRODUCT_NAME = GCDWebServer;
 				PROVISIONING_PROFILE = "";
@@ -1433,7 +1429,6 @@
 		E2DDD20B1BE69EE5002CE867 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_BITCODE = YES;
 				INFOPLIST_FILE = iOS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
@@ -1447,7 +1442,6 @@
 		E2DDD20C1BE69EE5002CE867 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_BITCODE = YES;
 				INFOPLIST_FILE = iOS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
