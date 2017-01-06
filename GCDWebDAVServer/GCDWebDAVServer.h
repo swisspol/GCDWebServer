@@ -104,6 +104,14 @@
 @property(nonatomic) BOOL allowHiddenItems;
 
 /**
+ *  A set of file paths (relative to the upload directory) that should be hidden
+ *  in addition to the files covered by `allowHiddenItems`.
+ *
+ *  The default value is nil i.e. all files are visible.
+ */
+@property(nonatomic, copy) NSArray* additionalHiddenResources;
+
+/**
  *  This method is the designated initializer for the class.
  */
 - (instancetype)initWithUploadDirectory:(NSString*)path;
