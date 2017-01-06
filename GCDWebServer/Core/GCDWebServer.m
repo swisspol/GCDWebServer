@@ -788,6 +788,10 @@ static inline NSString* _EncodeBase64(NSString* string) {
   return (_options ? YES : NO);
 }
 
+- (BOOL)hasActiveConnections {
+    return _activeConnections > 0;
+}
+
 - (void)stop {
   if (_options) {
 #if TARGET_OS_IPHONE
