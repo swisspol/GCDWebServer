@@ -69,6 +69,11 @@ typedef void (^GCDWebServerBodyReaderCompletionBlock)(NSData* data, NSError* err
  */
 - (void)close;
 
+/**
+ *  Convenience method that checks if the stream to send the body is still open.
+ */
+- (BOOL)isOpened;
+
 @optional
 
 /**
