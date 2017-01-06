@@ -1,5 +1,12 @@
 .DS_Store
-xcuserdata
+build/
+*.xcuserstate
+*.pbxuser
+*.xccheckout
+DerivedData
+*.ipa
+Thumbs.db
+*.xcuserstate
 project.xcworkspace
 
 Tests/Payload
