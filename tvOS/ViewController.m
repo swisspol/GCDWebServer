@@ -39,7 +39,7 @@
 
 - (void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
-  
+
   NSString* documentsPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
   _webServer = [[GCDWebUploader alloc] initWithUploadDirectory:documentsPath];
   _webServer.delegate = self;
@@ -53,7 +53,7 @@
 
 - (void)viewDidDisappear:(BOOL)animated {
   [super viewDidDisappear:animated];
-  
+
   [_webServer stop];
   _webServer = nil;
 }

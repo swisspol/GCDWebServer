@@ -49,10 +49,10 @@
     GWS_DNOT_REACHED();
     return nil;
   }
-  
+
   if ((self = [super init])) {
     _data = data;
-    
+
     self.contentType = type;
     self.contentLength = data.length;
   }

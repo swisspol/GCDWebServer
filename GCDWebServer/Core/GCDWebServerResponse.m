@@ -168,7 +168,7 @@
   NSMutableDictionary* _headers;
   BOOL _chunked;
   BOOL _gzipped;
-  
+
   BOOL _opened;
   NSMutableArray* _encoders;
   id<GCDWebServerBodyReader> __unsafe_unretained _reader;
@@ -177,8 +177,8 @@
 
 @implementation GCDWebServerResponse
 
-@synthesize contentType=_type, contentLength=_length, statusCode=_status, cacheControlMaxAge=_maxAge, lastModifiedDate=_lastModified, eTag=_eTag,
-            gzipContentEncodingEnabled=_gzipped, additionalHeaders=_headers;
+@synthesize contentType = _type, contentLength = _length, statusCode = _status, cacheControlMaxAge = _maxAge, lastModifiedDate = _lastModified, eTag = _eTag,
+            gzipContentEncodingEnabled = _gzipped, additionalHeaders = _headers;
 
 + (instancetype)response {
   return [[[self class] alloc] init];

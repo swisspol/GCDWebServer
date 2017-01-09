@@ -71,7 +71,7 @@ Then run `$ carthage update` and add the generated frameworks to your Xcode proj
 Help & Support
 ==============
 
-For help with using GCDWebServer, it's best to ask your question on Stack Overflow with the [`gcdwebserver`](http://stackoverflow.com/questions/tagged/gcdwebserver) tag.
+For help with using GCDWebServer, it's best to ask your question on Stack Overflow with the [`gcdwebserver`](http://stackoverflow.com/questions/tagged/gcdwebserver) tag. For bug reports and enhancement requests you can use [issues](https://github.com/swisspol/GCDWebServer/issues) in this project.
 
 Be sure to read this entire README first though!
 
