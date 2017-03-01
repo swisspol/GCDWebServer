@@ -742,79 +742,22 @@ static inline NSString* _EncodeBase64(NSString* string) {
 
 #if TARGET_OS_IPHONE
 
-- (void)resetIpv4SocketIfError {
-  int error = 0;
-  socklen_t len = sizeof(error);
-  int retval = getsockopt(ipv4ListeningSocket, SOL_SOCKET, SO_ERROR, &error, &len);
-
-  if (retval != 0) {
-    /* there was a problem getting the error code */
-    GWS_LOG_ERROR(@"error getting socket error code: %s\n", strerror(retval));
-    return;
-  }
-
-  if (error != 0) {
-    /* socket has a non zero error status */
-    GWS_LOG_INFO(@"Socket error: %s on socket %d\n", strerror(error), ipv4ListeningSocket);
-    dispatch_source_cancel(_source4);
-    _source4 = nil;
-    NSUInteger port = [_GetOption(_options, GCDWebServerOption_Port, @0) unsignedIntegerValue];
-    BOOL bindToLocalhost = [_GetOption(_options, GCDWebServerOption_BindToLocalhost, @NO) boolValue];
-    NSUInteger maxPendingConnections = [_GetOption(_options, GCDWebServerOption_MaxPendingConnections, @16) unsignedIntegerValue];
-
-    struct sockaddr_in addr4 = [self generateIpv4AddressWithPort:port bindToLocalhost:bindToLocalhost];
-    NSError* nsError = nil;
-    int listeningSocket4 = [self _createListeningSocket:NO
-                                           localAddress:&addr4
-                                                 length:sizeof(addr4)
-                                  maxPendingConnections:maxPendingConnections
-                                                  error:&nsError];
-
-    if (listeningSocket4 <= 0) {
-      GWS_LOG_ERROR(@"Failed to create the IPv4 socket\n");
+- (BOOL)hasSocketError:(int)socket {
+    int error = 0;
+    socklen_t len = sizeof(error);
+    int retval = getsockopt(socket, SOL_SOCKET, SO_ERROR, &error, &len);
+    
+    if (retval != 0 ) {
+        /* there was a problem getting the error code */
+        GWS_LOG_ERROR(@"error getting socket error code: %s\n", strerror(retval));
+        return YES;
     }
-    _source4 = [self _createDispatchSourceWithListeningSocket:listeningSocket4 isIPv6:NO];
-    // Need to investigate
-    dispatch_resume(_source4);
-  }
-}
-
-- (void)resetIpv6SocketIfError {
-  int error = 0;
-  NSError* nsError = nil;
-  socklen_t len = sizeof(error);
-  int retval = getsockopt(ipv6ListeningSocket, SOL_SOCKET, SO_ERROR, &error, &len);
-
-  if (retval != 0) {
-    /* there was a problem getting the error code */
-    GWS_LOG_ERROR(@"error getting socket error code: %s\n", strerror(retval));
-    return;
-  }
-
-  if (error != 0) {
-    /* socket has a non zero error status */
-    GWS_LOG_INFO(@"Socket error: %s on socket %d\n", strerror(error), ipv6ListeningSocket);
-
-    dispatch_source_cancel(_source6);
-    _source6 = nil;
-    NSUInteger port = [_GetOption(_options, GCDWebServerOption_Port, @0) unsignedIntegerValue];
-    BOOL bindToLocalhost = [_GetOption(_options, GCDWebServerOption_BindToLocalhost, @NO) boolValue];
-    NSUInteger maxPendingConnections = [_GetOption(_options, GCDWebServerOption_MaxPendingConnections, @16) unsignedIntegerValue];
-
-    struct sockaddr_in6 addr6 = [self generateAddressWithPort:port bindToLocalhost:bindToLocalhost];
-    int listeningSocket6 = [self _createListeningSocket:YES
-                                           localAddress:&addr6
-                                                 length:sizeof(addr6)
-                                  maxPendingConnections:maxPendingConnections
-                                                  error:&nsError];
-    if (listeningSocket6 <= 0) {
-      GWS_LOG_ERROR(@"Failed to create the IPv6 socket\n");
+    
+    if (error != 0) {
+        GWS_LOG_INFO(@"Socket error: %s on socket %d\n", strerror(error), socket);
+        return YES;
     }
-    _source6 = [self _createDispatchSourceWithListeningSocket:listeningSocket6 isIPv6:YES];
-
-    // Need to investigate
-    dispatch_resume(_source6);
-  }
+    return NO;
 }
 
 - (void)_didEnterBackground:(NSNotification*)notification {
@@ -833,9 +776,9 @@ static inline NSString* _EncodeBase64(NSString* string) {
     [self _start:NULL];  // TODO: There's probably nothing we can do on failure
   }
 
-  if ([self isRunning]) {
-    [self resetIpv4SocketIfError];
-    [self resetIpv6SocketIfError];
+    if ([self isRunning] && ([self hasSocketError:ipv4ListeningSocket] || [self hasSocketError:ipv6ListeningSocket])) {
+      [self _stop];
+      [self _start:nil];
   }
 }
 
