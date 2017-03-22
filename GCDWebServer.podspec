@@ -37,6 +37,11 @@ Pod::Spec.new do |s|
     cs.dependency 'GCDWebServer/Core'
     cs.dependency 'CocoaLumberjack', '~> 2'
   end
+
+  s.subspec "CocoaLumberjack-3" do |cs|
+    cs.dependency 'GCDWebServer/Core'
+    cs.dependency 'CocoaLumberjack', '~> 3'
+  end
   
   s.subspec 'WebDAV' do |cs|
     cs.subspec "Core" do |ccs|
@@ -66,6 +71,11 @@ Pod::Spec.new do |s|
     cs.subspec "CocoaLumberjack" do |cscl|
       cscl.dependency 'GCDWebServer/WebUploader/Core'
       cscl.dependency 'GCDWebServer/CocoaLumberjack'
+    end
+
+    cs.subspec "CocoaLumberjack-3" do |cscl|
+      cscl.dependency 'GCDWebServer/WebUploader/Core'
+      cscl.dependency 'GCDWebServer/CocoaLumberjack-3'
     end
   end 
 end
