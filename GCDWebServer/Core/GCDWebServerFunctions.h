@@ -30,6 +30,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+  
+/** 
+ *  Overrides the default extension-to-mimetype mapping. The extension argument
+ *  does not include the prefix dot.
+ */
+void GCDWebServerSetMimeTypeForExtension(NSString* extension, NSString* mimeType);
 
 /**
  *  Converts a file extension to the corresponding MIME type.

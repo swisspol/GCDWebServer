@@ -47,6 +47,8 @@ static NSDateFormatter* _dateFormatterRFC822 = nil;
 static NSDateFormatter* _dateFormatterISO8601 = nil;
 static dispatch_queue_t _dateFormatterQueue = NULL;
 
+static NSMutableDictionary* mimeTypeOverrides;
+
 // TODO: Handle RFC 850 and ANSI C's asctime() format
 void GCDWebServerInitializeFunctions() {
   GWS_DCHECK([NSThread isMainThread]);  // NSDateFormatter should be initialized on main thread
@@ -159,17 +161,22 @@ NSString* GCDWebServerDescribeData(NSData* data, NSString* type) {
   return [NSString stringWithFormat:@"<%lu bytes>", (unsigned long)data.length];
 }
 
+void GCDWebServerSetMimeTypeForExtension(NSString* extension, NSString* mimeType) {
+  if (mimeTypeOverrides == nil) {
+    mimeTypeOverrides = [[NSMutableDictionary alloc] initWithCapacity:10];
+  }
+  
+  mimeTypeOverrides[extension.lowercaseString] = mimeType.lowercaseString;
+}
+
 NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
-  static NSDictionary* _overrides = nil;
-  if (_overrides == nil) {
-    _overrides = [[NSDictionary alloc] initWithObjectsAndKeys:
-                                           @"text/css", @"css",
-                                           nil];
+  if (mimeTypeOverrides == nil) {
+    GCDWebServerSetMimeTypeForExtension(@"css", @"text/css");
   }
   NSString* mimeType = nil;
   extension = [extension lowercaseString];
   if (extension.length) {
-    mimeType = [_overrides objectForKey:extension];
+    mimeType = [mimeTypeOverrides objectForKey:extension];
     if (mimeType == nil) {
       CFStringRef uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (__bridge CFStringRef)extension, NULL);
       if (uti) {
