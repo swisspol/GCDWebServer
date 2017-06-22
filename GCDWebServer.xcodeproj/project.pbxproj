@@ -465,8 +465,10 @@
 				E2DDD1B81BE6952F002CE867 /* tvOS Frameworks and Libraries */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
+			indentWidth = 2;
 			name = LittleCMS;
 			sourceTree = "<group>";
+			tabWidth = 2;
 		};
 		1AB674ADFE9D54B511CA2CBB /* Products */ = {
 			isa = PBXGroup;
