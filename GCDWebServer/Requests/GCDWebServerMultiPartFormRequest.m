@@ -42,50 +42,28 @@ typedef enum {
 } ParserState;
 
 @interface GCDWebServerMIMEStreamParser : NSObject
-- (id)initWithBoundary:(NSString*)boundary defaultControlName:(NSString*)name arguments:(NSMutableArray*)arguments files:(NSMutableArray*)files;
-- (BOOL)appendBytes:(const void*)bytes length:(NSUInteger)length;
-- (BOOL)isAtEnd;
 @end
 
 static NSData* _newlineData = nil;
 static NSData* _newlinesData = nil;
 static NSData* _dashNewlineData = nil;
 
-@interface GCDWebServerMultiPart () {
-@private
-  NSString* _controlName;
-  NSString* _contentType;
-  NSString* _mimeType;
-}
-@end
-
 @implementation GCDWebServerMultiPart
 
-@synthesize controlName = _controlName, contentType = _contentType, mimeType = _mimeType;
-
-- (id)initWithControlName:(NSString*)name contentType:(NSString*)type {
+- (instancetype)initWithControlName:(NSString* _Nonnull)name contentType:(NSString* _Nonnull)type {
   if ((self = [super init])) {
     _controlName = [name copy];
     _contentType = [type copy];
-    _mimeType = GCDWebServerTruncateHeaderValue(_contentType);
+    _mimeType = (NSString*)GCDWebServerTruncateHeaderValue(_contentType);
   }
   return self;
 }
 
 @end
 
-@interface GCDWebServerMultiPartArgument () {
-@private
-  NSData* _data;
-  NSString* _string;
-}
-@end
-
 @implementation GCDWebServerMultiPartArgument
 
-@synthesize data = _data, string = _string;
-
-- (id)initWithControlName:(NSString*)name contentType:(NSString*)type data:(NSData*)data {
+- (instancetype)initWithControlName:(NSString* _Nonnull)name contentType:(NSString* _Nonnull)type data:(NSData* _Nonnull)data {
   if ((self = [super initWithControlName:name contentType:type])) {
     _data = data;
 
@@ -103,18 +81,9 @@ static NSData* _dashNewlineData = nil;
 
 @end
 
-@interface GCDWebServerMultiPartFile () {
-@private
-  NSString* _fileName;
-  NSString* _temporaryPath;
-}
-@end
-
 @implementation GCDWebServerMultiPartFile
 
-@synthesize fileName = _fileName, temporaryPath = _temporaryPath;
-
-- (id)initWithControlName:(NSString*)name contentType:(NSString*)type fileName:(NSString*)fileName temporaryPath:(NSString*)temporaryPath {
+- (instancetype)initWithControlName:(NSString* _Nonnull)name contentType:(NSString* _Nonnull)type fileName:(NSString* _Nonnull)fileName temporaryPath:(NSString* _Nonnull)temporaryPath {
   if ((self = [super initWithControlName:name contentType:type])) {
     _fileName = [fileName copy];
     _temporaryPath = [temporaryPath copy];
@@ -132,8 +101,7 @@ static NSData* _dashNewlineData = nil;
 
 @end
 
-@interface GCDWebServerMIMEStreamParser () {
-@private
+@implementation GCDWebServerMIMEStreamParser {
   NSData* _boundary;
   NSString* _defaultcontrolName;
   ParserState _state;
@@ -148,9 +116,6 @@ static NSData* _dashNewlineData = nil;
   int _tmpFile;
   GCDWebServerMIMEStreamParser* _subParser;
 }
-@end
-
-@implementation GCDWebServerMIMEStreamParser
 
 + (void)initialize {
   if (_newlineData == nil) {
@@ -167,7 +132,7 @@ static NSData* _dashNewlineData = nil;
   }
 }
 
-- (id)initWithBoundary:(NSString*)boundary defaultControlName:(NSString*)name arguments:(NSMutableArray*)arguments files:(NSMutableArray*)files {
+- (instancetype)initWithBoundary:(NSString* _Nonnull)boundary defaultControlName:(NSString* _Nullable)name arguments:(NSMutableArray* _Nonnull)arguments files:(NSMutableArray* _Nonnull)files {
   NSData* data = boundary.length ? [[NSString stringWithFormat:@"--%@", boundary] dataUsingEncoding:NSASCIIStringEncoding] : nil;
   if (data == nil) {
     GWS_DNOT_REACHED();
@@ -346,17 +311,14 @@ static NSData* _dashNewlineData = nil;
 
 @end
 
-@interface GCDWebServerMultiPartFormRequest () {
-@private
-  GCDWebServerMIMEStreamParser* _parser;
-  NSMutableArray* _arguments;
-  NSMutableArray* _files;
-}
+@interface GCDWebServerMultiPartFormRequest ()
+@property(nonatomic) NSMutableArray* arguments;
+@property(nonatomic) NSMutableArray* files;
 @end
 
-@implementation GCDWebServerMultiPartFormRequest
-
-@synthesize arguments = _arguments, files = _files;
+@implementation GCDWebServerMultiPartFormRequest {
+  GCDWebServerMIMEStreamParser* _parser;
+}
 
 + (NSString*)mimeType {
   return @"multipart/form-data";

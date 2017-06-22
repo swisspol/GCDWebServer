@@ -1237,7 +1237,6 @@
 					"-Wno-cstring-format-directive",
 					"-Wno-reserved-id-macro",
 					"-Wno-cast-qual",
-					"-Wno-nullable-to-nonnull-conversion",
 					"-Wno-partial-availability",
 				);
 			};

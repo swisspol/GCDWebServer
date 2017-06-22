@@ -132,18 +132,9 @@ static void _ExecuteMainThreadRunLoopSources() {
 
 #endif
 
-@interface GCDWebServerHandler () {
-@private
-  GCDWebServerMatchBlock _matchBlock;
-  GCDWebServerAsyncProcessBlock _asyncProcessBlock;
-}
-@end
-
 @implementation GCDWebServerHandler
 
-@synthesize matchBlock = _matchBlock, asyncProcessBlock = _asyncProcessBlock;
-
-- (id)initWithMatchBlock:(GCDWebServerMatchBlock)matchBlock asyncProcessBlock:(GCDWebServerAsyncProcessBlock)processBlock {
+- (instancetype)initWithMatchBlock:(GCDWebServerMatchBlock _Nonnull)matchBlock asyncProcessBlock:(GCDWebServerAsyncProcessBlock _Nonnull)processBlock {
   if ((self = [super init])) {
     _matchBlock = [matchBlock copy];
     _asyncProcessBlock = [processBlock copy];
@@ -153,9 +144,7 @@ static void _ExecuteMainThreadRunLoopSources() {
 
 @end
 
-@interface GCDWebServer () {
-@private
-  id<GCDWebServerDelegate> __unsafe_unretained _delegate;
+@implementation GCDWebServer {
   dispatch_queue_t _syncQueue;
   dispatch_group_t _sourceGroup;
   NSMutableArray* _handlers;
@@ -164,15 +153,10 @@ static void _ExecuteMainThreadRunLoopSources() {
   CFRunLoopTimerRef _disconnectTimer;  // Accessed on main thread only
 
   NSDictionary* _options;
-  NSString* _serverName;
-  NSString* _authenticationRealm;
   NSMutableDictionary* _authenticationBasicAccounts;
   NSMutableDictionary* _authenticationDigestAccounts;
   Class _connectionClass;
-  BOOL _mapHEADToGET;
   CFTimeInterval _disconnectDelay;
-  dispatch_queue_priority_t _dispatchQueuePriority;
-  NSUInteger _port;
   dispatch_source_t _source4;
   dispatch_source_t _source6;
   CFNetServiceRef _registrationService;
@@ -191,13 +175,6 @@ static void _ExecuteMainThreadRunLoopSources() {
   BOOL _recording;
 #endif
 }
-@end
-
-@implementation GCDWebServer
-
-@synthesize delegate = _delegate, handlers = _handlers, port = _port, serverName = _serverName, authenticationRealm = _authenticationRealm,
-            authenticationBasicAccounts = _authenticationBasicAccounts, authenticationDigestAccounts = _authenticationDigestAccounts,
-            shouldAutomaticallyMapHEADToGET = _mapHEADToGET, dispatchQueuePriority = _dispatchQueuePriority;
 
 + (void)initialize {
   GCDWebServerInitializeFunctions();
@@ -600,7 +577,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
     }];
   }
   _connectionClass = _GetOption(_options, GCDWebServerOption_ConnectionClass, [GCDWebServerConnection class]);
-  _mapHEADToGET = [_GetOption(_options, GCDWebServerOption_AutomaticallyMapHEADToGET, @YES) boolValue];
+  _shouldAutomaticallyMapHEADToGET = [_GetOption(_options, GCDWebServerOption_AutomaticallyMapHEADToGET, @YES) boolValue];
   _disconnectDelay = [_GetOption(_options, GCDWebServerOption_ConnectedStateCoalescingInterval, @1.0) doubleValue];
   _dispatchQueuePriority = [_GetOption(_options, GCDWebServerOption_DispatchQueuePriority, @(DISPATCH_QUEUE_PRIORITY_DEFAULT)) longValue];
 
@@ -1294,9 +1271,9 @@ static void _LogResult(NSString* format, ...) {
                         success = NO;
 #if !TARGET_OS_IPHONE
 #if DEBUG
-                        if (GCDWebServerIsTextContentType([expectedHeaders objectForKey:@"Content-Type"])) {
-                          NSString* expectedPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[[NSProcessInfo processInfo] globallyUniqueString] stringByAppendingPathExtension:@"txt"]];
-                          NSString* actualPath = [NSTemporaryDirectory() stringByAppendingPathComponent:[[[NSProcessInfo processInfo] globallyUniqueString] stringByAppendingPathExtension:@"txt"]];
+                        if (GCDWebServerIsTextContentType((NSString*)[expectedHeaders objectForKey:@"Content-Type"])) {
+                          NSString* expectedPath = [NSTemporaryDirectory() stringByAppendingPathComponent:(NSString*)[[[NSProcessInfo processInfo] globallyUniqueString] stringByAppendingPathExtension:@"txt"]];
+                          NSString* actualPath = [NSTemporaryDirectory() stringByAppendingPathComponent:(NSString*)[[[NSProcessInfo processInfo] globallyUniqueString] stringByAppendingPathExtension:@"txt"]];
                           if ([expectedBody writeToFile:expectedPath atomically:YES] && [actualBody writeToFile:actualPath atomically:YES]) {
                             NSTask* task = [[NSTask alloc] init];
                             [task setLaunchPath:@"/usr/bin/opendiff"];

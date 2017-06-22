@@ -35,16 +35,14 @@
 
 #define kFileReadBufferSize (32 * 1024)
 
-@interface GCDWebServerFileResponse () {
-@private
+@implementation GCDWebServerFileResponse {
   NSString* _path;
   NSUInteger _offset;
   NSUInteger _size;
   int _file;
 }
-@end
 
-@implementation GCDWebServerFileResponse
+@dynamic contentType, lastModifiedDate, eTag;
 
 + (instancetype)responseWithFile:(NSString*)path {
   return [[[self class] alloc] initWithFile:path];

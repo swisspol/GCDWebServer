@@ -27,6 +27,8 @@
 
 #import "GCDWebServer.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @class GCDWebUploader;
 
 /**
@@ -84,7 +86,7 @@
 /**
  *  Sets the delegate for the uploader.
  */
-@property(nonatomic, assign) id<GCDWebUploaderDelegate> delegate;
+@property(nonatomic, weak, nullable) id<GCDWebUploaderDelegate> delegate;
 
 /**
  *  Sets which files are allowed to be operated on depending on their extension.
@@ -195,3 +197,5 @@
 - (BOOL)shouldCreateDirectoryAtPath:(NSString*)path;
 
 @end
+
+NS_ASSUME_NONNULL_END

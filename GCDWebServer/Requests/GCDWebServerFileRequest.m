@@ -31,16 +31,9 @@
 
 #import "GCDWebServerPrivate.h"
 
-@interface GCDWebServerFileRequest () {
-@private
-  NSString* _temporaryPath;
+@implementation GCDWebServerFileRequest {
   int _file;
 }
-@end
-
-@implementation GCDWebServerFileRequest
-
-@synthesize temporaryPath = _temporaryPath;
 
 - (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
   if ((self = [super initWithMethod:method url:url headers:headers path:path query:query])) {

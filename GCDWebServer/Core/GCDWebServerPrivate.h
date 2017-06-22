@@ -48,6 +48,8 @@
 #import "GCDWebServerFileResponse.h"
 #import "GCDWebServerStreamedResponse.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 /**
  *  Check if a custom logging facility should be used instead.
  */
@@ -190,9 +192,9 @@ static inline NSError* GCDWebServerMakePosixError(int code) {
 }
 
 extern void GCDWebServerInitializeFunctions();
-extern NSString* GCDWebServerNormalizeHeaderValue(NSString* value);
-extern NSString* GCDWebServerTruncateHeaderValue(NSString* value);
-extern NSString* GCDWebServerExtractHeaderValueParameter(NSString* header, NSString* attribute);
+extern NSString* _Nullable GCDWebServerNormalizeHeaderValue(NSString* _Nullable value);
+extern NSString* _Nullable GCDWebServerTruncateHeaderValue(NSString* _Nullable value);
+extern NSString* _Nullable GCDWebServerExtractHeaderValueParameter(NSString* _Nullable value, NSString* attribute);
 extern NSStringEncoding GCDWebServerStringEncodingFromCharset(NSString* charset);
 extern BOOL GCDWebServerIsTextContentType(NSString* type);
 extern NSString* GCDWebServerDescribeData(NSData* data, NSString* contentType);
@@ -200,15 +202,15 @@ extern NSString* GCDWebServerComputeMD5Digest(NSString* format, ...) NS_FORMAT_F
 extern NSString* GCDWebServerStringFromSockAddr(const struct sockaddr* addr, BOOL includeService);
 
 @interface GCDWebServerConnection ()
-- (id)initWithServer:(GCDWebServer*)server localAddress:(NSData*)localAddress remoteAddress:(NSData*)remoteAddress socket:(CFSocketNativeHandle)socket;
+- (instancetype)initWithServer:(GCDWebServer*)server localAddress:(NSData*)localAddress remoteAddress:(NSData*)remoteAddress socket:(CFSocketNativeHandle)socket;
 @end
 
 @interface GCDWebServer ()
-@property(nonatomic, readonly) NSArray* handlers;
+@property(nonatomic, readonly) NSMutableArray* handlers;
 @property(nonatomic, readonly) NSString* serverName;
 @property(nonatomic, readonly) NSString* authenticationRealm;
-@property(nonatomic, readonly) NSDictionary* authenticationBasicAccounts;
-@property(nonatomic, readonly) NSDictionary* authenticationDigestAccounts;
+@property(nonatomic, readonly) NSMutableDictionary* authenticationBasicAccounts;
+@property(nonatomic, readonly) NSMutableDictionary* authenticationDigestAccounts;
 @property(nonatomic, readonly) BOOL shouldAutomaticallyMapHEADToGET;
 @property(nonatomic, readonly) dispatch_queue_priority_t dispatchQueuePriority;
 - (void)willStartConnection:(GCDWebServerConnection*)connection;
@@ -222,13 +224,13 @@ extern NSString* GCDWebServerStringFromSockAddr(const struct sockaddr* addr, BOO
 
 @interface GCDWebServerRequest ()
 @property(nonatomic, readonly) BOOL usesChunkedTransferEncoding;
-@property(nonatomic, readwrite) NSData* localAddressData;
-@property(nonatomic, readwrite) NSData* remoteAddressData;
+@property(nonatomic) NSData* localAddressData;
+@property(nonatomic) NSData* remoteAddressData;
 - (void)prepareForWriting;
 - (BOOL)performOpen:(NSError**)error;
 - (BOOL)performWriteData:(NSData*)data error:(NSError**)error;
 - (BOOL)performClose:(NSError**)error;
-- (void)setAttribute:(id)attribute forKey:(NSString*)key;
+- (void)setAttribute:(nullable id)attribute forKey:(NSString*)key;
 @end
 
 @interface GCDWebServerResponse ()
@@ -239,3 +241,5 @@ extern NSString* GCDWebServerStringFromSockAddr(const struct sockaddr* addr, BOO
 - (void)performReadDataWithCompletion:(GCDWebServerBodyReaderCompletionBlock)block;
 - (void)performClose;
 @end
+
+NS_ASSUME_NONNULL_END
