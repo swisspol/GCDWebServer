@@ -233,7 +233,7 @@ static inline BOOL _IsMacFinder(GCDWebServerRequest* request) {
   NSString* creationDateHeader = [request.headers objectForKey:@"X-GCDWebServer-CreationDate"];
   if (creationDateHeader) {
     NSDate* date = GCDWebServerParseISO8601(creationDateHeader);
-    if (!date || ![[NSFileManager defaultManager] setAttributes:@{ NSFileCreationDate : date } ofItemAtPath:absolutePath error:&error]) {
+    if (!date || ![[NSFileManager defaultManager] setAttributes:@{NSFileCreationDate : date} ofItemAtPath:absolutePath error:&error]) {
       return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed setting creation date for directory \"%@\"", relativePath];
     }
   }

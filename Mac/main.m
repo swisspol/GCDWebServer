@@ -425,7 +425,7 @@ int main(int argc, const char* argv[]) {
         [options setObject:@"" forKey:GCDWebServerOption_BonjourName];
         if (authenticationUser && authenticationPassword) {
           [options setValue:authenticationRealm forKey:GCDWebServerOption_AuthenticationRealm];
-          [options setObject:@{ authenticationUser : authenticationPassword } forKey:GCDWebServerOption_AuthenticationAccounts];
+          [options setObject:@{authenticationUser : authenticationPassword} forKey:GCDWebServerOption_AuthenticationAccounts];
           if ([authenticationMethod isEqualToString:@"Basic"]) {
             [options setObject:GCDWebServerAuthenticationMethod_Basic forKey:GCDWebServerOption_AuthenticationMethod];
           } else if ([authenticationMethod isEqualToString:@"Digest"]) {
