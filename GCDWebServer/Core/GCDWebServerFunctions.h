@@ -36,8 +36,12 @@ extern "C" {
 /**
  *  Converts a file extension to the corresponding MIME type.
  *  If there is no match, "application/octet-stream" is returned.
+ *
+ *  Overrides allow to customize the built-in mapping from extensions to MIME
+ *  types. Keys of the dictionary must be lowercased file extensions without
+ *  the period, and the values must be the corresponding MIME types.
  */
-NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension);
+NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension, NSDictionary* _Nullable overrides);
 
 /**
  *  Add percent-escapes to a string so it can be used in a URL.

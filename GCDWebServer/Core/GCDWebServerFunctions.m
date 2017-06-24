@@ -166,12 +166,15 @@ NSString* GCDWebServerDescribeData(NSData* data, NSString* type) {
   return [NSString stringWithFormat:@"<%lu bytes>", (unsigned long)data.length];
 }
 
-NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
-  NSDictionary* overrides = @{@"css": @"text/css"};
+NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension, NSDictionary* overrides) {
+  NSDictionary* builtInOverrides = @{@"css": @"text/css"};
   NSString* mimeType = nil;
   extension = [extension lowercaseString];
   if (extension.length) {
     mimeType = [overrides objectForKey:extension];
+    if (mimeType == nil) {
+      mimeType = [builtInOverrides objectForKey:extension];
+    }
     if (mimeType == nil) {
       CFStringRef uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (__bridge CFStringRef)extension, NULL);
       if (uti) {

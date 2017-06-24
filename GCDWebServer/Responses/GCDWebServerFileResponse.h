@@ -95,8 +95,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  *  This method is the designated initializer for the class.
+ *
+ *  If MIME type overrides are specified, they allow to customize the built-in
+ *  mapping from extensions to MIME types. Keys of the dictionary must be lowercased
+ *  file extensions without the period, and the values must be the corresponding
+ *  MIME types.
  */
-- (nullable instancetype)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment;
+- (nullable instancetype)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment mimeTypeOverrides:(nullable NSDictionary*)overrides;
 
 @end
 

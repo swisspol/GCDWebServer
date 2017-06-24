@@ -57,26 +57,26 @@
 }
 
 + (instancetype)responseWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment {
-  return [[[self class] alloc] initWithFile:path byteRange:range isAttachment:attachment];
+  return [[[self class] alloc] initWithFile:path byteRange:range isAttachment:attachment mimeTypeOverrides:nil];
 }
 
 - (instancetype)initWithFile:(NSString*)path {
-  return [self initWithFile:path byteRange:NSMakeRange(NSUIntegerMax, 0) isAttachment:NO];
+  return [self initWithFile:path byteRange:NSMakeRange(NSUIntegerMax, 0) isAttachment:NO mimeTypeOverrides:nil];
 }
 
 - (instancetype)initWithFile:(NSString*)path isAttachment:(BOOL)attachment {
-  return [self initWithFile:path byteRange:NSMakeRange(NSUIntegerMax, 0) isAttachment:attachment];
+  return [self initWithFile:path byteRange:NSMakeRange(NSUIntegerMax, 0) isAttachment:attachment mimeTypeOverrides:nil];
 }
 
 - (instancetype)initWithFile:(NSString*)path byteRange:(NSRange)range {
-  return [self initWithFile:path byteRange:range isAttachment:NO];
+  return [self initWithFile:path byteRange:range isAttachment:NO mimeTypeOverrides:nil];
 }
 
 static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
   return [NSDate dateWithTimeIntervalSince1970:((NSTimeInterval)t->tv_sec + (NSTimeInterval)t->tv_nsec / 1000000000.0)];
 }
 
-- (instancetype)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment {
+- (instancetype)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment mimeTypeOverrides:(NSDictionary*)overrides {
   struct stat info;
   if (lstat([path fileSystemRepresentation], &info) || !(info.st_mode & S_IFREG)) {
     GWS_DNOT_REACHED();
@@ -129,7 +129,7 @@ static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
       }
     }
 
-    self.contentType = GCDWebServerGetMimeTypeForExtension([_path pathExtension]);
+    self.contentType = GCDWebServerGetMimeTypeForExtension([_path pathExtension], overrides);
     self.contentLength = _size;
     self.lastModifiedDate = _NSDateFromTimeSpec(&info.st_mtimespec);
     self.eTag = [NSString stringWithFormat:@"%llu/%li/%li", info.st_ino, info.st_mtimespec.tv_sec, info.st_mtimespec.tv_nsec];
