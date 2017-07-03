@@ -94,6 +94,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 #define __GCDWEBSERVER_LOGGING_FACILITY_COCOALUMBERJACK__
 
+#ifndef LOG_ASYNC_ENABLED
+    #define LOG_ASYNC_ENABLED YES
+#endif
+
 #undef LOG_LEVEL_DEF
 #define LOG_LEVEL_DEF GCDWebServerLogLevel
 extern DDLogLevel GCDWebServerLogLevel;
