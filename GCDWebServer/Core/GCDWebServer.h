@@ -532,11 +532,10 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *
  *  Currently supported third-party logging facilities are:
  *  - XLFacility (by the same author as GCDWebServer): https://github.com/swisspol/XLFacility
- *  - CocoaLumberjack: https://github.com/CocoaLumberjack/CocoaLumberjack
  *
- *  For both the built-in logging facility and CocoaLumberjack, the default
- *  logging level is INFO (or DEBUG if the preprocessor constant "DEBUG"
- *  evaluates to non-zero at compile time).
+ *  For the built-in logging facility, the default logging level is INFO
+ *  (or DEBUG if the preprocessor constant "DEBUG" evaluates to non-zero at
+ *  compile time).
  *
  *  It's possible to have GCDWebServer use a custom logging facility by defining
  *  the "__GCDWEBSERVER_LOGGING_HEADER__" preprocessor constant in Xcode build

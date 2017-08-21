@@ -77,12 +77,6 @@ GCDWebServerLoggingLevel GCDWebServerLogLevel = kGCDWebServerLoggingLevel_Debug;
 #else
 GCDWebServerLoggingLevel GCDWebServerLogLevel = kGCDWebServerLoggingLevel_Info;
 #endif
-#elif defined(__GCDWEBSERVER_LOGGING_FACILITY_COCOALUMBERJACK__)
-#if DEBUG
-DDLogLevel GCDWebServerLogLevel = DDLogLevelDebug;
-#else
-DDLogLevel GCDWebServerLogLevel = DDLogLevelInfo;
-#endif
 #endif
 
 #if !TARGET_OS_IPHONE
@@ -1092,8 +1086,6 @@ static inline NSString* _EncodeBase64(NSString* string) {
 + (void)setLogLevel:(int)level {
 #if defined(__GCDWEBSERVER_LOGGING_FACILITY_XLFACILITY__)
   [XLSharedFacility setMinLogLevel:level];
-#elif defined(__GCDWEBSERVER_LOGGING_FACILITY_COCOALUMBERJACK__)
-  GCDWebServerLogLevel = level;
 #elif defined(__GCDWEBSERVER_LOGGING_FACILITY_BUILTIN__)
   GCDWebServerLogLevel = level;
 #endif
