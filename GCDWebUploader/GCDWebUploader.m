@@ -254,7 +254,7 @@ NS_ASSUME_NONNULL_END
         [array addObject:@{
           @"path" : [relativePath stringByAppendingPathComponent:item],
           @"name" : item,
-          @"size" : [attributes objectForKey:NSFileSize]
+          @"size" : (NSNumber*)[attributes objectForKey:NSFileSize]
         }];
       } else if ([type isEqualToString:NSFileTypeDirectory]) {
         [array addObject:@{

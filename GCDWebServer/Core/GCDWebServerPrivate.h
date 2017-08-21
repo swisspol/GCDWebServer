@@ -188,7 +188,7 @@ static inline BOOL GCDWebServerIsValidByteRange(NSRange range) {
 }
 
 static inline NSError* GCDWebServerMakePosixError(int code) {
-  return [NSError errorWithDomain:NSPOSIXErrorDomain code:code userInfo:@{NSLocalizedDescriptionKey : [NSString stringWithUTF8String:strerror(code)]}];
+  return [NSError errorWithDomain:NSPOSIXErrorDomain code:code userInfo:@{NSLocalizedDescriptionKey : (NSString*)[NSString stringWithUTF8String:strerror(code)]}];
 }
 
 extern void GCDWebServerInitializeFunctions();
