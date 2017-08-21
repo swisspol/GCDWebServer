@@ -753,7 +753,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     NSString* authorizationHeader = [request.headers objectForKey:@"Authorization"];
     if ([authorizationHeader hasPrefix:@"Digest "]) {
       NSString* realm = GCDWebServerExtractHeaderValueParameter(authorizationHeader, @"realm");
-      if ([realm isEqualToString:_server.authenticationRealm]) {
+      if (realm && [_server.authenticationRealm isEqualToString:realm]) {
         NSString* nonce = GCDWebServerExtractHeaderValueParameter(authorizationHeader, @"nonce");
         if ([nonce isEqualToString:_digestAuthenticationNonce]) {
           NSString* username = GCDWebServerExtractHeaderValueParameter(authorizationHeader, @"username");

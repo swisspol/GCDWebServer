@@ -207,10 +207,10 @@ extern NSString* GCDWebServerStringFromSockAddr(const struct sockaddr* addr, BOO
 
 @interface GCDWebServer ()
 @property(nonatomic, readonly) NSMutableArray* handlers;
-@property(nonatomic, readonly) NSString* serverName;
-@property(nonatomic, readonly) NSString* authenticationRealm;
-@property(nonatomic, readonly) NSMutableDictionary* authenticationBasicAccounts;
-@property(nonatomic, readonly) NSMutableDictionary* authenticationDigestAccounts;
+@property(nonatomic, readonly, nullable) NSString* serverName;
+@property(nonatomic, readonly, nullable) NSString* authenticationRealm;
+@property(nonatomic, readonly, nullable) NSMutableDictionary* authenticationBasicAccounts;
+@property(nonatomic, readonly, nullable) NSMutableDictionary* authenticationDigestAccounts;
 @property(nonatomic, readonly) BOOL shouldAutomaticallyMapHEADToGET;
 @property(nonatomic, readonly) dispatch_queue_priority_t dispatchQueuePriority;
 - (void)willStartConnection:(GCDWebServerConnection*)connection;
