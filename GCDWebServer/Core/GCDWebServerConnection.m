@@ -355,7 +355,7 @@ NS_ASSUME_NONNULL_END
             } else {
               _request = [[GCDWebServerRequest alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:requestPath query:requestQuery];
               GWS_DCHECK(_request);
-              [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_MethodNotAllowed];
+              [self abortRequest:_request withStatusCode:kGCDWebServerHTTPStatusCode_NotImplemented];
             }
           } else {
             [self abortRequest:nil withStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
