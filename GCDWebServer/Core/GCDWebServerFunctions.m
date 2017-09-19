@@ -164,6 +164,7 @@ NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension) {
   if (_overrides == nil) {
     _overrides = [[NSDictionary alloc] initWithObjectsAndKeys:
                   @"text/css", @"css",
+                  @"application/octet-stream", @"ttf",
                   nil];
   }
   NSString* mimeType = nil;
