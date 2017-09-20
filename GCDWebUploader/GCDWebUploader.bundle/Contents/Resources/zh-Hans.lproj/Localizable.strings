@@ -1,0 +1,20 @@
+// 主页
+"PROLOGUE" = "<p>拖动文件到本窗口或者使用 \"上传文件&hellip;\" 按钮来上传新文件。</p>";
+"UPLOAD"        = "上传文件";
+"CREATE_FOLDER" = "新建文件夹";
+"REFRESH"       = "刷新";
+"EPILOGUE" = "";
+"FOOTER_FORMAT" = "%@ %@";
+
+// 通用
+"CANCEL" = "取消";
+
+// 创建文件夹
+"PLEASE_ENTER_THE_NEME_OF_THE_FOLDER_TO_BE_CREATED" = "请输入要创建的文件夹名：";
+"UNTITLED_FOLDER" = "未命名文件夹";
+"CREATE" = "创建";
+
+// 移动文件
+"MOVE_ITEM" = "移动文件";
+"PLEASE_ENTER_THE_NEW_LOCATION_FOR_THIS_ITEM" = "请输入此文件要移动到的位置：";
+"MOVE" = "移动";

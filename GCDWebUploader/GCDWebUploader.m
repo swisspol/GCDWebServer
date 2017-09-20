@@ -102,19 +102,22 @@ NS_ASSUME_NONNULL_END
                      }
 #endif
                    }
+                   
+                   NSString *key = @"";
+
                    NSString* header = server.header;
                    if (header == nil) {
                      header = title;
                    }
-                   NSString* prologue = server.prologue;
+                   NSString* prologue = server.prologue; key = @"PROLOGUE";
                    if (prologue == nil) {
-                     prologue = [siteBundle localizedStringForKey:@"PROLOGUE" value:@"" table:nil];
+                     prologue = [siteBundle localizedStringForKey:key value:@"" table:nil];
                    }
-                   NSString* epilogue = server.epilogue;
+                   NSString* epilogue = server.epilogue; key = @"EPILOGUE";
                    if (epilogue == nil) {
-                     epilogue = [siteBundle localizedStringForKey:@"EPILOGUE" value:@"" table:nil];
+                     epilogue = [siteBundle localizedStringForKey:key value:@"" table:nil];
                    }
-                   NSString* footer = server.footer;
+                   NSString* footer = server.footer; key = @"FOOTER_FORMAT";
                    if (footer == nil) {
                      NSString* name = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
                      NSString* version = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
@@ -124,14 +127,65 @@ NS_ASSUME_NONNULL_END
                        version = [[NSProcessInfo processInfo] operatingSystemVersionString];
                      }
 #endif
-                     footer = [NSString stringWithFormat:[siteBundle localizedStringForKey:@"FOOTER_FORMAT" value:@"" table:nil], name, version];
+                     footer = [NSString stringWithFormat:[siteBundle localizedStringForKey:key value:@"" table:nil], name, version];
                    }
+                   NSString *upload = nil; key = @"UPLOAD";
+                   if ([siteBundle localizedStringForKey:key value:@"" table:nil]) {
+                     upload = [siteBundle localizedStringForKey:key value:@"" table:nil];
+                   }
+                   NSString *createFolder = nil; key = @"CREATE_FOLDER";
+                   if ([siteBundle localizedStringForKey:key value:@"" table:nil]) {
+                     createFolder = [siteBundle localizedStringForKey:key value:@"" table:nil];
+                   }
+                   NSString *refresh = nil; key = @"REFRESH";
+                   if ([siteBundle localizedStringForKey:key value:@"" table:nil]) {
+                     refresh = [siteBundle localizedStringForKey:key value:@"" table:nil];
+                   }
+                   NSString *cancel = nil; key = @"CANCEL";
+                   if ([siteBundle localizedStringForKey:key value:@"" table:nil]) {
+                     cancel = [siteBundle localizedStringForKey:key value:@"" table:nil];
+                   }
+                   NSString *createFolderDescription = nil; key = @"PLEASE_ENTER_THE_NEME_OF_THE_FOLDER_TO_BE_CREATED";
+                   if ([siteBundle localizedStringForKey:key value:@"" table:nil]) {
+                     createFolderDescription = [siteBundle localizedStringForKey:key value:@"" table:nil];
+                   }
+                   NSString *untitledFolder = nil; key = @"UNTITLED_FOLDER";
+                   if ([siteBundle localizedStringForKey:key value:@"" table:nil]) {
+                     untitledFolder = [siteBundle localizedStringForKey:key value:@"" table:nil];
+                   }
+                   NSString *create = nil; key = @"CREATE";
+                   if ([siteBundle localizedStringForKey:key value:@"" table:nil]) {
+                     create = [siteBundle localizedStringForKey:key value:@"" table:nil];
+                   }
+                   NSString *moveItem = nil; key = @"MOVE_ITEM";
+                   if ([siteBundle localizedStringForKey:key value:@"" table:nil]) {
+                     moveItem = [siteBundle localizedStringForKey:key value:@"" table:nil];
+                   }
+                   NSString *moveItemDescription = nil; key = @"PLEASE_ENTER_THE_NEW_LOCATION_FOR_THIS_ITEM";
+                   if ([siteBundle localizedStringForKey:key value:@"" table:nil]) {
+                     moveItemDescription = [siteBundle localizedStringForKey:key value:@"" table:nil];
+                   }
+                   NSString *move = nil; key = @"MOVE";
+                   if ([siteBundle localizedStringForKey:key value:@"" table:nil]) {
+                     move = [siteBundle localizedStringForKey:key value:@"" table:nil];
+                   }
+                   
                    return [GCDWebServerDataResponse responseWithHTMLTemplate:(NSString*)[siteBundle pathForResource:@"index" ofType:@"html"]
                                                                    variables:@{
                                                                      @"device" : device,
                                                                      @"title" : title,
                                                                      @"header" : header,
                                                                      @"prologue" : prologue,
+                                                                     @"upload": upload,
+                                                                     @"create_folder": createFolder,
+                                                                     @"refresh": refresh,
+                                                                     @"cancel": cancel,
+                                                                     @"create_folder_description": createFolderDescription,
+                                                                     @"refresh": untitledFolder,
+                                                                     @"create": create,
+                                                                     @"move_item": moveItem,
+                                                                     @"move_item_description": moveItemDescription,
+                                                                     @"move": move,
                                                                      @"epilogue" : epilogue,
                                                                      @"footer" : footer
                                                                    }];

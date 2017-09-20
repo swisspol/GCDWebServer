@@ -1,3 +1,22 @@
+// Main Page
 "PROLOGUE" = "<p>Drag &amp; drop files on this window or use the \"Upload Files&hellip;\" button to upload new files.</p>";
+"UPLOAD"        = "Upload Files";
+"CREATE_FOLDER" = "Create Folder";
+"REFRESH"       = "Refresh";
 "EPILOGUE" = "";
 "FOOTER_FORMAT" = "%@ %@";
+
+// Common
+"CANCEL" = "Cancel";
+
+// Create Folder
+"PLEASE_ENTER_THE_NEME_OF_THE_FOLDER_TO_BE_CREATED" = "Please enter the name of the folder to be created:";
+"UNTITLED_FOLDER" = "Untitled folder";
+"CREATE" = "Create";
+
+// Move Item
+"MOVE_ITEM" = "Move Item";
+"PLEASE_ENTER_THE_NEW_LOCATION_FOR_THIS_ITEM" = "Please enter the new location for this item:";
+"MOVE" = "Move";
+
+
