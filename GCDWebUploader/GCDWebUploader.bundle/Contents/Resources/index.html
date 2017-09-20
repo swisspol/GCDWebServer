@@ -66,14 +66,14 @@
       
       <div class="btn-toolbar">
         <button type="button" class="btn btn-primary fileinput-button" id="upload-file">
-          <span class="glyphicon glyphicon-upload"></span> Upload Files&hellip;
+            <span class="glyphicon glyphicon-upload"></span> %upload%&hellip;
           <input id="fileupload" type="file" name="files[]" multiple>
         </button>
         <button type="button" class="btn btn-success" id="create-folder">
-          <span class="glyphicon glyphicon-folder-close"></span> Create Folder&hellip;
+          <span class="glyphicon glyphicon-folder-close"></span> %create_folder%&hellip;
         </button>
         <button type="button" class="btn btn-default" id="reload">
-          <span class="glyphicon glyphicon-refresh"></span> Refresh
+          <span class="glyphicon glyphicon-refresh"></span> %refresh%
         </button>
       </div>
       
@@ -100,17 +100,17 @@
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <h4 class="modal-title">Create Folder</h4>
+            <h4 class="modal-title">%create_folder%</h4>
           </div>
           <div class="modal-body">
-            <p>Please enter the name of the folder to be created:</p>
+            <p>%create_folder_description%</p>
             <form onsubmit="return false">
               <input type="text" autocomplete="off" id="create-input">
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" id="create-confirm">Create Folder</button>
+            <button type="button" class="btn btn-default" data-dismiss="modal">%cancel%</button>
+            <button type="button" class="btn btn-primary" id="create-confirm">%create%</button>
           </div>
         </div>
       </div>
@@ -121,17 +121,17 @@
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <h4 class="modal-title">Move Item</h4>
+            <h4 class="modal-title">%move_item%</h4>
           </div>
           <div class="modal-body">
-            <p>Please enter the new location for this item:</p>
+            <p>%move_item_description%</p>
             <form onsubmit="return false">
               <input type="text" autocomplete="off" id="move-input">
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" id="move-confirm">Move Item</button>
+            <button type="button" class="btn btn-default" data-dismiss="modal">%cancel%</button>
+            <button type="button" class="btn btn-primary" id="move-confirm">%move%</button>
           </div>
         </div>
       </div>
