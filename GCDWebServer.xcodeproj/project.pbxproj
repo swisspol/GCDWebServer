@@ -363,6 +363,9 @@
 		E2DDD2261BE6A0B4002CE867 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.1.sdk/usr/lib/libz.tbd; sourceTree = DEVELOPER_DIR; };
 		E2DDD22A1BE6A0EB002CE867 /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
 		E2DDD22C1BE6A0EF002CE867 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		E70E3D421F721CEB00394ABD /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Main.strings"; sourceTree = "<group>"; };
+		E70E3D431F721CEB00394ABD /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/LaunchScreen.strings"; sourceTree = "<group>"; };
+		E70E3D441F721CEB00394ABD /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Main.strings"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1164,6 +1167,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				E2DDD1D31BE698A8002CE867 /* Base */,
+				E70E3D441F721CEB00394ABD /* zh-Hans */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";
@@ -1172,6 +1176,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				E2DDD2021BE69EE5002CE867 /* Base */,
+				E70E3D421F721CEB00394ABD /* zh-Hans */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";
@@ -1180,6 +1185,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				E2DDD2071BE69EE5002CE867 /* Base */,
+				E70E3D431F721CEB00394ABD /* zh-Hans */,
 			);
 			name = LaunchScreen.storyboard;
 			sourceTree = "<group>";
