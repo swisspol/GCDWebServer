@@ -48,8 +48,6 @@
 #import "GCDWebServerFileResponse.h"
 #import "GCDWebServerStreamedResponse.h"
 
-NS_ASSUME_NONNULL_BEGIN
-
 /**
  *  Check if a custom logging facility should be used instead.
  */
@@ -101,7 +99,7 @@ typedef NS_ENUM(int, GCDWebServerLoggingLevel) {
 };
 
 extern GCDWebServerLoggingLevel GCDWebServerLogLevel;
-extern void GCDWebServerLogMessage(GCDWebServerLoggingLevel level, NSString* format, ...) NS_FORMAT_FUNCTION(2, 3);
+extern void GCDWebServerLogMessage(GCDWebServerLoggingLevel level, NSString* _Nonnull format, ...) NS_FORMAT_FUNCTION(2, 3);
 
 #if DEBUG
 #define GWS_LOG_DEBUG(...)                                                                                                             \
@@ -154,6 +152,8 @@ extern void GCDWebServerLogMessage(GCDWebServerLoggingLevel level, NSString* for
 #endif
 
 #endif
+
+NS_ASSUME_NONNULL_BEGIN
 
 /**
  *  GCDWebServer internal constants and APIs.
