@@ -211,11 +211,12 @@ $(document).ready(function() {
     
     add: function(e, data) {
       var file = data.files[0];
+      var relativePath = _keepDirectoryTree ? file.relativePath : "";
       data.formData = {
-        path: _path
+        path: _path + relativePath
       };
       data.context = $(tmpl("template-uploads", {
-        path: _path + file.name
+        path: _path + relativePath + file.name
       })).appendTo("#uploads");
       var jqXHR = data.submit();
       data.context.find("button").click(function(event) {
