@@ -136,7 +136,8 @@ NS_ASSUME_NONNULL_END
                                                                      @"header" : header,
                                                                      @"prologue" : prologue,
                                                                      @"epilogue" : epilogue,
-                                                                     @"footer" : footer
+                                                                     @"footer" : footer,
+                                                                     @"keepDirectoryTree": keepDirectoryTree
                                                                    }];
 
                  }];
