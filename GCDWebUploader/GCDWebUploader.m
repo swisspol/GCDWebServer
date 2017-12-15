@@ -312,8 +312,10 @@ NS_ASSUME_NONNULL_END
     return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"Uploading file \"%@\" to \"%@\" is not permitted", file.fileName, relativePath];
   }
   
-  NSString *targetDirectory = [absolutePath stringByDeletingLastPathComponent];
-  [[NSFileManager defaultManager] createDirectoryAtPath:targetDirectory withIntermediateDirectories:YES attributes:nil error:NULL];
+  if (_keepDirectoryTree) {
+    NSString *targetDirectory = [absolutePath stringByDeletingLastPathComponent];
+    [[NSFileManager defaultManager] createDirectoryAtPath:targetDirectory withIntermediateDirectories:YES attributes:nil error:NULL];
+  }
 
   NSError* error = nil;
   if (![[NSFileManager defaultManager] moveItemAtPath:file.temporaryPath toPath:absolutePath error:&error]) {
