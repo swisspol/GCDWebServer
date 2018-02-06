@@ -212,6 +212,9 @@ $(document).ready(function() {
     add: function(e, data) {
       var file = data.files[0];
       var relativePath = (_keepDirectoryTree && file.relativePath != null) ? file.relativePath : "";
+      if (typeof relativePath == "undefined" || relativePath == "undefined") {
+        relativePath = "";
+      }
       data.formData = {
         path: _path + relativePath
       };
