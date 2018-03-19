@@ -88,26 +88,30 @@ static inline NSDate* _NSDateFromTimeSpec(const struct timespec* t) {
     return nil;
   }
 #endif
-  NSUInteger fileSize = (NSUInteger)info.st_size;
-
-  BOOL hasByteRange = GCDWebServerIsValidByteRange(range);
-  if (hasByteRange) {
-    if (range.location != NSUIntegerMax) {
-      range.location = MIN(range.location, fileSize);
-      range.length = MIN(range.length, fileSize - range.location);
-    } else {
-      range.length = MIN(range.length, fileSize);
-      range.location = fileSize - range.length;
-    }
-    if (range.length == 0) {
-      return nil;  // TODO: Return 416 status code and "Content-Range: bytes */{file length}" header
-    }
-  } else {
-    range.location = 0;
-    range.length = fileSize;
-  }
-
+  
   if ((self = [super init])) {
+    
+    NSUInteger fileSize = (NSUInteger)info.st_size;
+
+    BOOL hasByteRange = GCDWebServerIsValidByteRange(range);
+    if (hasByteRange) {
+      if (range.location != NSUIntegerMax) {
+        range.location = MIN(range.location, fileSize);
+        range.length = MIN(range.length, fileSize - range.location);
+      } else {
+        range.length = MIN(range.length, fileSize);
+        range.location = fileSize - range.length;
+      }
+      if (range.length == 0) {
+        [self setStatusCode:kGCDWebServerHTTPStatusCode_RequestedRangeNotSatisfiable];
+        [self setValue:[NSString stringWithFormat:@"bytes */%lu", (unsigned long)fileSize] forAdditionalHeader:@"Content-Range"];
+        return self;
+      }
+    } else {
+      range.location = 0;
+      range.length = fileSize;
+    }
+
     _path = [path copy];
     _offset = range.location;
     _size = range.length;
