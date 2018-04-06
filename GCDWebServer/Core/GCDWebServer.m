@@ -589,7 +589,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 
       CFNetServiceSetClient(_registrationService, _NetServiceRegisterCallBack, &context);
       CFNetServiceScheduleWithRunLoop(_registrationService, CFRunLoopGetMain(), kCFRunLoopCommonModes);
-      CFStreamError streamError = {0};
+      CFStreamError streamError = {.error = 0};
       CFNetServiceRegisterWithOptions(_registrationService, 0, &streamError);
 
       _resolutionService = CFNetServiceCreateCopy(kCFAllocatorDefault, _registrationService);
