@@ -901,12 +901,31 @@ static inline NSString* _EncodeBase64(NSString* string) {
     [self addHandlerWithMatchBlock:^GCDWebServerRequest*(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
 
       if (![requestMethod isEqualToString:method]) {
-        return nil;
+          return nil;
       }
-      if ([urlPath caseInsensitiveCompare:path] != NSOrderedSame) {
-        return nil;
+      
+      NSArray *handlerPathComponents = [path componentsSeparatedByString:@"/"];
+      NSArray *urlPathComponents = [urlPath componentsSeparatedByString:@"/"];
+
+      if ([handlerPathComponents count] != [urlPathComponents count]) {
+          return nil;
       }
-      return [[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:urlQuery];
+
+      NSMutableDictionary *params = [[NSMutableDictionary alloc] initWithDictionary:urlQuery];
+      for (int i = 0; i < [handlerPathComponents count]; i++) {
+          NSString *handlerPathComponent = handlerPathComponents[i];
+          NSString *urlPathComponent = urlPathComponents[i];
+          if ([handlerPathComponent hasPrefix:@":"]) {
+              NSString * key = [handlerPathComponent substringFromIndex:1];
+              params[key] = urlPathComponent;
+          } else if ([handlerPathComponent isEqualToString:urlPathComponent]) {
+              continue;
+          } else {
+              return nil;
+          }
+      }
+      
+      return [[aClass alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:urlPath query:params];
 
     }
                  asyncProcessBlock:block];
