@@ -71,9 +71,10 @@ typedef void (^GCDWebServerAsyncProcessBlock)(__kindof GCDWebServerRequest* requ
 
 /**
  *  The GCDWebServerBuiltInLoggerBlock is used to override the built-in logger at runtime.
- *  The message parameter is the formatted log message with the logging level.
+ *  The block will be passed the log level and the log message, see setLogLevel for
+ *  documentation of the log levels for the built-in logger.
  */
-typedef void (^GCDWebServerBuiltInLoggerBlock)(NSString* _Nonnull message);
+typedef void (^GCDWebServerBuiltInLoggerBlock)(int level, NSString* _Nonnull message);
 
 /**
  *  The port used by the GCDWebServer (NSNumber / NSUInteger).

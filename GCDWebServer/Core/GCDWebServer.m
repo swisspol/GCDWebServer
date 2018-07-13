@@ -99,7 +99,7 @@ void GCDWebServerLogMessage(GCDWebServerLoggingLevel level, NSString* format, ..
     NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
     va_end(arguments);
     if (_builtInLoggerBlock) {
-      _builtInLoggerBlock([NSString stringWithFormat:@"[%s] %s", levelNames[level], [message UTF8String]]);
+      _builtInLoggerBlock(level, message);
     } else {
       fprintf(stderr, "[%s] %s\n", levelNames[level], [message UTF8String]);
     }
@@ -1101,7 +1101,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 #if defined(__GCDWEBSERVER_LOGGING_FACILITY_BUILTIN__)
   _builtInLoggerBlock = block;
 #else
-  GWS_DCHECK(false) // Built-in logger must be enabled in order to override
+  GWS_DNOT_REACHED(); // Built-in logger must be enabled in order to override
 #endif
 }
 
