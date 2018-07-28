@@ -1226,7 +1226,6 @@
 					"-Wno-explicit-ownership-type",
 					"-Wno-gnu-statement-expression",
 					"-Wno-direct-ivar-access",
-					"-Wno-implicit-retain-self",
 					"-Wno-assign-enum",
 					"-Wno-format-nonliteral",
 					"-Wno-cast-align",
