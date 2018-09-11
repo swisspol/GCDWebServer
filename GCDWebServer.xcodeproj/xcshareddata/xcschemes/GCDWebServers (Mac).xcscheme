@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "CEE28CD01AE004D800F4023C"
-               BuildableName = "GCDWebServers.framework"
+               BuildableName = "GCDWebServer.framework"
                BlueprintName = "GCDWebServers (Mac)"
                ReferencedContainer = "container:GCDWebServer.xcodeproj">
             </BuildableReference>
@@ -27,7 +27,6 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       enableAddressSanitizer = "YES"
-      language = ""
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
          <TestableReference
@@ -48,7 +47,6 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      language = ""
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
@@ -59,7 +57,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "CEE28CD01AE004D800F4023C"
-            BuildableName = "GCDWebServers.framework"
+            BuildableName = "GCDWebServer.framework"
             BlueprintName = "GCDWebServers (Mac)"
             ReferencedContainer = "container:GCDWebServer.xcodeproj">
          </BuildableReference>
@@ -77,7 +75,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "CEE28CD01AE004D800F4023C"
-            BuildableName = "GCDWebServers.framework"
+            BuildableName = "GCDWebServer.framework"
             BlueprintName = "GCDWebServers (Mac)"
             ReferencedContainer = "container:GCDWebServer.xcodeproj">
          </BuildableReference>

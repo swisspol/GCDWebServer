@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "E2DDD18A1BE69404002CE867"
-               BuildableName = "GCDWebServers.framework"
+               BuildableName = "GCDWebServer.framework"
                BlueprintName = "GCDWebServers (tvOS)"
                ReferencedContainer = "container:GCDWebServer.xcodeproj">
             </BuildableReference>
@@ -26,7 +26,6 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      language = ""
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
       </Testables>
@@ -34,7 +33,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E2DDD18A1BE69404002CE867"
-            BuildableName = "GCDWebServers.framework"
+            BuildableName = "GCDWebServer.framework"
             BlueprintName = "GCDWebServers (tvOS)"
             ReferencedContainer = "container:GCDWebServer.xcodeproj">
          </BuildableReference>
@@ -46,7 +45,6 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      language = ""
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
@@ -57,7 +55,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E2DDD18A1BE69404002CE867"
-            BuildableName = "GCDWebServers.framework"
+            BuildableName = "GCDWebServer.framework"
             BlueprintName = "GCDWebServers (tvOS)"
             ReferencedContainer = "container:GCDWebServer.xcodeproj">
          </BuildableReference>
@@ -75,7 +73,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E2DDD18A1BE69404002CE867"
-            BuildableName = "GCDWebServers.framework"
+            BuildableName = "GCDWebServer.framework"
             BlueprintName = "GCDWebServers (tvOS)"
             ReferencedContainer = "container:GCDWebServer.xcodeproj">
          </BuildableReference>
