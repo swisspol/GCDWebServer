@@ -102,7 +102,7 @@
 		E208D149167B76B700500836 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E208D148167B76B700500836 /* CFNetwork.framework */; };
 		E208D1B3167BB17E00500836 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E208D1B2167BB17E00500836 /* CoreServices.framework */; };
 		E221128F1690B6470048D2B2 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = E221128E1690B6470048D2B2 /* main.m */; };
-		E240392B1BA09207000B7089 /* GCDWebServers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEE28CD11AE004D800F4023C /* GCDWebServers.framework */; };
+		E240392B1BA09207000B7089 /* GCDWebServer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEE28CD11AE004D800F4023C /* GCDWebServer.framework */; };
 		E24039321BA092B7000B7089 /* Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = E24039311BA092B7000B7089 /* Tests.m */; };
 		E28BAE3418F99C810095C089 /* GCDWebServer.m in Sources */ = {isa = PBXBuildFile; fileRef = E28BAE1718F99C810095C089 /* GCDWebServer.m */; };
 		E28BAE3618F99C810095C089 /* GCDWebServerConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = E28BAE1918F99C810095C089 /* GCDWebServerConnection.m */; };
@@ -287,8 +287,8 @@
 
 /* Begin PBXFileReference section */
 		8DD76FB20486AB0100D96B5E /* GCDWebServer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GCDWebServer; sourceTree = BUILT_PRODUCTS_DIR; };
-		CEE28CD11AE004D800F4023C /* GCDWebServers.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = GCDWebServers.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		CEE28CEF1AE0051F00F4023C /* GCDWebServers.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = GCDWebServers.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		CEE28CD11AE004D800F4023C /* GCDWebServer.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = GCDWebServer.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		CEE28CEF1AE0051F00F4023C /* GCDWebServer.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = GCDWebServer.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		CEE28CF21AE0051F00F4023C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		CEE28CF31AE0051F00F4023C /* GCDWebServers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GCDWebServers.h; sourceTree = "<group>"; };
 		CEE28D4B1AE0095600F4023C /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -334,7 +334,7 @@
 		E2BE850818E77ECA0061360B /* GCDWebUploader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebUploader.h; sourceTree = "<group>"; };
 		E2BE850918E77ECA0061360B /* GCDWebUploader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebUploader.m; sourceTree = "<group>"; };
 		E2BE851018E79DAF0061360B /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
-		E2DDD18B1BE69404002CE867 /* GCDWebServers.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = GCDWebServers.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		E2DDD18B1BE69404002CE867 /* GCDWebServer.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = GCDWebServer.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E2DDD1B61BE6951A002CE867 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.0.sdk/System/Library/Frameworks/CFNetwork.framework; sourceTree = DEVELOPER_DIR; };
 		E2DDD1B91BE69545002CE867 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.0.sdk/usr/lib/libz.tbd; sourceTree = DEVELOPER_DIR; };
 		E2DDD1BB1BE69551002CE867 /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.0.sdk/usr/lib/libxml2.tbd; sourceTree = DEVELOPER_DIR; };
@@ -407,7 +407,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E240392B1BA09207000B7089 /* GCDWebServers.framework in Frameworks */,
+				E240392B1BA09207000B7089 /* GCDWebServer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -474,10 +474,10 @@
 			isa = PBXGroup;
 			children = (
 				8DD76FB20486AB0100D96B5E /* GCDWebServer */,
-				CEE28CD11AE004D800F4023C /* GCDWebServers.framework */,
-				CEE28CEF1AE0051F00F4023C /* GCDWebServers.framework */,
+				CEE28CD11AE004D800F4023C /* GCDWebServer.framework */,
+				CEE28CEF1AE0051F00F4023C /* GCDWebServer.framework */,
 				E24039251BA09207000B7089 /* Tests.xctest */,
-				E2DDD18B1BE69404002CE867 /* GCDWebServers.framework */,
+				E2DDD18B1BE69404002CE867 /* GCDWebServer.framework */,
 				E2DDD1C71BE698A8002CE867 /* GCDWebServer.app */,
 				E2DDD1F61BE69EE4002CE867 /* GCDWebServer.app */,
 			);
@@ -760,7 +760,7 @@
 			);
 			name = "GCDWebServers (Mac)";
 			productName = GCDWebServers;
-			productReference = CEE28CD11AE004D800F4023C /* GCDWebServers.framework */;
+			productReference = CEE28CD11AE004D800F4023C /* GCDWebServer.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		CEE28CEE1AE0051F00F4023C /* GCDWebServers (iOS) */ = {
@@ -778,7 +778,7 @@
 			);
 			name = "GCDWebServers (iOS)";
 			productName = GCDWebServers;
-			productReference = CEE28CEF1AE0051F00F4023C /* GCDWebServers.framework */;
+			productReference = CEE28CEF1AE0051F00F4023C /* GCDWebServer.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		E24039241BA09207000B7089 /* Tests (Mac) */ = {
@@ -813,7 +813,7 @@
 			);
 			name = "GCDWebServers (tvOS)";
 			productName = "GCDWebServer (tvOS)";
-			productReference = E2DDD18B1BE69404002CE867 /* GCDWebServers.framework */;
+			productReference = E2DDD18B1BE69404002CE867 /* GCDWebServer.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		E2DDD1C61BE698A8002CE867 /* GCDWebServer (tvOS) */ = {
@@ -1266,7 +1266,7 @@
 				INFOPLIST_FILE = Frameworks/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
-				PRODUCT_NAME = GCDWebServers;
+				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 			};
@@ -1282,7 +1282,7 @@
 				INFOPLIST_FILE = Frameworks/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
-				PRODUCT_NAME = GCDWebServers;
+				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 			};
@@ -1298,7 +1298,7 @@
 				INFOPLIST_FILE = Frameworks/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_NAME = GCDWebServers;
+				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 			};
@@ -1314,7 +1314,7 @@
 				INFOPLIST_FILE = Frameworks/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_NAME = GCDWebServers;
+				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 			};
@@ -1379,7 +1379,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = Frameworks/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_NAME = GCDWebServers;
+				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = appletvos;
 				SKIP_INSTALL = YES;
 				TVOS_DEPLOYMENT_TARGET = 9.0;
@@ -1395,7 +1395,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				INFOPLIST_FILE = Frameworks/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_NAME = GCDWebServers;
+				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = appletvos;
 				SKIP_INSTALL = YES;
 				TVOS_DEPLOYMENT_TARGET = 9.0;
