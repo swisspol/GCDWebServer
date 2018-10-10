@@ -39,14 +39,18 @@ Requirements:
 * iOS 8.0 or later (armv7, armv7s or arm64)
 * ARC memory management only (if you need MRC support use GCDWebServer 3.1 and earlier)
 
-Getting Started
+Adding This to Your Project
 ===============
+
+## Manual import
 
 Download or check out the [latest release](https://github.com/swisspol/GCDWebServer/releases) of GCDWebServer then add the entire "GCDWebServer" subfolder to your Xcode project. If you intend to use one of the extensions like GCDWebDAVServer or GCDWebUploader, add these subfolders as well.
 
-If you add the files directly then (1) link to `libz` (via Target > Build Phases > Link Binary With Libraries) and (2) add `$(SDKROOT)/usr/include/libxml2` to your header search paths (via Target > Build Settings > HEADER_SEARCH_PATHS).
+(1) link to `libz` (via Target > Build Phases > Link Binary With Libraries) and (2) add `$(SDKROOT)/usr/include/libxml2` to your header search paths (via Target > Build Settings > HEADER_SEARCH_PATHS).
 
-Alternatively, you can install GCDWebServer using [CocoaPods](http://cocoapods.org/) by simply adding this line to your Podfile:
+## CocoaPod installation
+
+You can install GCDWebServer using [CocoaPods](http://cocoapods.org/) by simply adding this line to your Podfile:
 ```
 pod "GCDWebServer", "~> 3.0"
 ```
@@ -61,7 +65,9 @@ pod "GCDWebServer/WebDAV", "~> 3.0"
 
 And finally run `$ pod install`.
 
-You can also use [Carthage](https://github.com/Carthage/Carthage) by adding this line to your Cartfile (3.2.5 is the first release with Carthage support):
+## Carthage installation
+
+You can use [Carthage](https://github.com/Carthage/Carthage) by adding this line to your Cartfile (3.2.5 is the first release with Carthage support):
 ```
 github "swisspol/GCDWebServer" ~> 3.2.5
 ```
