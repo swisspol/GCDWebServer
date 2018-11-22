@@ -41,6 +41,7 @@
 #import <dns_sd.h>
 
 #import "GCDWebServerPrivate.h"
+#import <arpa/inet.h>
 
 #if TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
 #define kDefaultPort 80
@@ -55,6 +56,8 @@ NSString* const GCDWebServerOption_BonjourName = @"BonjourName";
 NSString* const GCDWebServerOption_BonjourType = @"BonjourType";
 NSString* const GCDWebServerOption_RequestNATPortMapping = @"RequestNATPortMapping";
 NSString* const GCDWebServerOption_BindToLocalhost = @"BindToLocalhost";
+NSString* const GCDWebServerOption_BindToIP = @"BindToIp";
+NSString* const GCDWebServerOption_BindToIPv6 = @"BindToIPv6";
 NSString* const GCDWebServerOption_MaxPendingConnections = @"MaxPendingConnections";
 NSString* const GCDWebServerOption_ServerName = @"ServerName";
 NSString* const GCDWebServerOption_AuthenticationMethod = @"AuthenticationMethod";
@@ -514,13 +517,19 @@ static inline NSString* _EncodeBase64(NSString* string) {
   NSUInteger port = [(NSNumber*)_GetOption(_options, GCDWebServerOption_Port, @0) unsignedIntegerValue];
   BOOL bindToLocalhost = [(NSNumber*)_GetOption(_options, GCDWebServerOption_BindToLocalhost, @NO) boolValue];
   NSUInteger maxPendingConnections = [(NSNumber*)_GetOption(_options, GCDWebServerOption_MaxPendingConnections, @16) unsignedIntegerValue];
+  NSString *ipBind = _GetOption(_options, GCDWebServerOption_BindToIP, nil);
+  BOOL bindToIPv6 = [(NSNumber*)_GetOption(_options, GCDWebServerOption_BindToIPv6, @YES) boolValue];
 
   struct sockaddr_in addr4;
   bzero(&addr4, sizeof(addr4));
   addr4.sin_len = sizeof(addr4);
   addr4.sin_family = AF_INET;
   addr4.sin_port = htons(port);
-  addr4.sin_addr.s_addr = bindToLocalhost ? htonl(INADDR_LOOPBACK) : htonl(INADDR_ANY);
+  if (ipBind != nil) {
+    addr4.sin_addr.s_addr = inet_addr(ipBind.UTF8String);
+  } else {
+    addr4.sin_addr.s_addr = bindToLocalhost ? htonl(INADDR_LOOPBACK) : htonl(INADDR_ANY);
+  }
   int listeningSocket4 = [self _createListeningSocket:NO localAddress:&addr4 length:sizeof(addr4) maxPendingConnections:maxPendingConnections error:error];
   if (listeningSocket4 <= 0) {
     return NO;
@@ -535,16 +544,19 @@ static inline NSString* _EncodeBase64(NSString* string) {
     }
   }
 
-  struct sockaddr_in6 addr6;
-  bzero(&addr6, sizeof(addr6));
-  addr6.sin6_len = sizeof(addr6);
-  addr6.sin6_family = AF_INET6;
-  addr6.sin6_port = htons(port);
-  addr6.sin6_addr = bindToLocalhost ? in6addr_loopback : in6addr_any;
-  int listeningSocket6 = [self _createListeningSocket:YES localAddress:&addr6 length:sizeof(addr6) maxPendingConnections:maxPendingConnections error:error];
-  if (listeningSocket6 <= 0) {
-    close(listeningSocket4);
-    return NO;
+  int listeningSocket6 = 0;
+  if (bindToIPv6) {
+    struct sockaddr_in6 addr6;
+    bzero(&addr6, sizeof(addr6));
+    addr6.sin6_len = sizeof(addr6);
+    addr6.sin6_family = AF_INET6;
+    addr6.sin6_port = htons(port);
+    addr6.sin6_addr = bindToLocalhost ? in6addr_loopback : in6addr_any;
+    listeningSocket6 = [self _createListeningSocket:YES localAddress:&addr6 length:sizeof(addr6) maxPendingConnections:maxPendingConnections error:error];
+    if (listeningSocket6 <= 0) {
+      close(listeningSocket4);
+      return NO;
+    }
   }
 
   _serverName = [(NSString*)_GetOption(_options, GCDWebServerOption_ServerName, NSStringFromClass([self class])) copy];
@@ -570,7 +582,9 @@ static inline NSString* _EncodeBase64(NSString* string) {
   _dispatchQueuePriority = [(NSNumber*)_GetOption(_options, GCDWebServerOption_DispatchQueuePriority, @(DISPATCH_QUEUE_PRIORITY_DEFAULT)) longValue];
 
   _source4 = [self _createDispatchSourceWithListeningSocket:listeningSocket4 isIPv6:NO];
-  _source6 = [self _createDispatchSourceWithListeningSocket:listeningSocket6 isIPv6:YES];
+  if (bindToIPv6) {
+    _source6 = [self _createDispatchSourceWithListeningSocket:listeningSocket6 isIPv6:YES];
+  }
   _port = port;
   _bindToLocalhost = bindToLocalhost;
 
@@ -622,7 +636,9 @@ static inline NSString* _EncodeBase64(NSString* string) {
   }
 
   dispatch_resume(_source4);
-  dispatch_resume(_source6);
+  if (bindToIPv6) {
+    dispatch_resume(_source6);
+  }
   GWS_LOG_INFO(@"%@ started on port %i and reachable at %@", [self class], (int)_port, self.serverURL);
   if ([_delegate respondsToSelector:@selector(webServerDidStart:)]) {
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -667,11 +683,15 @@ static inline NSString* _EncodeBase64(NSString* string) {
     _registrationService = NULL;
   }
 
-  dispatch_source_cancel(_source6);
+  if (_source6 != NULL) {
+    dispatch_source_cancel(_source6);
+  }
   dispatch_source_cancel(_source4);
   dispatch_group_wait(_sourceGroup, DISPATCH_TIME_FOREVER);  // Wait until the cancellation handlers have been called which guarantees the listening sockets are closed
 #if !OS_OBJECT_USE_OBJC_RETAIN_RELEASE
-  dispatch_release(_source6);
+  if (_source6 != NULL) {
+    dispatch_release(_source6);
+  }
 #endif
   _source6 = NULL;
 #if !OS_OBJECT_USE_OBJC_RETAIN_RELEASE

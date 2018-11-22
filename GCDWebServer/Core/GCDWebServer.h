@@ -116,6 +116,23 @@ extern NSString* const GCDWebServerOption_RequestNATPortMapping;
 extern NSString* const GCDWebServerOption_BindToLocalhost;
 
 /**
+ *  Bind to the interface with the given IP. Overrides the GCDWebServerOption_BindToLocalhost option.
+ *
+ *  The default value is `nil`, and the server will bind to all available interfaces, or the local loopback
+ *  if GCDWebServerOption_BindToLocalhost is set to YES.
+ */
+extern NSString* const GCDWebServerOption_BindToIP;
+
+/**
+ *  Bind to an IPv6 address.
+ *
+ *  The default value is YES.
+ *
+ *  @warning IPv6 binding should be turned off if using the GCDWebServerOption_BindToIP option.
+ */
+extern NSString* const GCDWebServerOption_BindToIPv6;
+
+/**
  *  The maximum number of incoming HTTP requests that can be queued waiting to
  *  be handled before new ones are dropped (NSNumber / NSUInteger).
  *
