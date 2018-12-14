@@ -48,7 +48,7 @@
   }
   if (_data == nil) {
     if (error) {
-      *error = [NSError errorWithDomain:kGCDWebServerErrorDomain code:-1 userInfo:@{ NSLocalizedDescriptionKey : @"Failed allocating memory" }];
+      *error = [NSError errorWithDomain:kGCDWebServerErrorDomain code:-1 userInfo:@{NSLocalizedDescriptionKey : @"Failed allocating memory"}];
     }
     return NO;
   }

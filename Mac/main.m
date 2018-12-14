@@ -219,9 +219,7 @@ int main(int argc, const char* argv[]) {
         [webServer addDefaultHandlerForMethod:@"GET"
                                  requestClass:[GCDWebServerRequest class]
                                  processBlock:^GCDWebServerResponse*(GCDWebServerRequest* request) {
-
                                    return [GCDWebServerDataResponse responseWithHTML:@"<html><body><p>Hello World</p></body></html>"];
-
                                  }];
         break;
       }
@@ -234,7 +232,6 @@ int main(int argc, const char* argv[]) {
                                   path:@"/"
                           requestClass:[GCDWebServerRequest class]
                           processBlock:^GCDWebServerResponse*(GCDWebServerRequest* request) {
-
                             NSString* html = @" \
             <html><body> \
               <form name=\"input\" action=\"/\" method=\"post\" enctype=\"application/x-www-form-urlencoded\"> \
@@ -244,17 +241,14 @@ int main(int argc, const char* argv[]) {
             </body></html> \
           ";
                             return [GCDWebServerDataResponse responseWithHTML:html];
-
                           }];
         [webServer addHandlerForMethod:@"POST"
                                   path:@"/"
                           requestClass:[GCDWebServerURLEncodedFormRequest class]
                           processBlock:^GCDWebServerResponse*(GCDWebServerRequest* request) {
-
                             NSString* value = [[(GCDWebServerURLEncodedFormRequest*)request arguments] objectForKey:@"value"];
                             NSString* html = [NSString stringWithFormat:@"<html><body><p>%@</p></body></html>", value];
                             return [GCDWebServerDataResponse responseWithHTML:html];
-
                           }];
         break;
       }
@@ -274,16 +268,13 @@ int main(int argc, const char* argv[]) {
                                   path:@"/"
                           requestClass:[GCDWebServerRequest class]
                           processBlock:^GCDWebServerResponse*(GCDWebServerRequest* request) {
-
                             NSString* html = [NSString stringWithFormat:@"<html><body>%@</body></html>", formHTML];
                             return [GCDWebServerDataResponse responseWithHTML:html];
-
                           }];
         [webServer addHandlerForMethod:@"POST"
                                   path:@"/"
                           requestClass:[GCDWebServerMultiPartFormRequest class]
                           processBlock:^GCDWebServerResponse*(GCDWebServerRequest* request) {
-
                             NSMutableString* string = [NSMutableString string];
                             for (GCDWebServerMultiPartArgument* argument in [(GCDWebServerMultiPartFormRequest*)request arguments]) {
                               [string appendFormat:@"%@ = %@<br>", argument.controlName, argument.string];
@@ -296,7 +287,6 @@ int main(int argc, const char* argv[]) {
                             };
                             NSString* html = [NSString stringWithFormat:@"<html><body><p>%@</p><hr>%@</body></html>", string, formHTML];
                             return [GCDWebServerDataResponse responseWithHTML:html];
-
                           }];
         break;
       }
@@ -323,39 +313,29 @@ int main(int argc, const char* argv[]) {
                                   path:@"/sync"
                           requestClass:[GCDWebServerRequest class]
                           processBlock:^GCDWebServerResponse*(GCDWebServerRequest* request) {
-
                             __block int countDown = 10;
                             return [GCDWebServerStreamedResponse responseWithContentType:@"text/plain"
                                                                              streamBlock:^NSData*(NSError** error) {
-
                                                                                usleep(100 * 1000);
                                                                                if (countDown) {
                                                                                  return [[NSString stringWithFormat:@"%i\n", countDown--] dataUsingEncoding:NSUTF8StringEncoding];
                                                                                } else {
                                                                                  return [NSData data];
                                                                                }
-
                                                                              }];
-
                           }];
         [webServer addHandlerForMethod:@"GET"
                                   path:@"/async"
                           requestClass:[GCDWebServerRequest class]
                           processBlock:^GCDWebServerResponse*(GCDWebServerRequest* request) {
-
                             __block int countDown = 10;
                             return [GCDWebServerStreamedResponse responseWithContentType:@"text/plain"
                                                                         asyncStreamBlock:^(GCDWebServerBodyReaderCompletionBlock completionBlock) {
-
                                                                           dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-
                                                                             NSData* data = countDown ? [[NSString stringWithFormat:@"%i\n", countDown--] dataUsingEncoding:NSUTF8StringEncoding] : [NSData data];
                                                                             completionBlock(data, nil);
-
                                                                           });
-
                                                                         }];
-
                           }];
         break;
       }
@@ -368,36 +348,26 @@ int main(int argc, const char* argv[]) {
                                   path:@"/async"
                           requestClass:[GCDWebServerRequest class]
                      asyncProcessBlock:^(GCDWebServerRequest* request, GCDWebServerCompletionBlock completionBlock) {
-
                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                          GCDWebServerDataResponse* response = [GCDWebServerDataResponse responseWithData:(NSData*)[@"Hello World!" dataUsingEncoding:NSUTF8StringEncoding] contentType:@"text/plain"];
                          completionBlock(response);
                        });
-
                      }];
         [webServer addHandlerForMethod:@"GET"
                                   path:@"/async2"
                           requestClass:[GCDWebServerRequest class]
                      asyncProcessBlock:^(GCDWebServerRequest* request, GCDWebServerCompletionBlock handlerCompletionBlock) {
-
                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-
                          __block int countDown = 10;
                          GCDWebServerStreamedResponse* response = [GCDWebServerStreamedResponse responseWithContentType:@"text/plain"
                                                                                                        asyncStreamBlock:^(GCDWebServerBodyReaderCompletionBlock readerCompletionBlock) {
-
                                                                                                          dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-
                                                                                                            NSData* data = countDown ? [[NSString stringWithFormat:@"%i\n", countDown--] dataUsingEncoding:NSUTF8StringEncoding] : [NSData data];
                                                                                                            readerCompletionBlock(data, nil);
-
                                                                                                          });
-
                                                                                                        }];
                          handlerCompletionBlock(response);
-
                        });
-
                      }];
         break;
       }

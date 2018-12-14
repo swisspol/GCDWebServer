@@ -337,7 +337,7 @@ static NSData* _dashNewlineData = nil;
   _parser = [[GCDWebServerMIMEStreamParser alloc] initWithBoundary:boundary defaultControlName:nil arguments:_arguments files:_files];
   if (_parser == nil) {
     if (error) {
-      *error = [NSError errorWithDomain:kGCDWebServerErrorDomain code:-1 userInfo:@{ NSLocalizedDescriptionKey : @"Failed starting to parse multipart form data" }];
+      *error = [NSError errorWithDomain:kGCDWebServerErrorDomain code:-1 userInfo:@{NSLocalizedDescriptionKey : @"Failed starting to parse multipart form data"}];
     }
     return NO;
   }
@@ -347,7 +347,7 @@ static NSData* _dashNewlineData = nil;
 - (BOOL)writeData:(NSData*)data error:(NSError**)error {
   if (![_parser appendBytes:data.bytes length:data.length]) {
     if (error) {
-      *error = [NSError errorWithDomain:kGCDWebServerErrorDomain code:-1 userInfo:@{ NSLocalizedDescriptionKey : @"Failed continuing to parse multipart form data" }];
+      *error = [NSError errorWithDomain:kGCDWebServerErrorDomain code:-1 userInfo:@{NSLocalizedDescriptionKey : @"Failed continuing to parse multipart form data"}];
     }
     return NO;
   }
@@ -359,7 +359,7 @@ static NSData* _dashNewlineData = nil;
   _parser = nil;
   if (!atEnd) {
     if (error) {
-      *error = [NSError errorWithDomain:kGCDWebServerErrorDomain code:-1 userInfo:@{ NSLocalizedDescriptionKey : @"Failed finishing to parse multipart form data" }];
+      *error = [NSError errorWithDomain:kGCDWebServerErrorDomain code:-1 userInfo:@{NSLocalizedDescriptionKey : @"Failed finishing to parse multipart form data"}];
     }
     return NO;
   }

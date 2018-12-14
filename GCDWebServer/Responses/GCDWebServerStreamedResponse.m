@@ -48,11 +48,9 @@
 - (instancetype)initWithContentType:(NSString*)type streamBlock:(GCDWebServerStreamBlock)block {
   return [self initWithContentType:type
                   asyncStreamBlock:^(GCDWebServerBodyReaderCompletionBlock completionBlock) {
-
                     NSError* error = nil;
                     NSData* data = block(&error);
                     completionBlock(data, error);
-
                   }];
 }
 

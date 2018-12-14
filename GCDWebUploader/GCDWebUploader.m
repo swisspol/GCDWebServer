@@ -135,7 +135,6 @@ NS_ASSUME_NONNULL_END
                                                                      @"epilogue" : epilogue,
                                                                      @"footer" : footer
                                                                    }];
-
                  }];
 
     // File listing
