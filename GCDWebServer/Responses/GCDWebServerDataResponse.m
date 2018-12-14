@@ -39,7 +39,7 @@
 @dynamic contentType;
 
 + (instancetype)responseWithData:(NSData*)data contentType:(NSString*)type {
-  return [[[self class] alloc] initWithData:data contentType:type];
+  return [(GCDWebServerDataResponse*)[[self class] alloc] initWithData:data contentType:type];
 }
 
 - (instancetype)initWithData:(NSData*)data contentType:(NSString*)type {
@@ -75,23 +75,23 @@
 @implementation GCDWebServerDataResponse (Extensions)
 
 + (instancetype)responseWithText:(NSString*)text {
-  return [[self alloc] initWithText:text];
+  return [(GCDWebServerDataResponse*)[self alloc] initWithText:text];
 }
 
 + (instancetype)responseWithHTML:(NSString*)html {
-  return [[self alloc] initWithHTML:html];
+  return [(GCDWebServerDataResponse*)[self alloc] initWithHTML:html];
 }
 
-+ (instancetype)responseWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables {
-  return [[self alloc] initWithHTMLTemplate:path variables:variables];
++ (instancetype)responseWithHTMLTemplate:(NSString*)path variables:(NSDictionary<NSString*, NSString*>*)variables {
+  return [(GCDWebServerDataResponse*)[self alloc] initWithHTMLTemplate:path variables:variables];
 }
 
 + (instancetype)responseWithJSONObject:(id)object {
-  return [[self alloc] initWithJSONObject:object];
+  return [(GCDWebServerDataResponse*)[self alloc] initWithJSONObject:object];
 }
 
 + (instancetype)responseWithJSONObject:(id)object contentType:(NSString*)type {
-  return [[self alloc] initWithJSONObject:object contentType:type];
+  return [(GCDWebServerDataResponse*)[self alloc] initWithJSONObject:object contentType:type];
 }
 
 - (instancetype)initWithText:(NSString*)text {

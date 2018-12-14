@@ -188,7 +188,7 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
       if ([rangeHeader hasPrefix:@"bytes="]) {
         NSArray* components = [[rangeHeader substringFromIndex:6] componentsSeparatedByString:@","];
         if (components.count == 1) {
-          components = [[components firstObject] componentsSeparatedByString:@"-"];
+          components = [(NSString*)[components firstObject] componentsSeparatedByString:@"-"];
           if (components.count == 2) {
             NSString* startString = [components objectAtIndex:0];
             NSInteger startValue = [startString integerValue];

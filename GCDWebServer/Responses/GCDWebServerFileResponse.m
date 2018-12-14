@@ -45,19 +45,19 @@
 @dynamic contentType, lastModifiedDate, eTag;
 
 + (instancetype)responseWithFile:(NSString*)path {
-  return [[[self class] alloc] initWithFile:path];
+  return [(GCDWebServerFileResponse*)[[self class] alloc] initWithFile:path];
 }
 
 + (instancetype)responseWithFile:(NSString*)path isAttachment:(BOOL)attachment {
-  return [[[self class] alloc] initWithFile:path isAttachment:attachment];
+  return [(GCDWebServerFileResponse*)[[self class] alloc] initWithFile:path isAttachment:attachment];
 }
 
 + (instancetype)responseWithFile:(NSString*)path byteRange:(NSRange)range {
-  return [[[self class] alloc] initWithFile:path byteRange:range];
+  return [(GCDWebServerFileResponse*)[[self class] alloc] initWithFile:path byteRange:range];
 }
 
 + (instancetype)responseWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment {
-  return [[[self class] alloc] initWithFile:path byteRange:range isAttachment:attachment mimeTypeOverrides:nil];
+  return [(GCDWebServerFileResponse*)[[self class] alloc] initWithFile:path byteRange:range isAttachment:attachment mimeTypeOverrides:nil];
 }
 
 - (instancetype)initWithFile:(NSString*)path {
