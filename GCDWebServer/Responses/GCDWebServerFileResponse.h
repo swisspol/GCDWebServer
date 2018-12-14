@@ -101,7 +101,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  file extensions without the period, and the values must be the corresponding
  *  MIME types.
  */
-- (nullable instancetype)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment mimeTypeOverrides:(nullable NSDictionary*)overrides;
+- (nullable instancetype)initWithFile:(NSString*)path byteRange:(NSRange)range isAttachment:(BOOL)attachment mimeTypeOverrides:(nullable NSDictionary<NSString*, NSString*>*)overrides;
 
 @end
 

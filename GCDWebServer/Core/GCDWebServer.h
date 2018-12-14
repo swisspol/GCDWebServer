@@ -42,7 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  GCDWebServerRequest instance created with the same basic info.
  *  Otherwise, it simply returns nil.
  */
-typedef GCDWebServerRequest* _Nullable (^GCDWebServerMatchBlock)(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery);
+typedef GCDWebServerRequest* _Nullable (^GCDWebServerMatchBlock)(NSString* requestMethod, NSURL* requestURL, NSDictionary<NSString*, NSString*>* requestHeaders, NSString* urlPath, NSDictionary<NSString*, NSString*>* urlQuery);
 
 /**
  *  The GCDWebServerProcessBlock is called after the HTTP request has been fully
@@ -365,7 +365,7 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *
  *  Returns NO if the server failed to start and sets "error" argument if not NULL.
  */
-- (BOOL)startWithOptions:(nullable NSDictionary*)options error:(NSError** _Nullable)error;
+- (BOOL)startWithOptions:(nullable NSDictionary<NSString*, id>*)options error:(NSError** _Nullable)error;
 
 /**
  *  Stops the server and prevents it to accepts new HTTP requests.
@@ -444,7 +444,7 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *
  *  @warning This method must be used from the main thread only.
  */
-- (BOOL)runWithOptions:(nullable NSDictionary*)options error:(NSError** _Nullable)error;
+- (BOOL)runWithOptions:(nullable NSDictionary<NSString*, id>*)options error:(NSError** _Nullable)error;
 
 #endif
 
@@ -613,7 +613,7 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
  *
  *  Returns the number of failed tests or -1 if server failed to start.
  */
-- (NSInteger)runTestsWithOptions:(nullable NSDictionary*)options inDirectory:(NSString*)path;
+- (NSInteger)runTestsWithOptions:(nullable NSDictionary<NSString*, id>*)options inDirectory:(NSString*)path;
 
 @end
 

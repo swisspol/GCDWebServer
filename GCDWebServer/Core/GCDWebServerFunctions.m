@@ -166,7 +166,7 @@ NSString* GCDWebServerDescribeData(NSData* data, NSString* type) {
   return [NSString stringWithFormat:@"<%lu bytes>", (unsigned long)data.length];
 }
 
-NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension, NSDictionary* overrides) {
+NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension, NSDictionary<NSString*, NSString*>* overrides) {
   NSDictionary* builtInOverrides = @{@"css" : @"text/css"};
   NSString* mimeType = nil;
   extension = [extension lowercaseString];
@@ -200,7 +200,7 @@ NSString* GCDWebServerUnescapeURLString(NSString* string) {
 #pragma clang diagnostic pop
 }
 
-NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form) {
+NSDictionary<NSString*, NSString*>* GCDWebServerParseURLEncodedForm(NSString* form) {
   NSMutableDictionary* parameters = [NSMutableDictionary dictionary];
   NSScanner* scanner = [[NSScanner alloc] initWithString:form];
   [scanner setCharactersToBeSkipped:nil];

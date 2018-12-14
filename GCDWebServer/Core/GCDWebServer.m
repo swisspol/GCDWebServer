@@ -141,14 +141,14 @@ static void _ExecuteMainThreadRunLoopSources() {
 @implementation GCDWebServer {
   dispatch_queue_t _syncQueue;
   dispatch_group_t _sourceGroup;
-  NSMutableArray* _handlers;
+  NSMutableArray<GCDWebServerHandler*>* _handlers;
   NSInteger _activeConnections;  // Accessed through _syncQueue only
   BOOL _connected;  // Accessed on main thread only
   CFRunLoopTimerRef _disconnectTimer;  // Accessed on main thread only
 
-  NSDictionary* _options;
-  NSMutableDictionary* _authenticationBasicAccounts;
-  NSMutableDictionary* _authenticationDigestAccounts;
+  NSDictionary<NSString*, id>* _options;
+  NSMutableDictionary<NSString*, NSString*>* _authenticationBasicAccounts;
+  NSMutableDictionary<NSString*, NSString*>* _authenticationDigestAccounts;
   Class _connectionClass;
   CFTimeInterval _disconnectDelay;
   dispatch_source_t _source4;
@@ -408,7 +408,7 @@ static void _SocketCallBack(CFSocketRef s, CFSocketCallBackType type, CFDataRef 
   }
 }
 
-static inline id _GetOption(NSDictionary* options, NSString* key, id defaultValue) {
+static inline id _GetOption(NSDictionary<NSString*, id>* options, NSString* key, id defaultValue) {
   id value = [options objectForKey:key];
   return value ? value : defaultValue;
 }
@@ -721,7 +721,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 
 #endif
 
-- (BOOL)startWithOptions:(NSDictionary*)options error:(NSError**)error {
+- (BOOL)startWithOptions:(NSDictionary<NSString*, id>*)options error:(NSError**)error {
   if (_options == nil) {
     _options = options ? [options copy] : @{};
 #if TARGET_OS_IPHONE
@@ -832,7 +832,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
   return [self runWithOptions:options error:NULL];
 }
 
-- (BOOL)runWithOptions:(NSDictionary*)options error:(NSError**)error {
+- (BOOL)runWithOptions:(NSDictionary<NSString*, id>*)options error:(NSError**)error {
   GWS_DCHECK([NSThread isMainThread]);
   BOOL success = NO;
   _run = YES;
@@ -868,7 +868,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 }
 
 - (void)addDefaultHandlerForMethod:(NSString*)method requestClass:(Class)aClass asyncProcessBlock:(GCDWebServerAsyncProcessBlock)block {
-  [self addHandlerWithMatchBlock:^GCDWebServerRequest*(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
+  [self addHandlerWithMatchBlock:^GCDWebServerRequest*(NSString* requestMethod, NSURL* requestURL, NSDictionary<NSString*, NSString*>* requestHeaders, NSString* urlPath, NSDictionary<NSString*, NSString*>* urlQuery) {
     if (![requestMethod isEqualToString:method]) {
       return nil;
     }
@@ -888,7 +888,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 
 - (void)addHandlerForMethod:(NSString*)method path:(NSString*)path requestClass:(Class)aClass asyncProcessBlock:(GCDWebServerAsyncProcessBlock)block {
   if ([path hasPrefix:@"/"] && [aClass isSubclassOfClass:[GCDWebServerRequest class]]) {
-    [self addHandlerWithMatchBlock:^GCDWebServerRequest*(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
+    [self addHandlerWithMatchBlock:^GCDWebServerRequest*(NSString* requestMethod, NSURL* requestURL, NSDictionary<NSString*, NSString*>* requestHeaders, NSString* urlPath, NSDictionary<NSString*, NSString*>* urlQuery) {
       if (![requestMethod isEqualToString:method]) {
         return nil;
       }
@@ -915,7 +915,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 - (void)addHandlerForMethod:(NSString*)method pathRegex:(NSString*)regex requestClass:(Class)aClass asyncProcessBlock:(GCDWebServerAsyncProcessBlock)block {
   NSRegularExpression* expression = [NSRegularExpression regularExpressionWithPattern:regex options:NSRegularExpressionCaseInsensitive error:NULL];
   if (expression && [aClass isSubclassOfClass:[GCDWebServerRequest class]]) {
-    [self addHandlerWithMatchBlock:^GCDWebServerRequest*(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
+    [self addHandlerWithMatchBlock:^GCDWebServerRequest*(NSString* requestMethod, NSURL* requestURL, NSDictionary<NSString*, NSString*>* requestHeaders, NSString* urlPath, NSDictionary<NSString*, NSString*>* urlQuery) {
       if (![requestMethod isEqualToString:method]) {
         return nil;
       }
@@ -1013,7 +1013,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 - (void)addGETHandlerForBasePath:(NSString*)basePath directoryPath:(NSString*)directoryPath indexFilename:(NSString*)indexFilename cacheAge:(NSUInteger)cacheAge allowRangeRequests:(BOOL)allowRangeRequests {
   if ([basePath hasPrefix:@"/"] && [basePath hasSuffix:@"/"]) {
     GCDWebServer* __unsafe_unretained server = self;
-    [self addHandlerWithMatchBlock:^GCDWebServerRequest*(NSString* requestMethod, NSURL* requestURL, NSDictionary* requestHeaders, NSString* urlPath, NSDictionary* urlQuery) {
+    [self addHandlerWithMatchBlock:^GCDWebServerRequest*(NSString* requestMethod, NSURL* requestURL, NSDictionary<NSString*, NSString*>* requestHeaders, NSString* urlPath, NSDictionary<NSString*, NSString*>* urlQuery) {
       if (![requestMethod isEqualToString:@"GET"]) {
         return nil;
       }
@@ -1168,7 +1168,7 @@ static void _LogResult(NSString* format, ...) {
   fprintf(stdout, "%s\n", [message UTF8String]);
 }
 
-- (NSInteger)runTestsWithOptions:(NSDictionary*)options inDirectory:(NSString*)path {
+- (NSInteger)runTestsWithOptions:(NSDictionary<NSString*, id>*)options inDirectory:(NSString*)path {
   GWS_DCHECK([NSThread isMainThread]);
   NSArray* ignoredHeaders = @[ @"Date", @"Etag" ];  // Dates are always different by definition and ETags depend on file system node IDs
   NSInteger result = -1;

@@ -95,7 +95,7 @@ NS_ASSUME_NONNULL_BEGIN
  *
  *  The default value is nil i.e. all file extensions are allowed.
  */
-@property(nonatomic, copy) NSArray* allowedFileExtensions;
+@property(nonatomic, copy) NSArray<NSString*>* allowedFileExtensions;
 
 /**
  *  Sets if files and directories whose name start with a period are allowed to

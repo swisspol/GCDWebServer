@@ -698,7 +698,7 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
 #endif
 }
 
-- (NSURL*)rewriteRequestURL:(NSURL*)url withMethod:(NSString*)method headers:(NSDictionary*)headers {
+- (NSURL*)rewriteRequestURL:(NSURL*)url withMethod:(NSString*)method headers:(NSDictionary<NSString*, NSString*>*)headers {
   return url;
 }
 

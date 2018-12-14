@@ -136,12 +136,12 @@ NSString* const GCDWebServerRequestAttribute_RegexCaptures = @"GCDWebServerReque
 
 @implementation GCDWebServerRequest {
   BOOL _opened;
-  NSMutableArray* _decoders;
+  NSMutableArray<GCDWebServerBodyDecoder*>* _decoders;
   id<GCDWebServerBodyWriter> __unsafe_unretained _writer;
-  NSMutableDictionary* _attributes;
+  NSMutableDictionary<NSString*, id>* _attributes;
 }
 
-- (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
+- (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary<NSString*, NSString*>*)headers path:(NSString*)path query:(NSDictionary<NSString*, NSString*>*)query {
   if ((self = [super init])) {
     _method = [method copy];
     _URL = url;

@@ -107,13 +107,13 @@ NS_ASSUME_NONNULL_BEGIN
  *  Returns the argument parts from the multipart encoded form as
  *  name / GCDWebServerMultiPartArgument pairs.
  */
-@property(nonatomic, readonly) NSArray* arguments;
+@property(nonatomic, readonly) NSArray<GCDWebServerMultiPartArgument*>* arguments;
 
 /**
  *  Returns the files parts from the multipart encoded form as
  *  name / GCDWebServerMultiPartFile pairs.
  */
-@property(nonatomic, readonly) NSArray* files;
+@property(nonatomic, readonly) NSArray<GCDWebServerMultiPartFile*>* files;
 
 /**
  *  Returns the MIME type for multipart encoded forms

@@ -185,11 +185,11 @@ extern NSString* GCDWebServerStringFromSockAddr(const struct sockaddr* addr, BOO
 @end
 
 @interface GCDWebServer ()
-@property(nonatomic, readonly) NSMutableArray* handlers;
+@property(nonatomic, readonly) NSMutableArray<GCDWebServerHandler*>* handlers;
 @property(nonatomic, readonly, nullable) NSString* serverName;
 @property(nonatomic, readonly, nullable) NSString* authenticationRealm;
-@property(nonatomic, readonly, nullable) NSMutableDictionary* authenticationBasicAccounts;
-@property(nonatomic, readonly, nullable) NSMutableDictionary* authenticationDigestAccounts;
+@property(nonatomic, readonly, nullable) NSMutableDictionary<NSString*, NSString*>* authenticationBasicAccounts;
+@property(nonatomic, readonly, nullable) NSMutableDictionary<NSString*, NSString*>* authenticationDigestAccounts;
 @property(nonatomic, readonly) BOOL shouldAutomaticallyMapHEADToGET;
 @property(nonatomic, readonly) dispatch_queue_priority_t dispatchQueuePriority;
 - (void)willStartConnection:(GCDWebServerConnection*)connection;
@@ -213,7 +213,7 @@ extern NSString* GCDWebServerStringFromSockAddr(const struct sockaddr* addr, BOO
 @end
 
 @interface GCDWebServerResponse ()
-@property(nonatomic, readonly) NSDictionary* additionalHeaders;
+@property(nonatomic, readonly) NSDictionary<NSString*, NSString*>* additionalHeaders;
 @property(nonatomic, readonly) BOOL usesChunkedTransferEncoding;
 - (void)prepareForReading;
 - (BOOL)performOpen:(NSError**)error;

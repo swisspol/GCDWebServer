@@ -150,7 +150,7 @@
 
 @implementation GCDWebServerResponse {
   BOOL _opened;
-  NSMutableArray* _encoders;
+  NSMutableArray<GCDWebServerBodyEncoder*>* _encoders;
   id<GCDWebServerBodyReader> __unsafe_unretained _reader;
 }
 

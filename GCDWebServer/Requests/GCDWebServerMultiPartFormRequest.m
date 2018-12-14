@@ -106,8 +106,8 @@ static NSData* _dashNewlineData = nil;
   NSString* _defaultcontrolName;
   ParserState _state;
   NSMutableData* _data;
-  NSMutableArray* _arguments;
-  NSMutableArray* _files;
+  NSMutableArray<GCDWebServerMultiPartArgument*>* _arguments;
+  NSMutableArray<GCDWebServerMultiPartFile*>* _files;
 
   NSString* _controlName;
   NSString* _fileName;
@@ -132,7 +132,7 @@ static NSData* _dashNewlineData = nil;
   }
 }
 
-- (instancetype)initWithBoundary:(NSString* _Nonnull)boundary defaultControlName:(NSString* _Nullable)name arguments:(NSMutableArray* _Nonnull)arguments files:(NSMutableArray* _Nonnull)files {
+- (instancetype)initWithBoundary:(NSString* _Nonnull)boundary defaultControlName:(NSString* _Nullable)name arguments:(NSMutableArray<GCDWebServerMultiPartArgument*>* _Nonnull)arguments files:(NSMutableArray<GCDWebServerMultiPartFile*>* _Nonnull)files {
   NSData* data = boundary.length ? [[NSString stringWithFormat:@"--%@", boundary] dataUsingEncoding:NSASCIIStringEncoding] : nil;
   if (data == nil) {
     GWS_DNOT_REACHED();
@@ -312,8 +312,8 @@ static NSData* _dashNewlineData = nil;
 @end
 
 @interface GCDWebServerMultiPartFormRequest ()
-@property(nonatomic) NSMutableArray* arguments;
-@property(nonatomic) NSMutableArray* files;
+@property(nonatomic) NSMutableArray<GCDWebServerMultiPartArgument*>* arguments;
+@property(nonatomic) NSMutableArray<GCDWebServerMultiPartFile*>* files;
 @end
 
 @implementation GCDWebServerMultiPartFormRequest {
@@ -324,7 +324,7 @@ static NSData* _dashNewlineData = nil;
   return @"multipart/form-data";
 }
 
-- (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary*)headers path:(NSString*)path query:(NSDictionary*)query {
+- (instancetype)initWithMethod:(NSString*)method url:(NSURL*)url headers:(NSDictionary<NSString*, NSString*>*)headers path:(NSString*)path query:(NSDictionary<NSString*, NSString*>*)query {
   if ((self = [super initWithMethod:method url:url headers:headers path:path query:query])) {
     _arguments = [[NSMutableArray alloc] init];
     _files = [[NSMutableArray alloc] init];

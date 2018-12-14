@@ -41,7 +41,7 @@ extern "C" {
  *  types. Keys of the dictionary must be lowercased file extensions without
  *  the period, and the values must be the corresponding MIME types.
  */
-NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension, NSDictionary* _Nullable overrides);
+NSString* GCDWebServerGetMimeTypeForExtension(NSString* extension, NSDictionary<NSString*, NSString*>* _Nullable overrides);
 
 /**
  *  Add percent-escapes to a string so it can be used in a URL.
@@ -60,7 +60,7 @@ NSString* _Nullable GCDWebServerUnescapeURLString(NSString* string);
  *  "application/x-www-form-urlencoded" form.
  *  http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4.1
  */
-NSDictionary* GCDWebServerParseURLEncodedForm(NSString* form);
+NSDictionary<NSString*, NSString*>* GCDWebServerParseURLEncodedForm(NSString* form);
 
 /**
  *  On OS X, returns the IPv4 or IPv6 address as a string of the primary

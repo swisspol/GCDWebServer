@@ -112,7 +112,7 @@
   return [self initWithData:data contentType:@"text/html; charset=utf-8"];
 }
 
-- (instancetype)initWithHTMLTemplate:(NSString*)path variables:(NSDictionary*)variables {
+- (instancetype)initWithHTMLTemplate:(NSString*)path variables:(NSDictionary<NSString*, NSString*>*)variables {
   NSMutableString* html = [[NSMutableString alloc] initWithContentsOfFile:path encoding:NSUTF8StringEncoding error:NULL];
   [variables enumerateKeysAndObjectsUsingBlock:^(NSString* key, NSString* value, BOOL* stop) {
     [html replaceOccurrencesOfString:[NSString stringWithFormat:@"%%%@%%", key] withString:value options:0 range:NSMakeRange(0, html.length)];

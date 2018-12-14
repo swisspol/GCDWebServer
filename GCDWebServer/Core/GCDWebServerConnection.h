@@ -130,7 +130,7 @@ NS_ASSUME_NONNULL_BEGIN
  *
  *  The default implementation returns the original URL.
  */
-- (NSURL*)rewriteRequestURL:(NSURL*)url withMethod:(NSString*)method headers:(NSDictionary*)headers;
+- (NSURL*)rewriteRequestURL:(NSURL*)url withMethod:(NSString*)method headers:(NSDictionary<NSString*, NSString*>*)headers;
 
 /**
  *  Assuming a valid HTTP request was received, this method is called before
