@@ -206,7 +206,7 @@ int main(int argc, const char* argv[]) {
     switch (mode) {
       // Simply serve contents of home directory
       case kMode_WebServer: {
-        fprintf(stdout, "Running in Web Server mode from \"%s\"", [rootDirectory UTF8String]);
+        fprintf(stdout, "Running in Web Server mode from \"%s\"\n", [rootDirectory UTF8String]);
         webServer = [[GCDWebServer alloc] init];
         [webServer addGETHandlerForBasePath:@"/" directoryPath:rootDirectory indexFilename:nil cacheAge:0 allowRangeRequests:YES];
         break;
@@ -214,7 +214,7 @@ int main(int argc, const char* argv[]) {
 
       // Renders a HTML page
       case kMode_HTMLPage: {
-        fprintf(stdout, "Running in HTML Page mode");
+        fprintf(stdout, "Running in HTML Page mode\n");
         webServer = [[GCDWebServer alloc] init];
         [webServer addDefaultHandlerForMethod:@"GET"
                                  requestClass:[GCDWebServerRequest class]
@@ -226,7 +226,7 @@ int main(int argc, const char* argv[]) {
 
       // Implements an HTML form
       case kMode_HTMLForm: {
-        fprintf(stdout, "Running in HTML Form mode");
+        fprintf(stdout, "Running in HTML Form mode\n");
         webServer = [[GCDWebServer alloc] init];
         [webServer addHandlerForMethod:@"GET"
                                   path:@"/"
@@ -255,7 +255,7 @@ int main(int argc, const char* argv[]) {
 
       // Implements HTML file upload
       case kMode_HTMLFileUpload: {
-        fprintf(stdout, "Running in HTML File Upload mode");
+        fprintf(stdout, "Running in HTML File Upload mode\n");
         webServer = [[GCDWebServer alloc] init];
         NSString* formHTML = @" \
           <form name=\"input\" action=\"/\" method=\"post\" enctype=\"multipart/form-data\"> \
@@ -293,21 +293,21 @@ int main(int argc, const char* argv[]) {
 
       // Serve home directory through WebDAV
       case kMode_WebDAV: {
-        fprintf(stdout, "Running in WebDAV mode from \"%s\"", [rootDirectory UTF8String]);
+        fprintf(stdout, "Running in WebDAV mode from \"%s\"\n", [rootDirectory UTF8String]);
         webServer = [[GCDWebDAVServer alloc] initWithUploadDirectory:rootDirectory];
         break;
       }
 
       // Serve home directory through web uploader
       case kMode_WebUploader: {
-        fprintf(stdout, "Running in Web Uploader mode from \"%s\"", [rootDirectory UTF8String]);
+        fprintf(stdout, "Running in Web Uploader mode from \"%s\"\n", [rootDirectory UTF8String]);
         webServer = [[GCDWebUploader alloc] initWithUploadDirectory:rootDirectory];
         break;
       }
 
       // Test streaming responses
       case kMode_StreamingResponse: {
-        fprintf(stdout, "Running in Streaming Response mode");
+        fprintf(stdout, "Running in Streaming Response mode\n");
         webServer = [[GCDWebServer alloc] init];
         [webServer addHandlerForMethod:@"GET"
                                   path:@"/sync"
@@ -342,7 +342,7 @@ int main(int argc, const char* argv[]) {
 
       // Test async responses
       case kMode_AsyncResponse: {
-        fprintf(stdout, "Running in Async Response mode");
+        fprintf(stdout, "Running in Async Response mode\n");
         webServer = [[GCDWebServer alloc] init];
         [webServer addHandlerForMethod:@"GET"
                                   path:@"/async"
