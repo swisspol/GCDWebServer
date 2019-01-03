@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -exu -o pipefail
 
 OSX_SDK="macosx"
 IOS_SDK="iphonesimulator"
@@ -22,16 +22,21 @@ PAYLOAD_ZIP="Tests/Payload.zip"
 PAYLOAD_DIR="/tmp/GCDWebServer-Payload"
 
 function runTests {
+  EXECUTABLE="$1"
+  MODE="$2"
+  TESTS="$3"
+  FILE="${4:-}"
+  
   rm -rf "$PAYLOAD_DIR"
   ditto -x -k "$PAYLOAD_ZIP" "$PAYLOAD_DIR"
   TZ=GMT find "$PAYLOAD_DIR" -type d -exec SetFile -d "1/1/2014 00:00:00" -m "1/1/2014 00:00:00" '{}' \;  # ZIP archives do not preserve directories dates
-  if [ "$4" != "" ]; then
+  if [ "$FILE" != "" ]; then
     cp -f "$4" "$PAYLOAD_DIR/Payload"
     pushd "$PAYLOAD_DIR/Payload"
-    TZ=GMT SetFile -d "1/1/2014 00:00:00" -m "1/1/2014 00:00:00" `basename "$4"`
+    TZ=GMT SetFile -d "1/1/2014 00:00:00" -m "1/1/2014 00:00:00" `basename "$FILE"`
     popd
   fi
-  logLevel=2 $1 -mode "$2" -root "$PAYLOAD_DIR/Payload" -tests "$3"
+  logLevel=2 $EXECUTABLE -mode "$MODE" -root "$PAYLOAD_DIR/Payload" -tests "$TESTS"
 }
 
 # Run built-in OS X tests
