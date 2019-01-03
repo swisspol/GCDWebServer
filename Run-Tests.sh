@@ -15,11 +15,11 @@ CONFIGURATION="Release"
 
 OSX_TEST_SCHEME="GCDWebServers (Mac)"
 
-BUILD_DIR="/tmp/GCDWebServer-Build"
+BUILD_DIR="`pwd`/build"
 PRODUCT="$BUILD_DIR/$CONFIGURATION/GCDWebServer"
 
 PAYLOAD_ZIP="Tests/Payload.zip"
-PAYLOAD_DIR="/tmp/GCDWebServer-Payload"
+PAYLOAD_DIR="`pwd`/build/Payload"
 
 function runTests {
   EXECUTABLE="$1"
