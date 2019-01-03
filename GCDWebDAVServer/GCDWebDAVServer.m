@@ -546,7 +546,7 @@ static inline xmlNodePtr _XMLChildWithName(xmlNodePtr child, const xmlChar* name
   NSArray* items = nil;
   if (isDirectory) {
     NSError* error = nil;
-    items = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:absolutePath error:&error];
+    items = [[[NSFileManager defaultManager] contentsOfDirectoryAtPath:absolutePath error:&error] sortedArrayUsingSelector:@selector(localizedStandardCompare:)];
     if (items == nil) {
       return [GCDWebServerErrorResponse responseWithServerError:kGCDWebServerHTTPStatusCode_InternalServerError underlyingError:error message:@"Failed listing directory \"%@\"", relativePath];
     }

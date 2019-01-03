@@ -981,29 +981,29 @@ static inline NSString* _EncodeBase64(NSString* string) {
 }
 
 - (GCDWebServerResponse*)_responseWithContentsOfDirectory:(NSString*)path {
-  NSDirectoryEnumerator* enumerator = [[NSFileManager defaultManager] enumeratorAtPath:path];
-  if (enumerator == nil) {
+  NSArray* contents = [[[NSFileManager defaultManager] contentsOfDirectoryAtPath:path error:NULL] sortedArrayUsingSelector:@selector(localizedStandardCompare:)];
+  if (contents == nil) {
     return nil;
   }
   NSMutableString* html = [NSMutableString string];
   [html appendString:@"<!DOCTYPE html>\n"];
   [html appendString:@"<html><head><meta charset=\"utf-8\"></head><body>\n"];
   [html appendString:@"<ul>\n"];
-  for (NSString* file in enumerator) {
-    if (![file hasPrefix:@"."]) {
-      NSString* type = [[enumerator fileAttributes] objectForKey:NSFileType];
+  for (NSString* entry in contents) {
+    if (![entry hasPrefix:@"."]) {
+      NSString* type = [[[NSFileManager defaultManager] attributesOfItemAtPath:[path stringByAppendingPathComponent:entry] error:NULL] objectForKey:NSFileType];
+      GWS_DCHECK(type);
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-      NSString* escapedFile = [file stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+      NSString* escapedFile = [entry stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 #pragma clang diagnostic pop
       GWS_DCHECK(escapedFile);
       if ([type isEqualToString:NSFileTypeRegular]) {
-        [html appendFormat:@"<li><a href=\"%@\">%@</a></li>\n", escapedFile, file];
+        [html appendFormat:@"<li><a href=\"%@\">%@</a></li>\n", escapedFile, entry];
       } else if ([type isEqualToString:NSFileTypeDirectory]) {
-        [html appendFormat:@"<li><a href=\"%@/\">%@/</a></li>\n", escapedFile, file];
+        [html appendFormat:@"<li><a href=\"%@/\">%@/</a></li>\n", escapedFile, entry];
       }
     }
-    [enumerator skipDescendents];
   }
   [html appendString:@"</ul>\n"];
   [html appendString:@"</body></html>\n"];
@@ -1176,7 +1176,7 @@ static void _LogResult(NSString* format, ...) {
     _ExecuteMainThreadRunLoopSources();
 
     result = 0;
-    NSArray* files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:path error:NULL];
+    NSArray* files = [[[NSFileManager defaultManager] contentsOfDirectoryAtPath:path error:NULL] sortedArrayUsingSelector:@selector(localizedStandardCompare:)];
     for (NSString* requestFile in files) {
       if (![requestFile hasSuffix:@".request"]) {
         continue;
