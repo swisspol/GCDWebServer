@@ -1236,7 +1236,7 @@ static void _LogResult(NSString* format, ...) {
                       if ([actualContentLength isEqualToString:expectedContentLength] && (actualBody.length > expectedBody.length)) {  // Handle web browser closing connection before retrieving entire body (e.g. when playing a video file)
                         actualBody = [actualBody subdataWithRange:NSMakeRange(0, expectedBody.length)];
                       }
-                      if (![actualBody isEqualToData:expectedBody]) {
+                      if ((actualBody && expectedBody && ![actualBody isEqualToData:expectedBody]) || (actualBody && !expectedBody) || (!actualBody && expectedBody)) {
                         _LogResult(@"  Bodies not matching:\n    Expected: %lu bytes\n      Actual: %lu bytes", (unsigned long)expectedBody.length, (unsigned long)actualBody.length);
                         success = NO;
 #if !TARGET_OS_IPHONE
