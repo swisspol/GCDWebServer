@@ -1223,6 +1223,7 @@
 					"-Weverything",
 					"-Wshadow",
 					"-Wshorten-64-to-32",
+					"-Wstrict-prototypes",
 					"-Wno-vla",
 					"-Wno-explicit-ownership-type",
 					"-Wno-gnu-statement-expression",
