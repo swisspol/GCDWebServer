@@ -415,12 +415,10 @@ static inline id _GetOption(NSDictionary<NSString*, id>* options, NSString* key,
 
 static inline NSString* _EncodeBase64(NSString* string) {
   NSData* data = [string dataUsingEncoding:NSUTF8StringEncoding];
-#if (TARGET_OS_IPHONE && !(__IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_7_0)) || (!TARGET_OS_IPHONE && !(__MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_10_9))
-  if (![data respondsToSelector:@selector(base64EncodedDataWithOptions:)]) {
-    return [data base64Encoding];
+  if (@available(macOS 10.9, iOS 7.0, tvOS 9.0, *)) {
+    return [[NSString alloc] initWithData:[data base64EncodedDataWithOptions:0] encoding:NSASCIIStringEncoding];
   }
-#endif
-  return [[NSString alloc] initWithData:[data base64EncodedDataWithOptions:0] encoding:NSASCIIStringEncoding];
+  return [data base64Encoding];
 }
 
 - (int)_createListeningSocket:(BOOL)useIPv6
