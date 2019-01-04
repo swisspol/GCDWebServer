@@ -1,5 +1,11 @@
 #!/bin/bash -exu -o pipefail
 
+if [[ -f "/usr/local/bin/xcpretty" ]]; then
+  PRETTYFIER="xcpretty"  
+else
+  PRETTYFIER="tee"  # Passthrough stdout
+fi
+
 OSX_SDK="macosx"
 IOS_SDK="iphonesimulator"
 TVOS_SDK="appletvsimulator"
@@ -45,7 +51,7 @@ xcodebuild test -scheme "$OSX_TEST_SCHEME" "SYMROOT=$BUILD_DIR"
 
 # Build for OS X for oldest supported deployment target
 rm -rf "$BUILD_DIR"
-xcodebuild build -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" "SYMROOT=$BUILD_DIR" "MACOSX_DEPLOYMENT_TARGET=10.7" > /dev/null
+xcodebuild build -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" "SYMROOT=$BUILD_DIR" "MACOSX_DEPLOYMENT_TARGET=10.7" | $PRETTYFIER
 
 # Run tests
 runTests $PRODUCT "htmlForm" "Tests/HTMLForm"
@@ -59,19 +65,19 @@ runTests $PRODUCT "webServer" "Tests/WebServer-Sample-Movie" "Tests/Sample-Movie
 
 # Build for OS X for current deployment target
 rm -rf "$BUILD_DIR"
-xcodebuild build -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" "SYMROOT=$BUILD_DIR" "MACOSX_DEPLOYMENT_TARGET=$OSX_SDK_VERSION" > /dev/null
+xcodebuild build -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGURATION" "SYMROOT=$BUILD_DIR" "MACOSX_DEPLOYMENT_TARGET=$OSX_SDK_VERSION" | $PRETTYFIER
 
 # Build for iOS for oldest supported deployment target
 rm -rf "$BUILD_DIR"
-xcodebuild build -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" "SYMROOT=$BUILD_DIR" "IPHONEOS_DEPLOYMENT_TARGET=8.0" > /dev/null
+xcodebuild build -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" "SYMROOT=$BUILD_DIR" "IPHONEOS_DEPLOYMENT_TARGET=8.0" | $PRETTYFIER
 
 # Build for iOS for current deployment target
 rm -rf "$BUILD_DIR"
-xcodebuild build -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" "SYMROOT=$BUILD_DIR" "IPHONEOS_DEPLOYMENT_TARGET=$IOS_SDK_VERSION" > /dev/null
+xcodebuild build -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" "SYMROOT=$BUILD_DIR" "IPHONEOS_DEPLOYMENT_TARGET=$IOS_SDK_VERSION" | $PRETTYFIER
 
 # Build for tvOS for current deployment target
 rm -rf "$BUILD_DIR"
-xcodebuild build -sdk "$TVOS_SDK" -target "$TVOS_TARGET" -configuration "$CONFIGURATION" "SYMROOT=$BUILD_DIR" "TVOS_DEPLOYMENT_TARGET=$TVOS_SDK_VERSION" > /dev/null
+xcodebuild build -sdk "$TVOS_SDK" -target "$TVOS_TARGET" -configuration "$CONFIGURATION" "SYMROOT=$BUILD_DIR" "TVOS_DEPLOYMENT_TARGET=$TVOS_SDK_VERSION" | $PRETTYFIER
 
 # Done
 echo "\nAll tests completed successfully!"
