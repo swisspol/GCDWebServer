@@ -178,10 +178,10 @@ int main(int argc, const char* argv[]) {
           recording = YES;
         } else if (!strcmp(argv[i], "-root") && (i + 1 < argc)) {
           ++i;
-          rootDirectory = [[[NSFileManager defaultManager] stringWithFileSystemRepresentation:argv[i] length:strlen(argv[i])] stringByStandardizingPath];
+          rootDirectory = [[NSFileManager defaultManager] stringWithFileSystemRepresentation:argv[i] length:strlen(argv[i])];
         } else if (!strcmp(argv[i], "-tests") && (i + 1 < argc)) {
           ++i;
-          testDirectory = [[[NSFileManager defaultManager] stringWithFileSystemRepresentation:argv[i] length:strlen(argv[i])] stringByStandardizingPath];
+          testDirectory = [[NSFileManager defaultManager] stringWithFileSystemRepresentation:argv[i] length:strlen(argv[i])];
         } else if (!strcmp(argv[i], "-authenticationMethod") && (i + 1 < argc)) {
           ++i;
           authenticationMethod = [NSString stringWithUTF8String:argv[i]];
