@@ -102,6 +102,11 @@ NSString* GCDWebServerFormatISO8601(NSDate* date);
  */
 NSDate* _Nullable GCDWebServerParseISO8601(NSString* string);
 
+/**
+ *  Removes "//", "/./" and "/../" components from path as well as any trailing slash.
+ */
+NSString* GCDWebServerNormalizePath(NSString* path);
+
 #ifdef __cplusplus
 }
 #endif
