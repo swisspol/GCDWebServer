@@ -1026,7 +1026,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
     }
         processBlock:^GCDWebServerResponse*(GCDWebServerRequest* request) {
           GCDWebServerResponse* response = nil;
-          NSString* filePath = [directoryPath stringByAppendingPathComponent:[request.path substringFromIndex:basePath.length]];
+          NSString* filePath = [directoryPath stringByAppendingPathComponent:GCDWebServerNormalizePath([request.path substringFromIndex:basePath.length])];
           NSString* fileType = [[[NSFileManager defaultManager] attributesOfItemAtPath:filePath error:NULL] fileType];
           if (fileType) {
             if ([fileType isEqualToString:NSFileTypeDirectory]) {
