@@ -35,7 +35,7 @@ What's not supported (but not really required from an embedded HTTP server):
 * HTTPS
 
 Requirements:
-* OS X 10.7 or later (x86_64)
+* macOS 10.7 or later (x86_64)
 * iOS 8.0 or later (armv7, armv7s or arm64)
 * tvOS 9.0 or later (arm64)
 * ARC memory management only (if you need MRC support use GCDWebServer 3.1 or earlier)
