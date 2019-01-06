@@ -159,12 +159,10 @@
 		E2DDD1BC1BE69551002CE867 /* libxml2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD1BB1BE69551002CE867 /* libxml2.tbd */; };
 		E2DDD1BE1BE6956F002CE867 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD1BD1BE6956F002CE867 /* MobileCoreServices.framework */; };
 		E2DDD1C01BE69576002CE867 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD1BF1BE69576002CE867 /* UIKit.framework */; };
-		E2DDD1CB1BE698A8002CE867 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = E2DDD1CA1BE698A8002CE867 /* main.m */; };
-		E2DDD1CE1BE698A8002CE867 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = E2DDD1CD1BE698A8002CE867 /* AppDelegate.m */; };
-		E2DDD1D11BE698A8002CE867 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E2DDD1D01BE698A8002CE867 /* ViewController.m */; };
+		E2DDD1CE1BE698A8002CE867 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2DDD1CD1BE698A8002CE867 /* AppDelegate.swift */; };
+		E2DDD1D11BE698A8002CE867 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2DDD1D01BE698A8002CE867 /* ViewController.swift */; };
 		E2DDD1D41BE698A8002CE867 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E2DDD1D21BE698A8002CE867 /* Main.storyboard */; };
 		E2DDD1D61BE698A8002CE867 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E2DDD1D51BE698A8002CE867 /* Assets.xcassets */; };
-		E2DDD1DD1BE69B1C002CE867 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD1BF1BE69576002CE867 /* UIKit.framework */; };
 		E2DDD1DE1BE69BB7002CE867 /* GCDWebServer.m in Sources */ = {isa = PBXBuildFile; fileRef = E28BAE1718F99C810095C089 /* GCDWebServer.m */; };
 		E2DDD1DF1BE69BB7002CE867 /* GCDWebServerConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = E28BAE1918F99C810095C089 /* GCDWebServerConnection.m */; };
 		E2DDD1E01BE69BB7002CE867 /* GCDWebServerFunctions.m in Sources */ = {isa = PBXBuildFile; fileRef = E28BAE1B18F99C810095C089 /* GCDWebServerFunctions.m */; };
@@ -340,11 +338,8 @@
 		E2DDD1BD1BE6956F002CE867 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.0.sdk/System/Library/Frameworks/MobileCoreServices.framework; sourceTree = DEVELOPER_DIR; };
 		E2DDD1BF1BE69576002CE867 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.0.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		E2DDD1C71BE698A8002CE867 /* GCDWebServer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GCDWebServer.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		E2DDD1CA1BE698A8002CE867 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		E2DDD1CC1BE698A8002CE867 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
-		E2DDD1CD1BE698A8002CE867 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		E2DDD1CF1BE698A8002CE867 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
-		E2DDD1D01BE698A8002CE867 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		E2DDD1CD1BE698A8002CE867 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		E2DDD1D01BE698A8002CE867 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		E2DDD1D31BE698A8002CE867 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		E2DDD1D51BE698A8002CE867 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E2DDD1D71BE698A8002CE867 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -423,7 +418,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E2DDD1DD1BE69B1C002CE867 /* UIKit.framework in Frameworks */,
 				E2DDD1ED1BE69BC5002CE867 /* MobileCoreServices.framework in Frameworks */,
 				E2DDD1EE1BE69BC5002CE867 /* CFNetwork.framework in Frameworks */,
 				E2DDD1EF1BE69BC5002CE867 /* libxml2.tbd in Frameworks */,
@@ -616,14 +610,11 @@
 		E2DDD1C81BE698A8002CE867 /* tvOS */ = {
 			isa = PBXGroup;
 			children = (
-				E2DDD1CC1BE698A8002CE867 /* AppDelegate.h */,
-				E2DDD1CD1BE698A8002CE867 /* AppDelegate.m */,
-				E2DDD1CF1BE698A8002CE867 /* ViewController.h */,
-				E2DDD1D01BE698A8002CE867 /* ViewController.m */,
+				E2DDD1CD1BE698A8002CE867 /* AppDelegate.swift */,
+				E2DDD1D01BE698A8002CE867 /* ViewController.swift */,
 				E2DDD1D21BE698A8002CE867 /* Main.storyboard */,
 				E2DDD1D51BE698A8002CE867 /* Assets.xcassets */,
 				E2DDD1D71BE698A8002CE867 /* Info.plist */,
-				E2DDD1CA1BE698A8002CE867 /* main.m */,
 			);
 			path = tvOS;
 			sourceTree = "<group>";
@@ -1081,9 +1072,8 @@
 				E2DDD1EA1BE69BB7002CE867 /* GCDWebServerStreamedResponse.m in Sources */,
 				E2DDD1EB1BE69BB7002CE867 /* GCDWebDAVServer.m in Sources */,
 				E2DDD1EC1BE69BB7002CE867 /* GCDWebUploader.m in Sources */,
-				E2DDD1D11BE698A8002CE867 /* ViewController.m in Sources */,
-				E2DDD1CE1BE698A8002CE867 /* AppDelegate.m in Sources */,
-				E2DDD1CB1BE698A8002CE867 /* main.m in Sources */,
+				E2DDD1D11BE698A8002CE867 /* ViewController.swift in Sources */,
+				E2DDD1CE1BE698A8002CE867 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1408,6 +1398,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = tvOS/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = appletvos;
 				TVOS_DEPLOYMENT_TARGET = 9.0;
@@ -1418,6 +1409,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = tvOS/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = appletvos;
 				TVOS_DEPLOYMENT_TARGET = 9.0;
