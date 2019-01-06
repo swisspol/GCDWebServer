@@ -6,7 +6,7 @@ Overview
 [![Platform](http://cocoapod-badges.herokuapp.com/p/GCDWebServer/badge.png)](https://github.com/swisspol/GCDWebServer)
 [![License](http://img.shields.io/cocoapods/l/GCDWebServer.svg)](LICENSE)
 
-GCDWebServer is a modern and lightweight GCD based HTTP 1.1 server designed to be embedded in OS X & iOS apps. It was written from scratch with the following goals in mind:
+GCDWebServer is a modern and lightweight GCD based HTTP 1.1 server designed to be embedded in iOS, macOS & tvOS apps. It was written from scratch with the following goals in mind:
 * Elegant and easy to use architecture with only 4 core classes: server, connection, request and response (see "Understanding GCDWebServer's Architecture" below)
 * Well designed API with fully documented headers for easy integration and customization
 * Entirely built with an event-driven design using [Grand Central Dispatch](http://en.wikipedia.org/wiki/Grand_Central_Dispatch) for best performance and concurrency
@@ -28,7 +28,7 @@ Extra built-in features:
 
 Included extensions:
 * [GCDWebUploader](GCDWebUploader/GCDWebUploader.h): subclass of ```GCDWebServer``` that implements an interface for uploading and downloading files using a web browser
-* [GCDWebDAVServer](GCDWebDAVServer/GCDWebDAVServer.h): subclass of ```GCDWebServer``` that implements a class 1 [WebDAV](https://en.wikipedia.org/wiki/WebDAV) server (with partial class 2 support for OS X Finder)
+* [GCDWebDAVServer](GCDWebDAVServer/GCDWebDAVServer.h): subclass of ```GCDWebServer``` that implements a class 1 [WebDAV](https://en.wikipedia.org/wiki/WebDAV) server (with partial class 2 support for macOS Finder)
 
 What's not supported (but not really required from an embedded HTTP server):
 * Keep-alive connections
@@ -81,7 +81,7 @@ These code snippets show how to implement a custom HTTP server that runs on port
 
 **IMPORTANT:** If not using CocoaPods, be sure to add the `libz` shared system library to the Xcode target for your app.
 
-**OS X version (command line tool):**
+**macOS version (command line tool):**
 ```objectivec
 #import "GCDWebServer.h"
 #import "GCDWebServerDataResponse.h"
@@ -147,7 +147,7 @@ int main(int argc, const char* argv[]) {
 @end
 ```
 
-**OS X Swift version (command line tool):**
+**macOS Swift version (command line tool):**
 
 ***webServer.swift***
 ```swift
@@ -208,7 +208,7 @@ WebDAV Server in iOS Apps
 
 GCDWebDAVServer is a subclass of ```GCDWebServer``` that provides a class 1 compliant [WebDAV](https://en.wikipedia.org/wiki/WebDAV) server. This lets users upload, download, delete files and create directories from a directory inside your iOS app's sandbox using any WebDAV client like [Transmit](https://panic.com/transmit/) (Mac), [ForkLift](http://binarynights.com/forklift/) (Mac) or [CyberDuck](http://cyberduck.io/) (Mac / Windows).
 
-GCDWebDAVServer should also work with the [OS X Finder](http://support.apple.com/kb/PH13859) as it is partially class 2 compliant (but only when the client is the OS X WebDAV implementation).
+GCDWebDAVServer should also work with the [macOS Finder](http://support.apple.com/kb/PH13859) as it is partially class 2 compliant (but only when the client is the macOS WebDAV implementation).
 
 Simply instantiate and run a ```GCDWebDAVServer``` instance then connect to ```http://{YOUR-IOS-DEVICE-IP-ADDRESS}/``` using a WebDAV client:
 
@@ -238,7 +238,7 @@ Serving a Static Website
 
 GCDWebServer includes a built-in handler that can recursively serve a directory (it also lets you control how the ["Cache-Control"](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.9) header should be set):
 
-**OS X version (command line tool):**
+**macOS version (command line tool):**
 ```objectivec
 #import "GCDWebServer.h"
 
