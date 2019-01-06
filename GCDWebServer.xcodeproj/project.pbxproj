@@ -185,9 +185,8 @@
 		E2DDD1EF1BE69BC5002CE867 /* libxml2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD1BB1BE69551002CE867 /* libxml2.tbd */; };
 		E2DDD1F01BE69BC5002CE867 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD1B91BE69545002CE867 /* libz.tbd */; };
 		E2DDD1F11BE69BE9002CE867 /* GCDWebUploader.bundle in Resources */ = {isa = PBXBuildFile; fileRef = E2BE850718E77ECA0061360B /* GCDWebUploader.bundle */; };
-		E2DDD1FA1BE69EE5002CE867 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = E2DDD1F91BE69EE5002CE867 /* main.m */; };
-		E2DDD1FD1BE69EE5002CE867 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = E2DDD1FC1BE69EE5002CE867 /* AppDelegate.m */; };
-		E2DDD2001BE69EE5002CE867 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E2DDD1FF1BE69EE5002CE867 /* ViewController.m */; };
+		E2DDD1FD1BE69EE5002CE867 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2DDD1FC1BE69EE5002CE867 /* AppDelegate.swift */; };
+		E2DDD2001BE69EE5002CE867 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2DDD1FF1BE69EE5002CE867 /* ViewController.swift */; };
 		E2DDD2031BE69EE5002CE867 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E2DDD2011BE69EE5002CE867 /* Main.storyboard */; };
 		E2DDD2051BE69EE5002CE867 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E2DDD2041BE69EE5002CE867 /* Assets.xcassets */; };
 		E2DDD2081BE69EE5002CE867 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E2DDD2061BE69EE5002CE867 /* LaunchScreen.storyboard */; };
@@ -207,7 +206,6 @@
 		E2DDD21C1BE69F17002CE867 /* GCDWebServerStreamedResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = E28BAE3318F99C810095C089 /* GCDWebServerStreamedResponse.m */; };
 		E2DDD21D1BE69F25002CE867 /* GCDWebDAVServer.m in Sources */ = {isa = PBXBuildFile; fileRef = E2A0E80918F3432600C580B1 /* GCDWebDAVServer.m */; };
 		E2DDD21E1BE69F25002CE867 /* GCDWebUploader.m in Sources */ = {isa = PBXBuildFile; fileRef = E2BE850918E77ECA0061360B /* GCDWebUploader.m */; };
-		E2DDD21F1BE6A061002CE867 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEE28D691AE1ABAA00F4023C /* UIKit.framework */; };
 		E2DDD2201BE6A067002CE867 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E221129C1690B7BA0048D2B2 /* MobileCoreServices.framework */; };
 		E2DDD2211BE6A06E002CE867 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E22112981690B7AA0048D2B2 /* CFNetwork.framework */; };
 		E2DDD2251BE6A0AE002CE867 /* libxml2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD2241BE6A0AE002CE867 /* libxml2.tbd */; };
@@ -300,6 +298,7 @@
 		E221129C1690B7BA0048D2B2 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.0.sdk/System/Library/Frameworks/MobileCoreServices.framework; sourceTree = DEVELOPER_DIR; };
 		E24039251BA09207000B7089 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E24039311BA092B7000B7089 /* Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Tests.m; sourceTree = "<group>"; };
+		E24A3BE021E2795700C58878 /* BridgingHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BridgingHeader.h; sourceTree = SOURCE_ROOT; };
 		E28BAE1618F99C810095C089 /* GCDWebServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebServer.h; sourceTree = "<group>"; };
 		E28BAE1718F99C810095C089 /* GCDWebServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebServer.m; sourceTree = "<group>"; };
 		E28BAE1818F99C810095C089 /* GCDWebServerConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebServerConnection.h; sourceTree = "<group>"; };
@@ -350,11 +349,8 @@
 		E2DDD1D51BE698A8002CE867 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E2DDD1D71BE698A8002CE867 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E2DDD1F61BE69EE4002CE867 /* GCDWebServer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GCDWebServer.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		E2DDD1F91BE69EE5002CE867 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		E2DDD1FB1BE69EE5002CE867 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
-		E2DDD1FC1BE69EE5002CE867 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		E2DDD1FE1BE69EE5002CE867 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
-		E2DDD1FF1BE69EE5002CE867 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		E2DDD1FC1BE69EE5002CE867 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		E2DDD1FF1BE69EE5002CE867 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		E2DDD2021BE69EE5002CE867 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		E2DDD2041BE69EE5002CE867 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E2DDD2071BE69EE5002CE867 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -439,7 +435,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E2DDD21F1BE6A061002CE867 /* UIKit.framework in Frameworks */,
 				E2DDD2201BE6A067002CE867 /* MobileCoreServices.framework in Frameworks */,
 				E2DDD2211BE6A06E002CE867 /* CFNetwork.framework in Frameworks */,
 				E2DDD2281BE6A0D8002CE867 /* libxml2.tbd in Frameworks */,
@@ -453,6 +448,7 @@
 		08FB7794FE84155DC02AAC07 /* LittleCMS */ = {
 			isa = PBXGroup;
 			children = (
+				E24A3BE021E2795700C58878 /* BridgingHeader.h */,
 				E28BAE1418F99C810095C089 /* GCDWebServer */,
 				E2A0E80718F3432600C580B1 /* GCDWebDAVServer */,
 				E2BE850618E77ECA0061360B /* GCDWebUploader */,
@@ -635,15 +631,12 @@
 		E2DDD1F71BE69EE5002CE867 /* iOS */ = {
 			isa = PBXGroup;
 			children = (
-				E2DDD1FB1BE69EE5002CE867 /* AppDelegate.h */,
-				E2DDD1FC1BE69EE5002CE867 /* AppDelegate.m */,
-				E2DDD1FE1BE69EE5002CE867 /* ViewController.h */,
-				E2DDD1FF1BE69EE5002CE867 /* ViewController.m */,
+				E2DDD1FC1BE69EE5002CE867 /* AppDelegate.swift */,
+				E2DDD1FF1BE69EE5002CE867 /* ViewController.swift */,
 				E2DDD2011BE69EE5002CE867 /* Main.storyboard */,
 				E2DDD2041BE69EE5002CE867 /* Assets.xcassets */,
 				E2DDD2061BE69EE5002CE867 /* LaunchScreen.storyboard */,
 				E2DDD2091BE69EE5002CE867 /* Info.plist */,
-				E2DDD1F91BE69EE5002CE867 /* main.m */,
 			);
 			path = iOS;
 			sourceTree = "<group>";
@@ -1113,9 +1106,8 @@
 				E2DDD21C1BE69F17002CE867 /* GCDWebServerStreamedResponse.m in Sources */,
 				E2DDD21D1BE69F25002CE867 /* GCDWebDAVServer.m in Sources */,
 				E2DDD21E1BE69F25002CE867 /* GCDWebUploader.m in Sources */,
-				E2DDD2001BE69EE5002CE867 /* ViewController.m in Sources */,
-				E2DDD1FD1BE69EE5002CE867 /* AppDelegate.m in Sources */,
-				E2DDD1FA1BE69EE5002CE867 /* main.m in Sources */,
+				E2DDD2001BE69EE5002CE867 /* ViewController.swift in Sources */,
+				E2DDD1FD1BE69EE5002CE867 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1218,6 +1210,10 @@
 				HEADER_SEARCH_PATHS = "$(SDKROOT)/usr/include/libxml2";
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "net.pol-online.GCDWebServers";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OBJC_BRIDGING_HEADER = BridgingHeader.h;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 4.2;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Weverything",
@@ -1254,6 +1250,10 @@
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				HEADER_SEARCH_PATHS = "$(SDKROOT)/usr/include/libxml2";
 				PRODUCT_BUNDLE_IDENTIFIER = "net.pol-online.GCDWebServers";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OBJC_BRIDGING_HEADER = BridgingHeader.h;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = YES;
+				SWIFT_VERSION = 4.2;
 				WARNING_CFLAGS = "-Wall";
 			};
 			name = Release;
@@ -1430,6 +1430,7 @@
 				ENABLE_BITCODE = YES;
 				INFOPLIST_FILE = iOS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1442,6 +1443,7 @@
 				ENABLE_BITCODE = YES;
 				INFOPLIST_FILE = iOS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = GCDWebServer;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
