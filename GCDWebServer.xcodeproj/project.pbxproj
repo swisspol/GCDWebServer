@@ -1409,7 +1409,6 @@
 			buildSettings = {
 				INFOPLIST_FILE = tvOS/Info.plist;
 				PRODUCT_NAME = GCDWebServer;
-				PROVISIONING_PROFILE = "";
 				SDKROOT = appletvos;
 				TVOS_DEPLOYMENT_TARGET = 9.0;
 			};
@@ -1420,7 +1419,6 @@
 			buildSettings = {
 				INFOPLIST_FILE = tvOS/Info.plist;
 				PRODUCT_NAME = GCDWebServer;
-				PROVISIONING_PROFILE = "";
 				SDKROOT = appletvos;
 				TVOS_DEPLOYMENT_TARGET = 9.0;
 			};
@@ -1433,7 +1431,6 @@
 				INFOPLIST_FILE = iOS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				PRODUCT_NAME = GCDWebServer;
-				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1446,7 +1443,6 @@
 				INFOPLIST_FILE = iOS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				PRODUCT_NAME = GCDWebServer;
-				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
