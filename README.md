@@ -37,14 +37,13 @@ What's not supported (but not really required from an embedded HTTP server):
 Requirements:
 * OS X 10.7 or later (x86_64)
 * iOS 8.0 or later (armv7, armv7s or arm64)
-* ARC memory management only (if you need MRC support use GCDWebServer 3.1 and earlier)
+* tvOS 9.0 or later (arm64)
+* ARC memory management only (if you need MRC support use GCDWebServer 3.1 or earlier)
 
 Getting Started
 ===============
 
-Download or check out the [latest release](https://github.com/swisspol/GCDWebServer/releases) of GCDWebServer then add the entire "GCDWebServer" subfolder to your Xcode project. If you intend to use one of the extensions like GCDWebDAVServer or GCDWebUploader, add these subfolders as well.
-
-If you add the files directly then (1) link to `libz` (via Target > Build Phases > Link Binary With Libraries) and (2) add `$(SDKROOT)/usr/include/libxml2` to your header search paths (via Target > Build Settings > HEADER_SEARCH_PATHS).
+Download or check out the [latest release](https://github.com/swisspol/GCDWebServer/releases) of GCDWebServer then add the entire "GCDWebServer" subfolder to your Xcode project. If you intend to use one of the extensions like GCDWebDAVServer or GCDWebUploader, add these subfolders as well. Finally link to `libz` (via Target > Build Phases > Link Binary With Libraries) and add `$(SDKROOT)/usr/include/libxml2` to your header search paths (via Target > Build Settings > HEADER_SEARCH_PATHS).
 
 Alternatively, you can install GCDWebServer using [CocoaPods](http://cocoapods.org/) by simply adding this line to your Podfile:
 ```
