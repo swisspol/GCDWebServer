@@ -297,6 +297,7 @@
 		E24039251BA09207000B7089 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E24039311BA092B7000B7089 /* Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Tests.m; sourceTree = "<group>"; };
 		E24A3BE021E2795700C58878 /* BridgingHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BridgingHeader.h; sourceTree = SOURCE_ROOT; };
+		E24A3C4021E2940600C58878 /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
 		E28BAE1618F99C810095C089 /* GCDWebServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebServer.h; sourceTree = "<group>"; };
 		E28BAE1718F99C810095C089 /* GCDWebServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebServer.m; sourceTree = "<group>"; };
 		E28BAE1818F99C810095C089 /* GCDWebServerConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebServerConnection.h; sourceTree = "<group>"; };
@@ -471,6 +472,7 @@
 		CEE28D081AE0053E00F4023C /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				E24A3C4021E2940600C58878 /* module.modulemap */,
 				CEE28CF31AE0051F00F4023C /* GCDWebServers.h */,
 				CEE28CF21AE0051F00F4023C /* Info.plist */,
 				E24039311BA092B7000B7089 /* Tests.m */,
@@ -1268,6 +1270,7 @@
 				INFOPLIST_FILE = Frameworks/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MODULEMAP_FILE = Frameworks/module.modulemap;
 				PRODUCT_NAME = GCDWebServers;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -1285,6 +1288,7 @@
 				INFOPLIST_FILE = Frameworks/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				MODULEMAP_FILE = Frameworks/module.modulemap;
 				PRODUCT_NAME = GCDWebServers;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
