@@ -15,8 +15,6 @@ if [[ ! -f "build/swiftformat" ]]; then
   mv "build/SwiftFormat-0.37.2/CommandLineTool/swiftformat" "build/swiftformat"
 fi
 
-clang-format -style=file -i *.h
-
 pushd "GCDWebServer/Core"
 clang-format -style=file -i *.h *.m
 popd
