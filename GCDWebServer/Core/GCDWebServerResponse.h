@@ -148,6 +148,11 @@ typedef void (^GCDWebServerBodyReaderCompletionBlock)(NSData* data, NSError* _Nu
 @property(nonatomic, copy, nullable) NSString* eTag;
 
 /**
+ *  Returns the HTTP headers of the response.
+ */
+@property(nonatomic, readonly) NSMutableDictionary* additionalHeaders;
+
+/**
  *  Enables gzip encoding for the response body.
  *
  *  The default value is NO.
