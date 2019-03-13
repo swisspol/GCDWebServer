@@ -85,18 +85,24 @@ static BOOL _run;
 
 #ifdef __GCDWEBSERVER_LOGGING_FACILITY_BUILTIN__
 
+static GCDWebServerBuiltInLoggerBlock _builtInLoggerBlock;
+
 void GCDWebServerLogMessage(GCDWebServerLoggingLevel level, NSString* format, ...) {
   static const char* levelNames[] = {"DEBUG", "VERBOSE", "INFO", "WARNING", "ERROR"};
   static int enableLogging = -1;
   if (enableLogging < 0) {
     enableLogging = (isatty(STDERR_FILENO) ? 1 : 0);
   }
-  if (enableLogging) {
+  if (_builtInLoggerBlock || enableLogging) {
     va_list arguments;
     va_start(arguments, format);
     NSString* message = [[NSString alloc] initWithFormat:format arguments:arguments];
     va_end(arguments);
-    fprintf(stderr, "[%s] %s\n", levelNames[level], [message UTF8String]);
+    if (_builtInLoggerBlock) {
+      _builtInLoggerBlock(level, message);
+    } else {
+      fprintf(stderr, "[%s] %s\n", levelNames[level], [message UTF8String]);
+    }
   }
 }
 
@@ -1068,6 +1074,14 @@ static inline NSString* _EncodeBase64(NSString* string) {
   [XLSharedFacility setMinLogLevel:level];
 #elif defined(__GCDWEBSERVER_LOGGING_FACILITY_BUILTIN__)
   GCDWebServerLogLevel = level;
+#endif
+}
+
++ (void)setBuiltInLogger:(GCDWebServerBuiltInLoggerBlock)block {
+#if defined(__GCDWEBSERVER_LOGGING_FACILITY_BUILTIN__)
+  _builtInLoggerBlock = block;
+#else
+  GWS_DNOT_REACHED(); // Built-in logger must be enabled in order to override
 #endif
 }
 
