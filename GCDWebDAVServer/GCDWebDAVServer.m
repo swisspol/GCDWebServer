@@ -358,9 +358,14 @@ static inline BOOL _IsMacFinder(GCDWebServerRequest* request) {
     return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Conflict message:@"Invalid destination \"%@\"", dstRelativePath];
   }
 
-  NSString* itemName = [dstAbsolutePath lastPathComponent];
-  if ((!_allowHiddenItems && [itemName hasPrefix:@"."]) || (!isDirectory && ![self _checkFileExtension:itemName])) {
-    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"%@ to item name \"%@\" is not allowed", isMove ? @"Moving" : @"Copying", itemName];
+  NSString* srcName = [srcAbsolutePath lastPathComponent];
+  if ((!_allowHiddenItems && [srcName hasPrefix:@"."]) || (!isDirectory && ![self _checkFileExtension:srcName])) {
+    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"%@ from item name \"%@\" is not allowed", isMove ? @"Moving" : @"Copying", srcName];
+  }
+
+  NSString* dstName = [dstAbsolutePath lastPathComponent];
+  if ((!_allowHiddenItems && [dstName hasPrefix:@"."]) || (!isDirectory && ![self _checkFileExtension:dstName])) {
+    return [GCDWebServerErrorResponse responseWithClientError:kGCDWebServerHTTPStatusCode_Forbidden message:@"%@ to item name \"%@\" is not allowed", isMove ? @"Moving" : @"Copying", dstName];
   }
 
   NSString* overwriteHeader = [request.headers objectForKey:@"Overwrite"];
