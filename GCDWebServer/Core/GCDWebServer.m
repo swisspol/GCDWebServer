@@ -1081,7 +1081,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 #if defined(__GCDWEBSERVER_LOGGING_FACILITY_BUILTIN__)
   _builtInLoggerBlock = block;
 #else
-  GWS_DNOT_REACHED(); // Built-in logger must be enabled in order to override
+  GWS_DNOT_REACHED();  // Built-in logger must be enabled in order to override
 #endif
 }
 
