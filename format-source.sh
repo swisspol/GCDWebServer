@@ -15,13 +15,10 @@ if [[ ! -f "build/swiftformat" ]]; then
   mv "build/SwiftFormat-0.37.2/CommandLineTool/swiftformat" "build/swiftformat"
 fi
 
-pushd "GCDWebServer/Core"
+pushd "Sources/GCDWebServers"
 clang-format -style=file -i *.h *.m
 popd
-pushd "GCDWebServer/Requests"
-clang-format -style=file -i *.h *.m
-popd
-pushd "GCDWebServer/Responses"
+pushd "Sources/GCDWebServers/include"
 clang-format -style=file -i *.h *.m
 popd
 pushd "GCDWebUploader"

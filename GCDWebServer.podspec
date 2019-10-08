@@ -22,7 +22,7 @@ Pod::Spec.new do |s|
   s.default_subspec = 'Core'
   
   s.subspec 'Core' do |cs|
-    cs.source_files = 'GCDWebServer/**/*.{h,m}'
+    cs.source_files = 'Sources/GCDWebServers/**/*.{h,m}'
     cs.private_header_files = "GCDWebServer/Core/GCDWebServerPrivate.h"
     cs.requires_arc = true
     cs.ios.library = 'z'
