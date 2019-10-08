@@ -436,7 +436,7 @@
 		08FB7794FE84155DC02AAC07 /* LittleCMS */ = {
 			isa = PBXGroup;
 			children = (
-				E28BAE1418F99C810095C089 /* GCDWebServer */,
+				E28BAE1418F99C810095C089 /* Sources */,
 				E2A0E80718F3432600C580B1 /* GCDWebDAVServer */,
 				E2BE850618E77ECA0061360B /* GCDWebUploader */,
 				CEE28D081AE0053E00F4023C /* Frameworks */,
@@ -511,63 +511,55 @@
 			name = "Mac Frameworks and Libraries";
 			sourceTree = "<group>";
 		};
-		E28BAE1418F99C810095C089 /* GCDWebServer */ = {
+		E28BAE1418F99C810095C089 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				E28BAE1518F99C810095C089 /* Core */,
-				E28BAE2218F99C810095C089 /* Requests */,
-				E28BAE2B18F99C810095C089 /* Responses */,
+				E28BAE1518F99C810095C089 /* GCDWebServers */,
 			);
-			path = GCDWebServer;
+			path = Sources;
 			sourceTree = "<group>";
 		};
-		E28BAE1518F99C810095C089 /* Core */ = {
+		E28BAE1518F99C810095C089 /* GCDWebServers */ = {
+			isa = PBXGroup;
+			children = (
+				E28BAE2218F99C810095C089 /* include */,
+				E28BAE1718F99C810095C089 /* GCDWebServer.m */,
+				E28BAE1918F99C810095C089 /* GCDWebServerConnection.m */,
+				E28BAE2418F99C810095C089 /* GCDWebServerDataRequest.m */,
+				E28BAE2D18F99C810095C089 /* GCDWebServerDataResponse.m */,
+				E28BAE2F18F99C810095C089 /* GCDWebServerErrorResponse.m */,
+				E28BAE2618F99C810095C089 /* GCDWebServerFileRequest.m */,
+				E28BAE3118F99C810095C089 /* GCDWebServerFileResponse.m */,
+				E28BAE1B18F99C810095C089 /* GCDWebServerFunctions.m */,
+				E28BAE2818F99C810095C089 /* GCDWebServerMultiPartFormRequest.m */,
+				E28BAE1D18F99C810095C089 /* GCDWebServerPrivate.h */,
+				E28BAE1F18F99C810095C089 /* GCDWebServerRequest.m */,
+				E28BAE2118F99C810095C089 /* GCDWebServerResponse.m */,
+				E28BAE3318F99C810095C089 /* GCDWebServerStreamedResponse.m */,
+				E28BAE2A18F99C810095C089 /* GCDWebServerURLEncodedFormRequest.m */,
+			);
+			path = GCDWebServers;
+			sourceTree = "<group>";
+		};
+		E28BAE2218F99C810095C089 /* include */ = {
 			isa = PBXGroup;
 			children = (
 				E28BAE1618F99C810095C089 /* GCDWebServer.h */,
-				E28BAE1718F99C810095C089 /* GCDWebServer.m */,
 				E28BAE1818F99C810095C089 /* GCDWebServerConnection.h */,
-				E28BAE1918F99C810095C089 /* GCDWebServerConnection.m */,
-				E28BAE1A18F99C810095C089 /* GCDWebServerFunctions.h */,
-				E28BAE1B18F99C810095C089 /* GCDWebServerFunctions.m */,
-				E28BAE1C18F99C810095C089 /* GCDWebServerHTTPStatusCodes.h */,
-				E28BAE1D18F99C810095C089 /* GCDWebServerPrivate.h */,
-				E28BAE1E18F99C810095C089 /* GCDWebServerRequest.h */,
-				E28BAE1F18F99C810095C089 /* GCDWebServerRequest.m */,
-				E28BAE2018F99C810095C089 /* GCDWebServerResponse.h */,
-				E28BAE2118F99C810095C089 /* GCDWebServerResponse.m */,
-			);
-			path = Core;
-			sourceTree = "<group>";
-		};
-		E28BAE2218F99C810095C089 /* Requests */ = {
-			isa = PBXGroup;
-			children = (
 				E28BAE2318F99C810095C089 /* GCDWebServerDataRequest.h */,
-				E28BAE2418F99C810095C089 /* GCDWebServerDataRequest.m */,
-				E28BAE2518F99C810095C089 /* GCDWebServerFileRequest.h */,
-				E28BAE2618F99C810095C089 /* GCDWebServerFileRequest.m */,
-				E28BAE2718F99C810095C089 /* GCDWebServerMultiPartFormRequest.h */,
-				E28BAE2818F99C810095C089 /* GCDWebServerMultiPartFormRequest.m */,
-				E28BAE2918F99C810095C089 /* GCDWebServerURLEncodedFormRequest.h */,
-				E28BAE2A18F99C810095C089 /* GCDWebServerURLEncodedFormRequest.m */,
-			);
-			path = Requests;
-			sourceTree = "<group>";
-		};
-		E28BAE2B18F99C810095C089 /* Responses */ = {
-			isa = PBXGroup;
-			children = (
 				E28BAE2C18F99C810095C089 /* GCDWebServerDataResponse.h */,
-				E28BAE2D18F99C810095C089 /* GCDWebServerDataResponse.m */,
 				E28BAE2E18F99C810095C089 /* GCDWebServerErrorResponse.h */,
-				E28BAE2F18F99C810095C089 /* GCDWebServerErrorResponse.m */,
+				E28BAE2518F99C810095C089 /* GCDWebServerFileRequest.h */,
 				E28BAE3018F99C810095C089 /* GCDWebServerFileResponse.h */,
-				E28BAE3118F99C810095C089 /* GCDWebServerFileResponse.m */,
+				E28BAE1A18F99C810095C089 /* GCDWebServerFunctions.h */,
+				E28BAE1C18F99C810095C089 /* GCDWebServerHTTPStatusCodes.h */,
+				E28BAE2718F99C810095C089 /* GCDWebServerMultiPartFormRequest.h */,
+				E28BAE1E18F99C810095C089 /* GCDWebServerRequest.h */,
+				E28BAE2018F99C810095C089 /* GCDWebServerResponse.h */,
 				E28BAE3218F99C810095C089 /* GCDWebServerStreamedResponse.h */,
-				E28BAE3318F99C810095C089 /* GCDWebServerStreamedResponse.m */,
+				E28BAE2918F99C810095C089 /* GCDWebServerURLEncodedFormRequest.h */,
 			);
-			path = Responses;
+			path = include;
 			sourceTree = "<group>";
 		};
 		E2A0E80718F3432600C580B1 /* GCDWebDAVServer */ = {
