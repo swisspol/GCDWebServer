@@ -27,10 +27,21 @@ Pod::Spec.new do |s|
     cs.requires_arc = true
     cs.ios.library = 'z'
     cs.ios.frameworks = 'MobileCoreServices', 'CFNetwork'
+    cs.ios.pod_target_xcconfig = { 'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) IOS_EXTENSION=0' }
     cs.tvos.library = 'z'
     cs.tvos.frameworks = 'MobileCoreServices', 'CFNetwork'
+    cs.tvos.pod_target_xcconfig = { 'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) IOS_EXTENSION=0' }
     cs.osx.library = 'z'
     cs.osx.framework = 'SystemConfiguration'
+  end
+
+  s.subspec 'AppExtension' do |cs|
+    cs.source_files = 'GCDWebServer/**/*.{h,m}'
+    cs.private_header_files = "GCDWebServer/Core/GCDWebServerPrivate.h"
+    cs.requires_arc = true
+    cs.ios.library = 'z'
+    cs.ios.frameworks = 'MobileCoreServices', 'CFNetwork'
+    cs.pod_target_xcconfig = { 'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) IOS_EXTENSION=1' }
   end
   
   s.subspec 'WebDAV' do |cs|
