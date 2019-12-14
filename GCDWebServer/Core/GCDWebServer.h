@@ -93,6 +93,13 @@ extern NSString* const GCDWebServerOption_Port;
 extern NSString* const GCDWebServerOption_BonjourName;
 
 /**
+*  The Bonjour TXT Data used by the GCDWebServer (NSDictionary<NSString, NSString>).
+*
+*  The default value is nil.
+*/
+extern NSString* const GCDWebServerOption_BonjourTXTData;
+
+/**
  *  The Bonjour service type used by the GCDWebServer (NSString).
  *
  *  The default value is "_http._tcp", the service type for HTTP web servers.

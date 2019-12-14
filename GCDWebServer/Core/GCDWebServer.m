@@ -53,6 +53,7 @@
 NSString* const GCDWebServerOption_Port = @"Port";
 NSString* const GCDWebServerOption_BonjourName = @"BonjourName";
 NSString* const GCDWebServerOption_BonjourType = @"BonjourType";
+NSString* const GCDWebServerOption_BonjourTXTData = @"BonjourTXTData";
 NSString* const GCDWebServerOption_RequestNATPortMapping = @"RequestNATPortMapping";
 NSString* const GCDWebServerOption_BindToLocalhost = @"BindToLocalhost";
 NSString* const GCDWebServerOption_MaxPendingConnections = @"MaxPendingConnections";
@@ -590,6 +591,29 @@ static inline NSString* _EncodeBase64(NSString* string) {
       CFNetServiceSetClient(_registrationService, _NetServiceRegisterCallBack, &context);
       CFNetServiceScheduleWithRunLoop(_registrationService, CFRunLoopGetMain(), kCFRunLoopCommonModes);
       CFStreamError streamError = {0};
+      
+      NSDictionary* txtDataDictionary = _GetOption(_options, GCDWebServerOption_BonjourTXTData, nil);
+      if (txtDataDictionary != nil) {
+        NSUInteger count = txtDataDictionary.count;
+        CFStringRef keys[count];
+        CFStringRef values[count];
+        NSUInteger index = 0;
+        for (NSString *key in txtDataDictionary) {
+          NSString *value = txtDataDictionary[key];
+          keys[index] = (__bridge CFStringRef)(key);
+          values[index] = (__bridge CFStringRef)(value);
+          index ++;
+        }
+        CFDictionaryRef txtDictionary = CFDictionaryCreate(CFAllocatorGetDefault(), (void *)keys, (void *)values, count, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+        if (txtDictionary != NULL) {
+          CFDataRef txtData = CFNetServiceCreateTXTDataWithDictionary(nil, txtDictionary);
+          Boolean setTXTDataResult = CFNetServiceSetTXTData(_registrationService, txtData);
+          if (!setTXTDataResult) {
+            GWS_LOG_ERROR(@"Failed setting TXTData");
+          }
+        }
+      }
+      
       CFNetServiceRegisterWithOptions(_registrationService, 0, &streamError);
 
       _resolutionService = CFNetServiceCreateCopy(kCFAllocatorDefault, _registrationService);
