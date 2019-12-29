@@ -84,6 +84,7 @@ NS_ASSUME_NONNULL_END
   CFHTTPMessageRef _responseMessage;
   GCDWebServerResponse* _response;
   NSInteger _statusCode;
+  NSUInteger bodyStartLocation;
 
   BOOL _opened;
 #ifdef __GCDWEBSERVER_ENABLE_TESTING__
@@ -410,6 +411,11 @@ NS_ASSUME_NONNULL_END
   }
 }
 
+- (NSUInteger)expectedFinalReadByteTotal {
+  if (!_request) return NSUIntegerMax;
+  return _request.contentLength + bodyStartLocation;
+}
+
 @end
 
 @implementation GCDWebServerConnection (Read)
@@ -453,7 +459,9 @@ NS_ASSUME_NONNULL_END
           if (range.location == NSNotFound) {
             [self readHeaders:headersData withCompletionBlock:block];
           } else {
+            // The length of the pre-body bytes
             NSUInteger length = range.location + range.length;
+            self->bodyStartLocation = length;
             if (CFHTTPMessageAppendBytes(self->_requestMessage, headersData.bytes, length)) {
               if (CFHTTPMessageIsHeaderComplete(self->_requestMessage)) {
                 block([headersData subdataWithRange:NSMakeRange(length, headersData.length - length)]);

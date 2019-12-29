@@ -86,6 +86,16 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, readonly) NSUInteger totalBytesRead;
 
 /**
+ *  Returns the total number of bytes that the connection expects to receive by
+ *  the end of the exchange with the remote peer (i.e. client).
+ *
+ *  This property will be set to "NSUIntegerMax" if the request hasn't been received
+ *  yet, has no body or if there is a body but no "Content-Length" header, typically
+ *  because chunked transfer encoding is used.
+ */
+- (NSUInteger)expectedFinalReadByteTotal;
+
+/**
  *  Returns the total number of bytes sent to the remote peer (i.e. client) so far.
  */
 @property(nonatomic, readonly) NSUInteger totalBytesWritten;
