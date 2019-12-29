@@ -299,8 +299,9 @@ NS_ASSUME_NONNULL_END
           NSDictionary* requestQuery = queryString ? GCDWebServerParseURLEncodedForm(queryString) : @{};
           if (requestMethod && requestURL && requestHeaders && requestPath && requestQuery) {
             for (self->_handler in self->_server.handlers) {
-              self->_request = self->_handler.matchBlock(requestMethod, requestURL, requestHeaders, requestPath, requestQuery);
-              if (self->_request) {
+              GCDWebServerRequest *request = self->_handler.matchBlock(requestMethod, requestURL, requestHeaders, requestPath, requestQuery);
+              if (request) {
+                [self didParseRequest:request];
                 break;
               }
             }
@@ -342,8 +343,9 @@ NS_ASSUME_NONNULL_END
                 [self _startProcessingRequest];
               }
             } else {
-              self->_request = [[GCDWebServerRequest alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:requestPath query:requestQuery];
-              GWS_DCHECK(self->_request);
+              GCDWebServerRequest *request = [[GCDWebServerRequest alloc] initWithMethod:requestMethod url:requestURL headers:requestHeaders path:requestPath query:requestQuery];
+              GWS_DCHECK(request);
+              [self didParseRequest:request];
               [self abortRequest:self->_request withStatusCode:kGCDWebServerHTTPStatusCode_NotImplemented];
             }
           } else {
@@ -696,6 +698,11 @@ static inline NSUInteger _ScanHexNumber(const void* bytes, NSUInteger size) {
     _responseFD = 0;
   }
 #endif
+}
+
+- (void)didParseRequest:(GCDWebServerRequest *)request {
+  GWS_LOG_DEBUG(@"Connection on socket %i parsed request \"%@ %@\" from %lu received bytes", _socket, _request.method, _request.path, (unsigned long)_totalBytesRead);
+  _request = request;
 }
 
 - (NSURL*)rewriteRequestURL:(NSURL*)url withMethod:(NSString*)method headers:(NSDictionary<NSString*, NSString*>*)headers {
