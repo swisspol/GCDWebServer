@@ -84,7 +84,8 @@ NS_ASSUME_NONNULL_END
   CFHTTPMessageRef _responseMessage;
   GCDWebServerResponse* _response;
   NSInteger _statusCode;
-  NSUInteger bodyStartLocation;
+  NSUInteger _requestBodyLocation;
+  NSUInteger _responseBodyLocation;
 
   BOOL _opened;
 #ifdef __GCDWEBSERVER_ENABLE_TESTING__
@@ -411,9 +412,14 @@ NS_ASSUME_NONNULL_END
   }
 }
 
-- (NSUInteger)expectedFinalReadByteTotal {
+- (NSUInteger)expectedFinalTotalReadBytes {
   if (!_request) return NSUIntegerMax;
-  return _request.contentLength + bodyStartLocation;
+  return _request.contentLength + _requestBodyLocation;
+}
+
+- (NSUInteger)expectedFinalTotalWrittenBytes {
+  if (!_response) return NSUIntegerMax;
+  return _response.contentLength + _responseBodyLocation;
 }
 
 @end
@@ -461,7 +467,7 @@ NS_ASSUME_NONNULL_END
           } else {
             // The length of the pre-body bytes
             NSUInteger length = range.location + range.length;
-            self->bodyStartLocation = length;
+            self->_requestBodyLocation = length;
             if (CFHTTPMessageAppendBytes(self->_requestMessage, headersData.bytes, length)) {
               if (CFHTTPMessageIsHeaderComplete(self->_requestMessage)) {
                 block([headersData subdataWithRange:NSMakeRange(length, headersData.length - length)]);
@@ -810,7 +816,7 @@ static inline BOOL _CompareResources(NSString* responseETag, NSString* requestET
   GWS_DCHECK((statusCode >= 400) && (statusCode < 600));
   [self _initializeResponseHeadersWithStatusCode:statusCode];
   [self writeHeadersWithCompletionBlock:^(BOOL success) {
-    ;  // Nothing more to do
+    self->_responseBodyLocation = self->_totalBytesWritten;
   }];
   GWS_LOG_DEBUG(@"Connection aborted with status code %i on socket %i", (int)statusCode, _socket);
 }
