@@ -96,7 +96,6 @@
 		CEE28D501AE0098600F4023C /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2BE851018E79DAF0061360B /* SystemConfiguration.framework */; };
 		CEE28D511AE0098C00F4023C /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E208D1B2167BB17E00500836 /* CoreServices.framework */; };
 		CEE28D521AE00A7A00F4023C /* GCDWebServers.h in Headers */ = {isa = PBXBuildFile; fileRef = CEE28CF31AE0051F00F4023C /* GCDWebServers.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		CEE28D571AE00AFE00F4023C /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E221129C1690B7BA0048D2B2 /* MobileCoreServices.framework */; };
 		CEE28D591AE00AFE00F4023C /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E22112981690B7AA0048D2B2 /* CFNetwork.framework */; };
 		CEE28D6A1AE1ABAA00F4023C /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEE28D691AE1ABAA00F4023C /* UIKit.framework */; };
 		E208D149167B76B700500836 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E208D148167B76B700500836 /* CFNetwork.framework */; };
@@ -161,7 +160,6 @@
 		E2DDD1B71BE6951A002CE867 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD1B61BE6951A002CE867 /* CFNetwork.framework */; };
 		E2DDD1BA1BE69545002CE867 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD1B91BE69545002CE867 /* libz.tbd */; };
 		E2DDD1BC1BE69551002CE867 /* libxml2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD1BB1BE69551002CE867 /* libxml2.tbd */; };
-		E2DDD1BE1BE6956F002CE867 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD1BD1BE6956F002CE867 /* MobileCoreServices.framework */; };
 		E2DDD1C01BE69576002CE867 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD1BF1BE69576002CE867 /* UIKit.framework */; };
 		E2DDD1CE1BE698A8002CE867 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2DDD1CD1BE698A8002CE867 /* AppDelegate.swift */; };
 		E2DDD1D11BE698A8002CE867 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2DDD1D01BE698A8002CE867 /* ViewController.swift */; };
@@ -178,6 +176,8 @@
 		E2DDD22D1BE6A0EF002CE867 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD22C1BE6A0EF002CE867 /* libz.tbd */; };
 		E2DDD22E1BE6A106002CE867 /* libxml2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD22A1BE6A0EB002CE867 /* libxml2.tbd */; };
 		E2DDD22F1BE6A108002CE867 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD22C1BE6A0EF002CE867 /* libz.tbd */; };
+		FBD29D912406C11900230A53 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E208D1B2167BB17E00500836 /* CoreServices.framework */; };
+		FBD29D932406C16100230A53 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBD29D922406C16100230A53 /* CoreServices.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -354,6 +354,7 @@
 		E2DDD2261BE6A0B4002CE867 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.1.sdk/usr/lib/libz.tbd; sourceTree = DEVELOPER_DIR; };
 		E2DDD22A1BE6A0EB002CE867 /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
 		E2DDD22C1BE6A0EF002CE867 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		FBD29D922406C16100230A53 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS13.4.sdk/System/Library/Frameworks/CoreServices.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -387,7 +388,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CEE28D6A1AE1ABAA00F4023C /* UIKit.framework in Frameworks */,
-				CEE28D571AE00AFE00F4023C /* MobileCoreServices.framework in Frameworks */,
+				FBD29D912406C11900230A53 /* CoreServices.framework in Frameworks */,
 				CEE28D591AE00AFE00F4023C /* CFNetwork.framework in Frameworks */,
 				E2DDD2251BE6A0AE002CE867 /* libxml2.tbd in Frameworks */,
 				E2DDD2271BE6A0B4002CE867 /* libz.tbd in Frameworks */,
@@ -407,9 +408,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				E2DDD1C01BE69576002CE867 /* UIKit.framework in Frameworks */,
-				E2DDD1BE1BE6956F002CE867 /* MobileCoreServices.framework in Frameworks */,
 				E2DDD1B71BE6951A002CE867 /* CFNetwork.framework in Frameworks */,
 				E2DDD1BC1BE69551002CE867 /* libxml2.tbd in Frameworks */,
+				FBD29D932406C16100230A53 /* CoreServices.framework in Frameworks */,
 				E2DDD1BA1BE69545002CE867 /* libz.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -470,6 +471,7 @@
 		CEE28D081AE0053E00F4023C /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				FBD29D922406C16100230A53 /* CoreServices.framework */,
 				E24A3C4021E2940600C58878 /* module.modulemap */,
 				CEE28CF31AE0051F00F4023C /* GCDWebServers.h */,
 				CEE28CF21AE0051F00F4023C /* Info.plist */,
@@ -838,7 +840,7 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1030;
+				LastUpgradeCheck = 1140;
 				TargetAttributes = {
 					CEE28CD01AE004D800F4023C = {
 						CreatedOnToolsVersion = 6.3;
