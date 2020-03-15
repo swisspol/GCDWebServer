@@ -380,7 +380,7 @@ int main(int argc, const char* argv[]) {
         webServer.delegate = delegate;
 #endif
         fprintf(stdout, "<RUNNING TESTS FROM \"%s\">\n\n", [testDirectory UTF8String]);
-        result = (int)[webServer runTestsWithOptions:@{ GCDWebServerOption_Port : @8080 } inDirectory:testDirectory];
+        result = (int)[webServer runTestsWithOptions:@{GCDWebServerOption_Port : @8080} inDirectory:testDirectory];
       } else {
         webServer.delegate = delegate;
         if (recording) {
