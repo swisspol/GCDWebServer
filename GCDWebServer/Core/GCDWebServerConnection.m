@@ -795,7 +795,7 @@ static inline BOOL _CompareResources(NSString* responseETag, NSString* requestET
   GWS_DCHECK((statusCode >= 400) && (statusCode < 600));
   [self _initializeResponseHeadersWithStatusCode:statusCode];
   [self writeHeadersWithCompletionBlock:^(BOOL success) {
-    ;  // Nothing more to do
+    // Nothing more to do
   }];
   GWS_LOG_DEBUG(@"Connection aborted with status code %i on socket %i", (int)statusCode, _socket);
 }
