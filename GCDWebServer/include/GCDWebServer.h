@@ -1,4 +1,4 @@
-#import "../Core/GCDWebServer.h"
+#import "GCDWebServerCore.h"
 #import "GCDWebServerConnection.h"
 #import "GCDWebServerDataRequest.h"
 #import "GCDWebServerDataResponse.h"
