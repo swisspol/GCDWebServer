@@ -38,15 +38,15 @@
 #import "GCDWebServer.h"
 #import "GCDWebServerConnection.h"
 
-#import "GCDWebServerDataRequest.h"
-#import "GCDWebServerFileRequest.h"
-#import "GCDWebServerMultiPartFormRequest.h"
-#import "GCDWebServerURLEncodedFormRequest.h"
+#import "../Requests/GCDWebServerDataRequest.h"
+#import "../Requests/GCDWebServerFileRequest.h"
+#import "../Requests/GCDWebServerMultiPartFormRequest.h"
+#import "../Requests/GCDWebServerURLEncodedFormRequest.h"
 
-#import "GCDWebServerDataResponse.h"
-#import "GCDWebServerErrorResponse.h"
-#import "GCDWebServerFileResponse.h"
-#import "GCDWebServerStreamedResponse.h"
+#import "../Responses/GCDWebServerDataResponse.h"
+#import "../Responses/GCDWebServerErrorResponse.h"
+#import "../Responses/GCDWebServerFileResponse.h"
+#import "../Responses/GCDWebServerStreamedResponse.h"
 
 /**
  *  Check if a custom logging facility should be used instead.

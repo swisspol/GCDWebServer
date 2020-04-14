@@ -3,3 +3,4 @@ xcuserdata
 project.xcworkspace
 /build
 /Carthage/Build
+.build

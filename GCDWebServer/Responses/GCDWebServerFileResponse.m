@@ -31,7 +31,7 @@
 
 #import <sys/stat.h>
 
-#import "GCDWebServerPrivate.h"
+#import "../Core/GCDWebServerPrivate.h"
 
 #define kFileReadBufferSize (32 * 1024)
 

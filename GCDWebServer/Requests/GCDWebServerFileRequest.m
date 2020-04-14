@@ -29,7 +29,7 @@
 #error GCDWebServer requires ARC
 #endif
 
-#import "GCDWebServerPrivate.h"
+#import "../Core/GCDWebServerPrivate.h"
 
 @implementation GCDWebServerFileRequest {
   int _file;
