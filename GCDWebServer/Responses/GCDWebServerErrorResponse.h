@@ -26,7 +26,7 @@
  */
 
 #import "GCDWebServerDataResponse.h"
-#import "../Core/GCDWebServerHTTPStatusCodes.h"
+#import "GCDWebServerHTTPStatusCodes.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

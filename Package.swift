@@ -9,7 +9,10 @@ let package = Package(
     targets: [
         .target(
             name: "GCDWebServer",
-            path: "GCDWebServer"
+            path: "GCDWebServer",
+            cSettings: [
+                .define("SWIFT_PACKAGE")
+            ]
         )
     ]
 )

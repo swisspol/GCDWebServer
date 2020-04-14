@@ -31,7 +31,11 @@
 
 #import <sys/stat.h>
 
+#ifdef SWIFT_PACKAGE
 #import "../Core/GCDWebServerPrivate.h"
+#else
+#import "GCDWebServerPrivate.h"
+#endif
 
 #define kFileReadBufferSize (32 * 1024)
 

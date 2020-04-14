@@ -29,7 +29,11 @@
 #error GCDWebServer requires ARC
 #endif
 
+#ifdef SWIFT_PACKAGE
 #import "../Core/GCDWebServerPrivate.h"
+#else
+#import "GCDWebServerPrivate.h"
+#endif
 
 @implementation GCDWebServerURLEncodedFormRequest
 
