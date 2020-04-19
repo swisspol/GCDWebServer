@@ -26,6 +26,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		1FB15A1E244BFEF4008042CC /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E208D1B2167BB17E00500836 /* CoreServices.framework */; };
+		1FB15A20244BFF21008042CC /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB15A1F244BFF21008042CC /* CoreServices.framework */; };
 		CEE28CF41AE0051F00F4023C /* GCDWebServers.h in Headers */ = {isa = PBXBuildFile; fileRef = CEE28CF31AE0051F00F4023C /* GCDWebServers.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CEE28D091AE006C200F4023C /* GCDWebServer.h in Headers */ = {isa = PBXBuildFile; fileRef = E28BAE1618F99C810095C089 /* GCDWebServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		CEE28D0A1AE006C300F4023C /* GCDWebServer.h in Headers */ = {isa = PBXBuildFile; fileRef = E28BAE1618F99C810095C089 /* GCDWebServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -96,7 +98,6 @@
 		CEE28D501AE0098600F4023C /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2BE851018E79DAF0061360B /* SystemConfiguration.framework */; };
 		CEE28D511AE0098C00F4023C /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E208D1B2167BB17E00500836 /* CoreServices.framework */; };
 		CEE28D521AE00A7A00F4023C /* GCDWebServers.h in Headers */ = {isa = PBXBuildFile; fileRef = CEE28CF31AE0051F00F4023C /* GCDWebServers.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		CEE28D571AE00AFE00F4023C /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E221129C1690B7BA0048D2B2 /* MobileCoreServices.framework */; };
 		CEE28D591AE00AFE00F4023C /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E22112981690B7AA0048D2B2 /* CFNetwork.framework */; };
 		CEE28D6A1AE1ABAA00F4023C /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEE28D691AE1ABAA00F4023C /* UIKit.framework */; };
 		E208D149167B76B700500836 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E208D148167B76B700500836 /* CFNetwork.framework */; };
@@ -161,7 +162,6 @@
 		E2DDD1B71BE6951A002CE867 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD1B61BE6951A002CE867 /* CFNetwork.framework */; };
 		E2DDD1BA1BE69545002CE867 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD1B91BE69545002CE867 /* libz.tbd */; };
 		E2DDD1BC1BE69551002CE867 /* libxml2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD1BB1BE69551002CE867 /* libxml2.tbd */; };
-		E2DDD1BE1BE6956F002CE867 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD1BD1BE6956F002CE867 /* MobileCoreServices.framework */; };
 		E2DDD1C01BE69576002CE867 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2DDD1BF1BE69576002CE867 /* UIKit.framework */; };
 		E2DDD1CE1BE698A8002CE867 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2DDD1CD1BE698A8002CE867 /* AppDelegate.swift */; };
 		E2DDD1D11BE698A8002CE867 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2DDD1D01BE698A8002CE867 /* ViewController.swift */; };
@@ -282,6 +282,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1FB15A1F244BFF21008042CC /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS13.4.sdk/System/Library/Frameworks/CoreServices.framework; sourceTree = DEVELOPER_DIR; };
 		8DD76FB20486AB0100D96B5E /* GCDWebServer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = GCDWebServer; sourceTree = BUILT_PRODUCTS_DIR; };
 		CEE28CD11AE004D800F4023C /* GCDWebServers.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = GCDWebServers.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		CEE28CEF1AE0051F00F4023C /* GCDWebServers.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = GCDWebServers.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -386,8 +387,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1FB15A1E244BFEF4008042CC /* CoreServices.framework in Frameworks */,
 				CEE28D6A1AE1ABAA00F4023C /* UIKit.framework in Frameworks */,
-				CEE28D571AE00AFE00F4023C /* MobileCoreServices.framework in Frameworks */,
 				CEE28D591AE00AFE00F4023C /* CFNetwork.framework in Frameworks */,
 				E2DDD2251BE6A0AE002CE867 /* libxml2.tbd in Frameworks */,
 				E2DDD2271BE6A0B4002CE867 /* libz.tbd in Frameworks */,
@@ -406,8 +407,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1FB15A20244BFF21008042CC /* CoreServices.framework in Frameworks */,
 				E2DDD1C01BE69576002CE867 /* UIKit.framework in Frameworks */,
-				E2DDD1BE1BE6956F002CE867 /* MobileCoreServices.framework in Frameworks */,
 				E2DDD1B71BE6951A002CE867 /* CFNetwork.framework in Frameworks */,
 				E2DDD1BC1BE69551002CE867 /* libxml2.tbd in Frameworks */,
 				E2DDD1BA1BE69545002CE867 /* libz.tbd in Frameworks */,
@@ -470,6 +471,7 @@
 		CEE28D081AE0053E00F4023C /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1FB15A1F244BFF21008042CC /* CoreServices.framework */,
 				E24A3C4021E2940600C58878 /* module.modulemap */,
 				CEE28CF31AE0051F00F4023C /* GCDWebServers.h */,
 				CEE28CF21AE0051F00F4023C /* Info.plist */,
