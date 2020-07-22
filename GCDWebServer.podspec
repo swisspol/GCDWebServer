@@ -26,9 +26,9 @@ Pod::Spec.new do |s|
     cs.private_header_files = "GCDWebServer/Core/GCDWebServerPrivate.h"
     cs.requires_arc = true
     cs.ios.library = 'z'
-    cs.ios.frameworks = 'MobileCoreServices', 'CFNetwork'
+    cs.ios.frameworks = 'CoreServices', 'CFNetwork'
     cs.tvos.library = 'z'
-    cs.tvos.frameworks = 'MobileCoreServices', 'CFNetwork'
+    cs.tvos.frameworks = 'CoreServices', 'CFNetwork'
     cs.osx.library = 'z'
     cs.osx.framework = 'SystemConfiguration'
   end
