@@ -13,16 +13,6 @@
   XCTAssertNotNil(server);
 }
 
-- (void)testDAVServer {
-  GCDWebDAVServer* server = [[GCDWebDAVServer alloc] init];
-  XCTAssertNotNil(server);
-}
-
-- (void)testWebUploader {
-  GCDWebUploader* server = [[GCDWebUploader alloc] init];
-  XCTAssertNotNil(server);
-}
-
 - (void)testPaths {
   XCTAssertEqualObjects(GCDWebServerNormalizePath(@""), @"");
   XCTAssertEqualObjects(GCDWebServerNormalizePath(@"/foo/"), @"/foo");
