@@ -60,25 +60,25 @@
         <h1>%header%</h1>
       </div>
       
-      %prologue%
+      <p>%prologue%<p>
       
       <div id="alerts"></div>
       
       <div class="btn-toolbar">
         <button type="button" class="btn btn-primary fileinput-button" id="upload-file">
-          <span class="glyphicon glyphicon-upload"></span> Upload Files&hellip;
-          <input id="fileupload" type="file" name="files[]" multiple>
+          <span class="glyphicon glyphicon-upload"></span> %UPLOAD_FILES%&hellip;
+          <input id="fileupload" type="file" name="files[]" %accept% multiple>
         </button>
-        <button type="button" class="btn btn-success" id="create-folder">
-          <span class="glyphicon glyphicon-folder-close"></span> Create Folder&hellip;
+        <button type="button" class="btn btn-success %showCreateFolder%" id="create-folder">
+          <span class="glyphicon glyphicon-folder-close"></span> %CREATE_FOLDER%&hellip;
         </button>
         <button type="button" class="btn btn-default" id="reload">
-          <span class="glyphicon glyphicon-refresh"></span> Refresh
+          <span class="glyphicon glyphicon-refresh"></span> %REFRESH%
         </button>
       </div>
       
       <div class="panel panel-default uploading">
-        <div class="panel-heading">File Uploads in Progress</div>
+        <div class="panel-heading">%UPLOADS_IN_PROGRESS%</div>
         <table class="table table-striped"><tbody id="uploads"></tbody></table>
       </div>
       
@@ -100,17 +100,17 @@
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <h4 class="modal-title">Create Folder</h4>
+            <h4 class="modal-title">%CREATE_FOLDER%</h4>
           </div>
           <div class="modal-body">
-            <p>Please enter the name of the folder to be created:</p>
+            <p>%CREATE_FOLDER_DESCRIPTION%</p>
             <form onsubmit="return false">
               <input type="text" autocomplete="off" id="create-input">
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" id="create-confirm">Create Folder</button>
+            <button type="button" class="btn btn-default" data-dismiss="modal">%CANCEL%</button>
+            <button type="button" class="btn btn-primary" id="create-confirm">%CREATE_FOLDER%</button>
           </div>
         </div>
       </div>
@@ -121,17 +121,17 @@
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <h4 class="modal-title">Move Item</h4>
+            <h4 class="modal-title">%MOVE_ITEM%</h4>
           </div>
           <div class="modal-body">
-            <p>Please enter the new location for this item:</p>
+            <p>%MOVE_DESCRIPTION%</p>
             <form onsubmit="return false">
               <input type="text" autocomplete="off" id="move-input">
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" id="move-confirm">Move Item</button>
+            <button type="button" class="btn btn-default" data-dismiss="modal">%CANCEL%</button>
+            <button type="button" class="btn btn-primary" id="move-confirm">%MOVE_ITEM%</button>
           </div>
         </div>
       </div>
@@ -156,12 +156,12 @@
             <p>{%=formatFileSize(o.size)%}</p>
           {% } %}
         </td>
-        <td class="column-move">
+        <td class="column-move %allowFileMoving%">
           <button type="button" class="btn btn-default btn-xs button-move">
             <span class="glyphicon glyphicon glyphicon-share-alt"></span>
           </button>
         </td>
-        <td class="column-delete">
+        <td class="column-delete %allowDeletion%"">
           <button type="button" class="btn btn-danger btn-xs button-delete">
             <span class="glyphicon glyphicon-trash"></span>
           </button>

@@ -1,3 +1,11 @@
-"PROLOGUE" = "<p>Drag &amp; drop files on this window or use the \"Upload Files&hellip;\" button to upload new files.</p>";
+"PROLOGUE" = "Drag & drop files on this window or use the \"Upload Files...\" button to upload new files.";
 "EPILOGUE" = "";
 "FOOTER_FORMAT" = "%@ %@";
+"UPLOAD_FILES" = "Upload Files";
+"REFRESH" = "Refresh";
+"CREATE_FOLDER" = "Create Folder";
+"UPLOADS_IN_PROGRESS" = "File Uploads in Progress";
+"CANCEL" = "Cancel";
+"MOVE_ITEM" = "Move Item";
+"MOVE_DESCRIPTION" = "Please enter the new location for this item:";
+"CREATE_FOLDER_DESCRIPTION" = "Please enter the name of the folder to be created:";

@@ -74,6 +74,9 @@ NS_ASSUME_NONNULL_END
     if (siteBundle == nil) {
       return nil;
     }
+    _showCreateFolder = YES;
+    _allowFileMoving = YES;
+    _allowDeletion = YES;
     _uploadDirectory = [path copy];
     GCDWebUploader* __unsafe_unretained server = self;
 
@@ -130,6 +133,12 @@ NS_ASSUME_NONNULL_END
 #endif
                      footer = [NSString stringWithFormat:[siteBundle localizedStringForKey:@"FOOTER_FORMAT" value:@"" table:nil], name, version];
                    }
+
+                   NSString* accept = @"";
+                   if (server.allowedMimeTypes && [server.allowedMimeTypes count] > 0) {
+                     accept = [NSString stringWithFormat:@"accept=\"%@\"", [server.allowedMimeTypes componentsJoinedByString:@", "]];
+                   }
+
                    return [GCDWebServerDataResponse responseWithHTMLTemplate:(NSString*)[siteBundle pathForResource:@"index" ofType:@"html"]
                                                                    variables:@{
                                                                      @"device" : device,
@@ -137,7 +146,27 @@ NS_ASSUME_NONNULL_END
                                                                      @"header" : header,
                                                                      @"prologue" : prologue,
                                                                      @"epilogue" : epilogue,
-                                                                     @"footer" : footer
+                                                                     @"footer" : footer,
+                                                                     @"accept": accept,
+                                                                     @"UPLOAD_FILES": [siteBundle localizedStringForKey:@"UPLOAD_FILES"
+                                                                                                                  value:@"" table:nil],
+                                                                     @"REFRESH": [siteBundle localizedStringForKey:@"REFRESH"
+                                                                                                                  value:@"" table:nil],
+                                                                     @"CREATE_FOLDER": [siteBundle localizedStringForKey:@"CREATE_FOLDER"
+                                                                                                                  value:@"" table:nil],
+                                                                     @"UPLOADS_IN_PROGRESS": [siteBundle localizedStringForKey:@"UPLOADS_IN_PROGRESS"
+                                                                                                                  value:@"" table:nil],
+                                                                     @"CANCEL": [siteBundle localizedStringForKey:@"CANCEL"
+                                                                                                                  value:@"" table:nil],
+                                                                     @"MOVE_ITEM": [siteBundle localizedStringForKey:@"MOVE_ITEM"
+                                                                                                                  value:@"" table:nil],
+                                                                     @"MOVE_DESCRIPTION": [siteBundle localizedStringForKey:@"MOVE_DESCRIPTION"
+                                                                                                                  value:@"" table:nil],
+                                                                     @"CREATE_FOLDER_DESCRIPTION": [siteBundle localizedStringForKey:@"CREATE_FOLDER_DESCRIPTION"
+                                                                                                                  value:@"" table:nil],
+                                                                     @"showCreateFolder": (server.showCreateFolder ? @"" : @"hidden"),
+                                                                     @"allowFileMoving": (server.allowFileMoving ? @"" : @"hidden"),
+                                                                     @"allowDeletion": (server.allowDeletion ? @"" : @"hidden"),
                                                                    }];
                  }];
 

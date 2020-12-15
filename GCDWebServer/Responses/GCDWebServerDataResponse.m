@@ -31,6 +31,47 @@
 
 #import "GCDWebServerPrivate.h"
 
+@interface NSString(GCDWebServer)
+@end
+
+@implementation NSString(GCDWebServer)
+
+- (NSString *)gcdwebserver_encodeHTMLCharacterEntities {
+    NSMutableString *encoded = [NSMutableString stringWithString:self];
+
+    // @"&amp;"
+    NSRange range = [self rangeOfString:@"&"];
+    if (range.location != NSNotFound) {
+        [encoded replaceOccurrencesOfString:@"&"
+                                 withString:@"&amp;"
+                                    options:NSLiteralSearch
+                                      range:NSMakeRange(0, [encoded length])];
+    }
+
+    // @"&lt;"
+    range = [self rangeOfString:@"<"];
+    if (range.location != NSNotFound) {
+        [encoded replaceOccurrencesOfString:@"<"
+                                 withString:@"&lt;"
+                                    options:NSLiteralSearch
+                                      range:NSMakeRange(0, [encoded length])];
+    }
+
+    // @"&gt;"
+    range = [self rangeOfString:@">"];
+    if (range.location != NSNotFound) {
+        [encoded replaceOccurrencesOfString:@">"
+                                 withString:@"&gt;"
+                                    options:NSLiteralSearch
+                                      range:NSMakeRange(0, [encoded length])];
+    }
+
+    return [encoded copy];
+}
+
+
+@end
+
 @implementation GCDWebServerDataResponse {
   NSData* _data;
   BOOL _done;
@@ -115,7 +156,9 @@
 - (instancetype)initWithHTMLTemplate:(NSString*)path variables:(NSDictionary<NSString*, NSString*>*)variables {
   NSMutableString* html = [[NSMutableString alloc] initWithContentsOfFile:path encoding:NSUTF8StringEncoding error:NULL];
   [variables enumerateKeysAndObjectsUsingBlock:^(NSString* key, NSString* value, BOOL* stop) {
-    [html replaceOccurrencesOfString:[NSString stringWithFormat:@"%%%@%%", key] withString:value options:0 range:NSMakeRange(0, html.length)];
+    [html replaceOccurrencesOfString:[NSString stringWithFormat:@"%%%@%%", key]
+                          withString:[value gcdwebserver_encodeHTMLCharacterEntities]
+                             options:0 range:NSMakeRange(0, html.length)];
   }];
   return [self initWithHTML:html];
 }

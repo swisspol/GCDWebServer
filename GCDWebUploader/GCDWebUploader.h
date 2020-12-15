@@ -154,6 +154,32 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy) NSString* footer;
 
 /**
+ * Sets the allowed mime types which can be selected on web pages.
+ * This allows us to filter files before uploading.
+ * For example: @[ @"image/jpeg", @"image/png" ], @[@"image/*"]
+ * See https://developer.mozilla.org/ru/docs/Web/HTML/Element/Input/file
+ */
+@property(nonatomic, copy) NSArray<NSString*>* allowedMimeTypes;
+
+/**
+ * If YES, then "Create Folder button" is shown.
+ * Default value is YES.
+ */
+@property(nonatomic, assign) BOOL showCreateFolder;
+
+/**
+ * Allows "Move Item" action.
+ * Default value is YES.
+ */
+@property(nonatomic, assign) BOOL allowFileMoving;
+
+/**
+ * Allows "Delete File" action.
+ * Default value is YES.
+ */
+@property(nonatomic, assign) BOOL allowDeletion;
+
+/**
  *  This method is the designated initializer for the class.
  */
 - (instancetype)initWithUploadDirectory:(NSString*)path;
