@@ -1,7 +1,7 @@
 #!/bin/bash -exu -o pipefail
 
 if [[ -f "/usr/local/bin/xcpretty" ]]; then
-  PRETTYFIER="xcpretty"  
+  PRETTYFIER="xcpretty"
 else
   PRETTYFIER="tee"  # Passthrough stdout
 fi
@@ -32,7 +32,7 @@ function runTests {
   MODE="$2"
   TESTS="$3"
   FILE="${4:-}"
-  
+
   rm -rf "$PAYLOAD_DIR"
   ditto -x -k "$PAYLOAD_ZIP" "$PAYLOAD_DIR"
   TZ=GMT find "$PAYLOAD_DIR" -type d -exec SetFile -d "1/1/2014 00:00:00" -m "1/1/2014 00:00:00" '{}' \;  # ZIP archives do not preserve directories dates
@@ -69,7 +69,7 @@ xcodebuild build -sdk "$OSX_SDK" -target "$OSX_TARGET" -configuration "$CONFIGUR
 
 # Build for iOS for oldest supported deployment target
 rm -rf "$BUILD_DIR"
-xcodebuild build -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" "SYMROOT=$BUILD_DIR" "IPHONEOS_DEPLOYMENT_TARGET=8.0" | $PRETTYFIER
+xcodebuild build -sdk "$IOS_SDK" -target "$IOS_TARGET" -configuration "$CONFIGURATION" "SYMROOT=$BUILD_DIR" "IPHONEOS_DEPLOYMENT_TARGET=9.0" | $PRETTYFIER
 
 # Build for iOS for current deployment target
 rm -rf "$BUILD_DIR"
