@@ -641,4 +641,10 @@ extern NSString* const GCDWebServerAuthenticationMethod_DigestAccess;
 
 #endif
 
+@interface UIApplicationHelper: NSObject
+
++ (nullable UIApplication *)sharedApplication;
+
+@end
+
 NS_ASSUME_NONNULL_END
