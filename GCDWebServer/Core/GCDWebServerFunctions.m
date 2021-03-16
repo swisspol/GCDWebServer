@@ -245,56 +245,60 @@ NSString* GCDWebServerStringFromSockAddr(const struct sockaddr* addr, BOOL inclu
 }
 
 NSString* GCDWebServerGetPrimaryIPAddress(BOOL useIPv6) {
-  NSString* address = nil;
-  NSString *VPNAddress = nil;
+    NSString* address = nil;
+    NSString *VPNAddress = nil;
+    NSString *ethernetAddress = nil;
+    const char* ethernetInterface = "en3";  // Ethernet interface on iOS
 #if TARGET_OS_IPHONE
 #if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_TV
-  const char* primaryInterface = "en0";  // WiFi interface on iOS
+    const char* primaryInterface = "en0";  // WiFi interface on iOS
 #endif
 #else
-  const char* primaryInterface = NULL;
-  SCDynamicStoreRef store = SCDynamicStoreCreate(kCFAllocatorDefault, CFSTR("GCDWebServer"), NULL, NULL);
-  if (store) {
-    CFPropertyListRef info = SCDynamicStoreCopyValue(store, CFSTR("State:/Network/Global/IPv4"));  // There is no equivalent for IPv6 but the primary interface should be the same
-    if (info) {
-      primaryInterface = [[NSString stringWithString:[(__bridge NSDictionary*)info objectForKey:@"PrimaryInterface"]] UTF8String];
-      CFRelease(info);
-    }
-    CFRelease(store);
-  }
-  if (primaryInterface == NULL) {
-    primaryInterface = "lo0";
-  }
-#endif
-  struct ifaddrs* list;
-  if (getifaddrs(&list) >= 0) {
-    for (struct ifaddrs* ifap = list; ifap; ifap = ifap->ifa_next) {
-#if TARGET_IPHONE_SIMULATOR  || TARGET_OS_TV
-        // Assume en0 is Ethernet and en1 is WiFi since there is no way to use SystemConfiguration framework in iOS Simulator
-        // Assumption holds for Apple TV running tvOS
-      if (strcmp(ifap->ifa_name, "en0") && strcmp(ifap->ifa_name, "en1"))
-#else
-      if (strcmp(ifap->ifa_name, primaryInterface) && strcmp(ifap->ifa_name, "ppp0"))
-#endif
-      {
-        continue;
-      }
-      if ((ifap->ifa_flags & IFF_UP) && ((!useIPv6 && (ifap->ifa_addr->sa_family == AF_INET)) || (useIPv6 && (ifap->ifa_addr->sa_family == AF_INET6)))) {
-        NSString *interfaceAddress = GCDWebServerStringFromSockAddr(ifap->ifa_addr, NO);
-#if TARGET_IPHONE_SIMULATOR  || TARGET_OS_TV
-        address = interfaceAddress;
-#else
-        if (strcmp(ifap->ifa_name, primaryInterface) == 0) {
-          address = interfaceAddress;
-        } else {
-          VPNAddress = interfaceAddress;
+    const char* primaryInterface = NULL;
+    SCDynamicStoreRef store = SCDynamicStoreCreate(kCFAllocatorDefault, CFSTR("GCDWebServer"), NULL, NULL);
+    if (store) {
+        CFPropertyListRef info = SCDynamicStoreCopyValue(store, CFSTR("State:/Network/Global/IPv4"));  // There is no equivalent for IPv6 but the primary interface should be the same
+        if (info) {
+            primaryInterface = [[NSString stringWithString:[(__bridge NSDictionary*)info objectForKey:@"PrimaryInterface"]] UTF8String];
+            CFRelease(info);
         }
-#endif
-      }
+        CFRelease(store);
     }
-    freeifaddrs(list);
-  }
-  return address ? address : VPNAddress;
+    if (primaryInterface == NULL) {
+        primaryInterface = "lo0";
+    }
+#endif
+    struct ifaddrs* list;
+    if (getifaddrs(&list) >= 0) {
+        for (struct ifaddrs* ifap = list; ifap; ifap = ifap->ifa_next) {
+#if TARGET_IPHONE_SIMULATOR  || TARGET_OS_TV
+            // Assume en0 is Ethernet and en1 is WiFi since there is no way to use SystemConfiguration framework in iOS Simulator
+            // Assumption holds for Apple TV running tvOS
+            if (strcmp(ifap->ifa_name, "en0") && strcmp(ifap->ifa_name, "en1"))
+#else
+                if (strcmp(ifap->ifa_name, primaryInterface) && strcmp(ifap->ifa_name, "ppp0") &&  strcmp(ifap->ifa_name, ethernetInterface))
+#endif
+                {
+                    continue;
+                }
+            if ((ifap->ifa_flags & IFF_UP) && ((!useIPv6 && (ifap->ifa_addr->sa_family == AF_INET)) || (useIPv6 && (ifap->ifa_addr->sa_family == AF_INET6)))) {
+                NSString *interfaceAddress = GCDWebServerStringFromSockAddr(ifap->ifa_addr, NO);
+#if TARGET_IPHONE_SIMULATOR  || TARGET_OS_TV
+                address = interfaceAddress;
+#else
+                if (strcmp(ifap->ifa_name, primaryInterface) == 0) {
+                    address = interfaceAddress;
+                } else if (strcmp(ifap->ifa_name, ethernetInterface) == 0) {
+                    ethernetAddress = interfaceAddress;
+                } else {
+                    VPNAddress = interfaceAddress;
+                }
+#endif
+            }
+        }
+        freeifaddrs(list);
+    }
+    return ethernetAddress ? ethernetAddress : (address ? address : VPNAddress);
 }
 
 NSString* GCDWebServerComputeMD5Digest(NSString* format, ...) {
