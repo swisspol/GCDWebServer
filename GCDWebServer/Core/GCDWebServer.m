@@ -162,6 +162,8 @@ static void _ExecuteMainThreadRunLoopSources() {
   dispatch_source_t _source6;
   CFNetServiceRef _registrationService;
   CFNetServiceRef _resolutionService;
+  int ipv4ListeningSocket;
+  int ipv6ListeningSocket;
   DNSServiceRef _dnsService;
   CFSocketRef _dnsSocket;
   CFRunLoopSourceRef _dnsSource;
@@ -439,6 +441,11 @@ static inline NSString* _EncodeBase64(NSString* string) {
                         error:(NSError**)error {
   int listeningSocket = socket(useIPv6 ? PF_INET6 : PF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (listeningSocket > 0) {
+    if (!useIPv6) {
+      ipv4ListeningSocket = listeningSocket;
+    } else {
+      ipv6ListeningSocket = listeningSocket;
+    }
     int yes = 1;
     setsockopt(listeningSocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
 
@@ -542,12 +549,13 @@ static inline NSString* _EncodeBase64(NSString* string) {
     }
   }
 
-  struct sockaddr_in6 addr6;
-  bzero(&addr6, sizeof(addr6));
-  addr6.sin6_len = sizeof(addr6);
-  addr6.sin6_family = AF_INET6;
-  addr6.sin6_port = htons(port);
-  addr6.sin6_addr = bindToLocalhost ? in6addr_loopback : in6addr_any;
+//  struct sockaddr_in6 addr6;
+//  bzero(&addr6, sizeof(addr6));
+//  addr6.sin6_len = sizeof(addr6);
+//  addr6.sin6_family = AF_INET6;
+//  addr6.sin6_port = htons(port);
+//  addr6.sin6_addr = bindToLocalhost ? in6addr_loopback : in6addr_any;
+  struct sockaddr_in6 addr6 = [self generateAddressWithPort:port bindToLocalhost:bindToLocalhost];
   int listeningSocket6 = [self _createListeningSocket:YES localAddress:&addr6 length:sizeof(addr6) maxPendingConnections:maxPendingConnections error:error];
   if (listeningSocket6 <= 0) {
     close(listeningSocket4);
@@ -735,6 +743,81 @@ static inline NSString* _EncodeBase64(NSString* string) {
 
 #if TARGET_OS_IPHONE
 
+- (void)resetIpv4SocketIfError {
+  int error = 0;
+  socklen_t len = sizeof(error);
+  int retval = getsockopt(ipv4ListeningSocket, SOL_SOCKET, SO_ERROR, &error, &len);
+
+  if (retval != 0) {
+    /* there was a problem getting the error code */
+    GWS_LOG_ERROR(@"error getting socket error code: %s\n", strerror(retval));
+    return;
+  }
+
+  if (error != 0) {
+    /* socket has a non zero error status */
+    GWS_LOG_INFO(@"Socket error: %s on socket %d\n", strerror(error), ipv4ListeningSocket);
+    dispatch_source_cancel(_source4);
+    _source4 = nil;
+    NSUInteger port = [_GetOption(_options, GCDWebServerOption_Port, @0) unsignedIntegerValue];
+    BOOL bindToLocalhost = [_GetOption(_options, GCDWebServerOption_BindToLocalhost, @NO) boolValue];
+    NSUInteger maxPendingConnections = [_GetOption(_options, GCDWebServerOption_MaxPendingConnections, @16) unsignedIntegerValue];
+
+    struct sockaddr_in addr4 = [self generateIpv4AddressWithPort:port bindToLocalhost:bindToLocalhost];
+    NSError* nsError = nil;
+    int listeningSocket4 = [self _createListeningSocket:NO
+                                           localAddress:&addr4
+                                                 length:sizeof(addr4)
+                                  maxPendingConnections:maxPendingConnections
+                                                  error:&nsError];
+
+    if (listeningSocket4 <= 0) {
+      GWS_LOG_ERROR(@"Failed to create the IPv4 socket\n");
+    }
+    _source4 = [self _createDispatchSourceWithListeningSocket:listeningSocket4 isIPv6:NO];
+    // Need to investigate
+    dispatch_resume(_source4);
+  }
+}
+
+- (void)resetIpv6SocketIfError {
+  int error = 0;
+  NSError* nsError = nil;
+  socklen_t len = sizeof(error);
+  int retval = getsockopt(ipv6ListeningSocket, SOL_SOCKET, SO_ERROR, &error, &len);
+
+  if (retval != 0) {
+    /* there was a problem getting the error code */
+    GWS_LOG_ERROR(@"error getting socket error code: %s\n", strerror(retval));
+    return;
+  }
+
+  if (error != 0) {
+    /* socket has a non zero error status */
+    GWS_LOG_INFO(@"Socket error: %s on socket %d\n", strerror(error), ipv6ListeningSocket);
+
+    dispatch_source_cancel(_source6);
+    _source6 = nil;
+    NSUInteger port = [_GetOption(_options, GCDWebServerOption_Port, @0) unsignedIntegerValue];
+    BOOL bindToLocalhost = [_GetOption(_options, GCDWebServerOption_BindToLocalhost, @NO) boolValue];
+    NSUInteger maxPendingConnections = [_GetOption(_options, GCDWebServerOption_MaxPendingConnections, @16) unsignedIntegerValue];
+
+    struct sockaddr_in6 addr6 = [self generateAddressWithPort:port bindToLocalhost:bindToLocalhost];
+    int listeningSocket6 = [self _createListeningSocket:YES
+                                           localAddress:&addr6
+                                                 length:sizeof(addr6)
+                                  maxPendingConnections:maxPendingConnections
+                                                  error:&nsError];
+    if (listeningSocket6 <= 0) {
+      GWS_LOG_ERROR(@"Failed to create the IPv6 socket\n");
+    }
+    _source6 = [self _createDispatchSourceWithListeningSocket:listeningSocket6 isIPv6:YES];
+
+    // Need to investigate
+    dispatch_resume(_source6);
+  }
+}
+
 - (void)_didEnterBackground:(NSNotification*)notification {
   GWS_DCHECK([NSThread isMainThread]);
   GWS_LOG_DEBUG(@"Did enter background");
@@ -746,12 +829,37 @@ static inline NSString* _EncodeBase64(NSString* string) {
 - (void)_willEnterForeground:(NSNotification*)notification {
   GWS_DCHECK([NSThread isMainThread]);
   GWS_LOG_DEBUG(@"Will enter foreground");
-  if (!_source4) {
+  if (_suspendInBackground && !_source4) {
     [self _start:NULL];  // TODO: There's probably nothing we can do on failure
+  }
+  
+  if ([self isRunning]) {
+    [self resetIpv4SocketIfError];
+    [self resetIpv6SocketIfError];
   }
 }
 
 #endif
+
+- (struct sockaddr_in)generateIpv4AddressWithPort:(NSInteger)port bindToLocalhost:(BOOL)bindToLocalhost {
+  struct sockaddr_in addr4;
+  bzero(&addr4, sizeof(addr4));
+  addr4.sin_len = sizeof(addr4);
+  addr4.sin_family = AF_INET;
+  addr4.sin_port = htons(port);
+  addr4.sin_addr.s_addr = bindToLocalhost ? htonl(INADDR_LOOPBACK) : htonl(INADDR_ANY);
+  return addr4;
+}
+
+- (struct sockaddr_in6)generateAddressWithPort:(NSInteger)port bindToLocalhost:(BOOL)bindToLocalhost {
+  struct sockaddr_in6 addr6;
+  bzero(&addr6, sizeof(addr6));
+  addr6.sin6_len = sizeof(addr6);
+  addr6.sin6_family = AF_INET6;
+  addr6.sin6_port = htons(port);
+  addr6.sin6_addr = bindToLocalhost ? in6addr_loopback : in6addr_any;
+  return addr6;
+}
 
 - (BOOL)startWithOptions:(NSDictionary<NSString*, id>*)options error:(NSError**)error {
   if (_options == nil) {
@@ -769,8 +877,8 @@ static inline NSString* _EncodeBase64(NSString* string) {
 #if TARGET_OS_IPHONE
     if (_suspendInBackground) {
       [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_didEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
-      [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_willEnterForeground:) name:UIApplicationWillEnterForegroundNotification object:nil];
     }
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_willEnterForeground:) name:UIApplicationWillEnterForegroundNotification object:nil];
 #endif
     return YES;
   } else {
@@ -786,10 +894,7 @@ static inline NSString* _EncodeBase64(NSString* string) {
 - (void)stop {
   if (_options) {
 #if TARGET_OS_IPHONE
-    if (_suspendInBackground) {
-      [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
-      [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillEnterForegroundNotification object:nil];
-    }
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 #endif
     if (_source4) {
       [self _stop];
