@@ -1,4 +1,6 @@
 .DS_Store
+.build/
+.swiftpm/
 xcuserdata
 project.xcworkspace
 /build

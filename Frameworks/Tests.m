@@ -1,5 +1,6 @@
-#import <GCDWebServers/GCDWebServers.h>
 #import <XCTest/XCTest.h>
+
+@import GCDWebServers;
 
 #pragma clang diagnostic ignored "-Weverything"  // Prevent "messaging to unqualified id" warnings
 
