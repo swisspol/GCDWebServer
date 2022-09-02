@@ -180,10 +180,6 @@ extern NSString* GCDWebServerDescribeData(NSData* data, NSString* contentType);
 extern NSString* GCDWebServerComputeMD5Digest(NSString* format, ...) NS_FORMAT_FUNCTION(1, 2);
 extern NSString* GCDWebServerStringFromSockAddr(const struct sockaddr* addr, BOOL includeService);
 
-@interface GCDWebServerConnection ()
-- (instancetype)initWithServer:(GCDWebServer*)server localAddress:(NSData*)localAddress remoteAddress:(NSData*)remoteAddress socket:(CFSocketNativeHandle)socket;
-@end
-
 @interface GCDWebServer ()
 @property(nonatomic, readonly) NSMutableArray<GCDWebServerHandler*>* handlers;
 @property(nonatomic, readonly, nullable) NSString* serverName;

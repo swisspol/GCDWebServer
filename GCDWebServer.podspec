@@ -48,5 +48,12 @@ Pod::Spec.new do |s|
     cs.source_files = 'GCDWebUploader/*.{h,m}'
     cs.requires_arc = true
     cs.resource = "GCDWebUploader/GCDWebUploader.bundle"
-  end 
+  end
+  
+  s.subspec 'WebSocket' do |cs|
+    cs.dependency 'GCDWebServer/Core'
+    cs.source_files = 'GCDWebSocket/**/*.{h,m}'
+    cs.requires_arc = true
+  end
+
 end
