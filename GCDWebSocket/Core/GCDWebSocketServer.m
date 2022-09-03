@@ -28,7 +28,7 @@ NSString *GCDWebServerConnectionKey(GCDWebServerConnection *con)
 {
     self = [super init];
     if (self) {
-        _timeout = 60;
+        _timeout = 30;
         _connectionsDic = @{}.mutableCopy;
         [self addHandlerForMethod:@"GET" pathRegex:@"^/" requestClass:[GCDWebServerRequest class] processBlock:^GCDWebServerResponse * _Nullable(__kindof GCDWebServerRequest * _Nonnull request) {
             return [GCDWebServerResponse responseWith:request];

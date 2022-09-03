@@ -14,16 +14,30 @@
 
 @implementation GCDWebSocketEchoServer
 
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        self.transport = self;
+    }
+    return self;
+}
+
 #pragma mark - GCDWebSocketServerTransport
 
-- (void)transport:(id<GCDWebSocketConnection>)transport received:(GCDWebSocketMessage)msg
+- (void)transport:(GCDWebServerConnection *)transport received:(GCDWebSocketMessage)msg
 {
+    GCDWebSocketServerConnection *connection = nil;
+    if ([transport isKindOfClass:[GCDWebSocketServerConnection class]]) {
+        connection = (GCDWebSocketServerConnection *)transport;
+    }
+    
     //echo message
     GCDWebSocketMessage echoMessage;
     echoMessage.header.fin = YES;
     echoMessage.header.opcode = GCDWebSocketOpcodeBinaryFrame;
     echoMessage.body.payload = msg.body.payload;
-    [transport sendMessage:echoMessage];
+    [connection sendMessage:echoMessage];
 }
 
 @end

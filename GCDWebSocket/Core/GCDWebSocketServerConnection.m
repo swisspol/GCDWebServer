@@ -12,11 +12,10 @@
 
 @interface GCDWebSocketServerConnection ()
 
-@property (nonatomic, strong) GCDWebSocketServer *wsServer;
+@property (nonatomic,   weak) GCDWebSocketServer *wsServer;
 @property (nonatomic, strong) NSMutableData *buffer;
-
-@property (nonatomic, strong) GCDWebServerRequest *request;
 @property (nonatomic,   copy) GCDWebServerCompletionBlock completion;
+@property (nonatomic, strong) GCDWebSocketHandshake *handshake;
 
 @end
 
@@ -24,12 +23,13 @@
 
 - (void)dealloc
 {
-    GWS_LOG_DEBUG(@"[dealloc] %@", self.class);
+    GWS_LOG_DEBUG(@"[dealloc] %@-%p", self.class, self);
 }
 
 - (instancetype)initWithServer:(GCDWebServer *)server localAddress:(NSData *)localAddress remoteAddress:(NSData *)remoteAddress socket:(CFSocketNativeHandle)socket
 {
     self = [super initWithServer:server localAddress:localAddress remoteAddress:remoteAddress socket:socket];
+    GWS_LOG_DEBUG(@"[init] %@-%p", self.class, self);
     if (self) {
         if ([server isKindOfClass:[GCDWebSocketServer class]]) {
             _wsServer = (GCDWebSocketServer *)server;
@@ -44,7 +44,6 @@
 
 - (void)processRequest:(GCDWebServerRequest *)request completion:(GCDWebServerCompletionBlock)completion
 {
-    self.request = request;
     self.completion = completion;
     
     // callback
@@ -57,9 +56,10 @@
         __strong typeof(weakSelf) strongSelf = weakSelf;
         if ([response isKindOfClass:[GCDWebSocketHandshake class]]) {
             GCDWebSocketHandshake *handshake = (GCDWebSocketHandshake *)response;
+            strongSelf.handshake = handshake;
             [strongSelf sendHandshake:handshake completion:completion];
         } else {
-            !strongSelf.completion ?: strongSelf.completion(response);
+            !completion ?: completion(response);
         }
     };
     [super processRequest:request completion:interruptBlock];
@@ -68,8 +68,8 @@
 - (void)close
 {
     if (self.completion) {
-        GCDWebServerResponse *rsp = [GCDWebServerResponse responseWithStatusCode:200];
-        self.completion(rsp);
+        // finish websocket handshake to release connection
+        !self.handshake ?: self.completion(self.handshake);
         self.completion = nil;
     }
     [super close];
@@ -89,12 +89,28 @@
         } else {
             GWS_LOG_DEBUG(@"write handshake data failure");
             [strongSelf stopTransmitData];
-            GCDWebServerResponse *errorRsp = [GCDWebServerResponse responseWithStatusCode:kGCDWebServerHTTPStatusCode_InternalServerError];
-            completion(errorRsp);
         }
     };
     [self writeData:handshakeData withCompletionBlock:completionBlock];
 }
+
+#pragma mark - read & write
+
+#ifdef DEBUG
+
+- (void)didReadBytes:(const void *)bytes length:(NSUInteger)length
+{
+    [super didReadBytes:bytes length:length];
+    GWS_LOG_DEBUG(@"didReadBytes: %@-%@", @(length), [NSData dataWithBytes:bytes length:length]);
+}
+
+- (void)didWriteBytes:(const void *)bytes length:(NSUInteger)length
+{
+    [super didWriteBytes:bytes length:length];
+    GWS_LOG_DEBUG(@"didWriteBytes: %@-%@", @(length), [NSData dataWithBytes:bytes length:length]);
+}
+
+#endif
 
 #pragma mark - transport
 
@@ -127,7 +143,7 @@
         GWS_LOG_DEBUG(@"----> readData: %@", readBuffer);
         
         if (readBuffer.length == 0) {
-            [self performSelector:@selector(readFrameContinue) withObject:nil afterDelay:strongSelf.readInterval];
+            [strongSelf performSelector:@selector(readFrameContinue) withObject:nil afterDelay:strongSelf.readInterval];
             return;
         }
         strongSelf.lastReadDataTime = CFAbsoluteTimeGetCurrent();
@@ -207,31 +223,16 @@
 
 - (void)sendMessage:(GCDWebSocketMessage)message
 {
+    __weak typeof(self) weakSelf = self;
     GCDWebSocketEncodeCompletion encodeCallback = ^(NSData *frame) {
+        __strong typeof(weakSelf) strongSelf = weakSelf;
         GWS_LOG_DEBUG(@"<<---------- [Begin] send message: %@", frame);
-        [self writeData:frame withCompletionBlock:^(BOOL success) {
+        [strongSelf writeData:frame withCompletionBlock:^(BOOL success) {
             GWS_LOG_DEBUG(@"<<---------- [End] send message: %@", success ? @"success" : @"failure");
+            success ?: [strongSelf stopTransmitData];
         }];
     };
     [self.encoder encode:message completion:encodeCallback];
 }
-
-#pragma mark - read & write
-
-#ifdef DEBUG
-
-- (void)didReadBytes:(const void *)bytes length:(NSUInteger)length
-{
-    [super didReadBytes:bytes length:length];
-    GWS_LOG_DEBUG(@"didReadBytes: %@-%@", @(length), [NSData dataWithBytes:bytes length:length]);
-}
-
-- (void)didWriteBytes:(const void *)bytes length:(NSUInteger)length
-{
-    [super didWriteBytes:bytes length:length];
-    GWS_LOG_DEBUG(@"didWriteBytes: %@-%@", @(length), [NSData dataWithBytes:bytes length:length]);
-}
-
-#endif
 
 @end
