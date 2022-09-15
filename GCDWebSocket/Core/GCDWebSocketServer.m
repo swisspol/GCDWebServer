@@ -92,18 +92,26 @@ NSString *GCDWebServerConnectionKey(GCDWebServerConnection *con)
     [self.connectionsDic removeObjectsForKeys:timeoutConnectionKeys];
 }
 
-#pragma mark - connection
+@end
 
-- (void)willStartConnection:(GCDWebServerConnection *)connection
+@implementation GCDWebSocketServer (Connection)
+
+- (void)transportWillStart:(GCDWebServerConnection *)connection
 {
-    [super willStartConnection:connection];
+    if ([self.transport respondsToSelector:@selector(transportWillStart:)]) {
+        [self.transport transportWillStart:connection];
+    }
+    
     NSString *key = GCDWebServerConnectionKey(connection);
     [self.connectionsDic setValue:connection forKey:key];
 }
 
-- (void)didEndConnection:(GCDWebServerConnection *)connection
+- (void)transportWillEnd:(GCDWebServerConnection *)connection
 {
-    [super didEndConnection:connection];
+    if ([self.transport respondsToSelector:@selector(transportWillEnd:)]) {
+        [self.transport transportWillEnd:connection];
+    }
+    
     NSString *key = GCDWebServerConnectionKey(connection);
     [self.connectionsDic removeObjectForKey:key];
 }

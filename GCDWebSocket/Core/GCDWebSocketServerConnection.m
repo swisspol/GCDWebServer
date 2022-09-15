@@ -36,8 +36,11 @@
         }
         _buffer = [NSMutableData dataWithCapacity:1024];
         _readInterval = 5;
+        _lastReadDataTime = CFAbsoluteTimeGetCurrent();
         _decoder = [[GCDWebSocketDecoder alloc] init];
         _encoder = [[GCDWebSocketEncoder alloc] init];
+        // callback
+        [_wsServer transportWillStart:self];
     }
     return self;
 }
@@ -45,11 +48,6 @@
 - (void)processRequest:(GCDWebServerRequest *)request completion:(GCDWebServerCompletionBlock)completion
 {
     self.completion = completion;
-    
-    // callback
-    if ([self.wsServer.transport respondsToSelector:@selector(transportWillStart:)]) {
-        [self.wsServer.transport transportWillStart:self];
-    }
     
     __weak typeof(self) weakSelf = self;
     void (^interruptBlock)(GCDWebServerResponse *) = ^(GCDWebServerResponse* _Nullable response) {
@@ -60,6 +58,7 @@
             [strongSelf sendHandshake:handshake completion:completion];
         } else {
             !completion ?: completion(response);
+            [strongSelf close];
         }
     };
     [super processRequest:request completion:interruptBlock];
@@ -67,6 +66,9 @@
 
 - (void)close
 {
+    // callback
+    [self.wsServer transportWillEnd:self];
+    
     if (self.completion) {
         // finish websocket handshake to release connection
         !self.handshake ?: self.completion(self.handshake);
@@ -171,11 +173,6 @@
 - (void)stopTransmitData
 {
     GWS_LOG_DEBUG(@"<<-- [Stop] stopTransmitData ...");
-    // callback
-    if ([self.wsServer.transport respondsToSelector:@selector(transportWillEnd:)]) {
-        [self.wsServer.transport transportWillEnd:self];
-    }
-    
     // disconnect
     [self close];
 }

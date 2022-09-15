@@ -28,3 +28,10 @@
 @property (nonatomic, weak) id<GCDWebSocketServerTransport> transport;
 
 @end
+
+@interface GCDWebSocketServer (Transport)
+
+- (void)transportWillStart:(GCDWebServerConnection *)connection;
+- (void)transportWillEnd:(GCDWebServerConnection *)connection;
+
+@end
