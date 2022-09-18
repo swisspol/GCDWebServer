@@ -190,6 +190,11 @@
     
     // opcode logic
     switch (message.header.opcode) {
+        case GCDWebSocketOpcodeConnectionClose:
+        {
+            [self stopTransmitData];
+        }
+            break;
         case GCDWebSocketOpcodePing:
         {
             // websocket ping/pong
